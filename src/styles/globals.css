@@ -1,0 +1,11 @@
+
+/* styles/globals.css */
+
+/* 1. Fontes */
+@import "./fonts.css";
+
+/* 2. Design tokens */
+@import "./tokens/index.css";
+
+/* 3. Reset e estilos fundamentais */
+@import "./base.css";

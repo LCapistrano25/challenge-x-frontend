@@ -1,0 +1,23 @@
+:root {
+  /* --- Neutros (Fundo, Texto e Bordas) --- */
+  --color-bg-primary: #F8F9FD;      /* Fundo principal da página */
+  --color-bg-secondary: #ffffff;    /* Fundo de cards, sidebars e inputs */
+  --color-text-primary: #1E1E1E;    /* Texto principal (alta legibilidade) */
+  --color-text-secondary: #555555;  /* Texto secundário (legendas, prazos) */
+  --color-border: #E2E2E8;          /* Linhas divisórias e bordas */
+  --color-sidebar-bg: #001A38;          /* Fundo da barra lateral */
+  --color-button-secondary-hover: #EEF5FF;          /* Fundo do botão secundário */
+
+  /* --- Cores da Marca / Destaques --- */
+  --color-primary: #0F64CA;         /* Cor principal (botões, links ativos) */
+  --color-primary-hover: #0B4FA3;   /* Cor de hover para elementos interativos */
+  
+  /* --- Cores de Feedback / Status --- */
+  --color-success: #16A34A;         /* Sucesso (notificações positivas, verde) */
+  --color-danger: #DC2626;         /* Erro / Alerta crítico (vermelho) */
+  --color-warning: #F59E0B;         /* Atenção / Aviso (amarelo) */
+  --color-info: #2563EB;            /* Informação / Notificação (azul) */
+
+  /* --- Transparências --- */
+  --color-overlay: rgba(0, 0, 0, 0.5); /* Fundo escurecido para modais */
+}

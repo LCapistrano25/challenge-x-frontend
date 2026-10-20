@@ -1,0 +1,33 @@
+.ui-playground {
+  width: min(100% - (2 * var(--spacing-6)), 960px);
+  margin: 0 auto;
+  padding: var(--spacing-12) 0;
+}
+
+.ui-playground h1 {
+  margin-bottom: var(--spacing-10);
+}
+
+.ui-playground__section {
+  padding: var(--spacing-6) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.ui-playground__section h2 {
+  margin-bottom: var(--spacing-4);
+  font-size: var(--font-size-h3);
+}
+
+.ui-playground__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+@media (max-width: 480px) {
+  .ui-playground {
+    width: min(100% - (2 * var(--spacing-4)), 960px);
+    padding: var(--spacing-8) 0;
+  }
+}
