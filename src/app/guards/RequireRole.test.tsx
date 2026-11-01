@@ -45,7 +45,7 @@ describe('RequireRole', () => {
   });
 
   it('bloqueia perfil sem permissão', async () => {
-    sessionAs( 'STUDENT');
+    sessionAs('STUDENT');
     renderGuard();
     expect(await screen.findByText('Acesso negado')).toBeInTheDocument();
   });

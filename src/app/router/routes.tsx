@@ -58,7 +58,7 @@ export const routes: RouteObject[] = [
     ],
   },
   {
-    element: <RequireRole allowedRoles={[ 'STUDENT']} />,
+    element: <RequireRole allowedRoles={['STUDENT']} />,
     children: [
       {
         element: <AppLayout area="Acadêmico" nav={academicNav} />,

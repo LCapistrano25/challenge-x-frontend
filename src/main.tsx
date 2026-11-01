@@ -8,7 +8,7 @@ async function enableMocking() {
   // Só em desenvolvimento: em produção o MSW é removido do bundle.
   if (!import.meta.env.DEV || !env.enableMocks) return;
   const { worker } = await import('@/mocks/browser');
-  await worker.start({ onUnhandledRequest: 'bypass' });
+  await worker.start({ onUnhandledFrame: 'bypass' });
 }
 
 enableMocking().then(() => {

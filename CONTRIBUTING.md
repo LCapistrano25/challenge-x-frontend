@@ -40,7 +40,6 @@ npm run lint && npm run format:check && npm run typecheck && npm test && npm run
 
 As telas criadas com `PagePlaceholder` indicam a task no texto ("task #12"). Ao implementar, troque o placeholder pelo conteúdo real e adicione os testes.
 
-
 ## Integração com a API
 
 - Consulte `docs/API-INTEGRATION.md` e `docs/api/openapi.yaml` antes de criar chamadas HTTP.

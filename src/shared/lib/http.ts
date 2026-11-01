@@ -10,4 +10,7 @@ export const http = axios.create({
   baseURL: env.apiUrl,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
+
+  // No ambiente de testes, utiliza Fetch para permitir a interceptação pelo MSW.
+  ...(import.meta.env.MODE === 'test' ? { adapter: 'fetch' as const } : {}),
 });

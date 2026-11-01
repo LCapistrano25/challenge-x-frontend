@@ -4,10 +4,12 @@ import { afterAll, afterEach, beforeAll } from 'vitest';
 import { resetMockSession } from '@/mocks/handlers';
 import { server } from '@/mocks/server';
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' }));
+
 afterEach(() => {
   cleanup();
   server.resetHandlers();
   resetMockSession();
 });
+
 afterAll(() => server.close());
