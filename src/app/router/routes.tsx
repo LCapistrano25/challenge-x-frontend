@@ -2,8 +2,9 @@ import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import { ForgotPasswordPage, LoginPage, RegisterPage } from '@/features/auth';
 import { RequireRole } from '../guards/RequireRole';
-import { AppLayout, type NavItem } from '../layouts/AppLayout';
+import { AppLayout } from '../layouts/AppLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
+import { NAV_ITEMS } from '@/app/config/navigation';
 import { AcademicHomePage } from '../pages/AcademicHomePage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -12,27 +13,6 @@ import { NotFoundPage } from '../pages/NotFoundPage';
 function lazyPage<M extends Record<string, unknown>>(load: () => Promise<M>, name: keyof M) {
   return async () => ({ Component: (await load())[name] as ComponentType });
 }
-
-const academicNav: NavItem[] = [
-  { to: '/academico', label: 'Início', end: true },
-  { to: '/academico/equipe', label: 'Minha equipe' },
-  { to: '/academico/projeto', label: 'Projeto' },
-  { to: '/academico/duvidas', label: 'Dúvidas' },
-];
-const teacherNav: NavItem[] = [
-  { to: '/professor', label: 'Acompanhamento', end: true },
-  { to: '/professor/integrantes', label: 'Integrantes' },
-];
-const evaluatorNav: NavItem[] = [
-  { to: '/avaliador', label: 'Projetos finalistas', end: true },
-  { to: '/avaliador/avaliacoes', label: 'Minhas avaliações' },
-];
-const adminNav: NavItem[] = [
-  { to: '/admin', label: 'Painel', end: true },
-  { to: '/admin/cursos-professores', label: 'Cursos e professores' },
-  { to: '/admin/ods-desafios', label: 'ODS e desafios' },
-  { to: '/admin/criterios-rubricas', label: 'Critérios e rubricas' },
-];
 
 const projects = () => import('@/features/projects');
 const teams = () => import('@/features/teams');
@@ -61,7 +41,7 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['STUDENT']} />,
     children: [
       {
-        element: <AppLayout area="Acadêmico" nav={academicNav} />,
+        element: <AppLayout area="Acadêmico" nav={NAV_ITEMS.STUDENT} />,
         children: [
           { path: '/academico', element: <AcademicHomePage /> },
           { path: '/academico/equipe/buscar', lazy: lazyPage(teams, 'FindTeamPage') },
@@ -82,7 +62,7 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['TEACHER']} />,
     children: [
       {
-        element: <AppLayout area="Professor" nav={teacherNav} />,
+        element: <AppLayout area="Professor" nav={NAV_ITEMS.TEACHER} />,
         children: [
           { path: '/professor', lazy: lazyPage(deliveries, 'DeliveryTrackingPage') },
           { path: '/professor/integrantes', lazy: lazyPage(teams, 'MemberObservationsPage') },
@@ -94,7 +74,7 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['EXTERNAL_EVALUATOR']} />,
     children: [
       {
-        element: <AppLayout area="Avaliador externo" nav={evaluatorNav} />,
+        element: <AppLayout area="Avaliador externo" nav={NAV_ITEMS.EXTERNAL_EVALUATOR} />,
         children: [
           { path: '/avaliador', lazy: lazyPage(projects, 'FinalistProjectsPage') },
           {
@@ -114,7 +94,7 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['ADMIN']} />,
     children: [
       {
-        element: <AppLayout area="Administração" nav={adminNav} />,
+        element: <AppLayout area="Administração" nav={NAV_ITEMS.ADMIN} />,
         children: [
           { path: '/admin', lazy: lazyPage(admin, 'AdminDashboardPage') },
           { path: '/admin/cursos-professores', lazy: lazyPage(admin, 'CoursesTeachersPage') },

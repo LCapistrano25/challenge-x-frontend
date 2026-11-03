@@ -1,26 +1,18 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
-import { useAuth, ROLE_HOME } from '@/features/auth';
+import { Outlet } from 'react-router-dom';
+import { ROLE_HOME, useAuth } from '@/features/auth';
+import { NAV_ITEMS } from '@/app/config/navigation';
+import { Sidebar } from './Sidebar';
 
 export function PublicLayout() {
   const { user } = useAuth();
+  const publicNav = user
+    ? [...NAV_ITEMS.publico.slice(0, -1), { to: ROLE_HOME[user.role], label: 'Minha área' }]
+    : NAV_ITEMS.publico;
 
   return (
-    <div className="layout">
-      <header className="topbar">
-        <Link to="/" className="brand">
-          Plataforma
-        </Link>
-        <nav aria-label="Principal">
-          <NavLink to="/projetos">Projetos</NavLink>
-          <NavLink to="/acervo">Acervo histórico</NavLink>
-          {user ? (
-            <Link to={ROLE_HOME[user.role]}>Minha área</Link>
-          ) : (
-            <NavLink to="/login">Entrar</NavLink>
-          )}
-        </nav>
-      </header>
-      <main>
+    <div className="layout app-shell">
+      <Sidebar area="Plataforma" nav={publicNav} />
+      <main className="app-content">
         <Outlet />
       </main>
     </div>

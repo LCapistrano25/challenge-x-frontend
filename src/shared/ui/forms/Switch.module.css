@@ -1,0 +1,45 @@
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  font-weight: var(--weight-medium);
+  border-radius: var(--radius-full);
+}
+
+.track {
+  appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 44px;
+  height: 26px;
+  margin: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.track::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+
+.track:checked {
+  background: var(--color-primary);
+}
+.track:checked::before {
+  transform: translateX(18px);
+}
+.track:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

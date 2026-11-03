@@ -1,6 +1,6 @@
 import { useState, type SyntheticEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '@/shared/ui';
+import { Button, Input } from '@/shared/ui';
 import { ROLE_HOME } from '../roles';
 import { useAuth } from '../useAuth';
 
@@ -37,7 +37,7 @@ export function LoginPage() {
       <form onSubmit={handleSubmit} noValidate>
         <label>
           E-mail
-          <input
+          <Input
             type="email"
             autoComplete="username"
             value={email}
@@ -47,7 +47,7 @@ export function LoginPage() {
         </label>
         <label>
           Senha
-          <input
+          <Input
             type="password"
             autoComplete="current-password"
             value={password}

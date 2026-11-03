@@ -1,4 +1,4 @@
-import { PagePlaceholder } from '@/shared/ui';
+import { PagePlaceholder } from '@/shared/ui/dev/PagePlaceholder';
 
 export function MemberObservationsPage() {
   return (

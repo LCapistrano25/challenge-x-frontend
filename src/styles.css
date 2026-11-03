@@ -1,152 +1,234 @@
-/* Estilos mínimos e provisórios. O Sistema de Design (task #4) substitui isto em shared/ui. */
-:root {
-  --bg: #ffffff;
-  --text: #1c2430;
-  --muted: #5a6574;
-  --border: #d5dbe3;
-  --accent: #1f5fbf;
-  --accent-contrast: #ffffff;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  color: var(--text);
-  background: var(--bg);
-  line-height: 1.5;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #12161c;
-    --text: #e8ecf1;
-    --muted: #9aa5b4;
-    --border: #2c3440;
-    --accent: #6ea4f0;
-    --accent-contrast: #0b1118;
-  }
-}
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-}
-
-a {
-  color: var(--accent);
-}
-
-:focus-visible {
-  outline: 3px solid var(--accent);
-  outline-offset: 2px;
-}
+@import './styles/globals.css';
 
 .topbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem 1.5rem;
-  padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid var(--border);
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding: var(--spacing-3) var(--spacing-6);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
 }
 
-.topbar nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  flex: 1;
-}
-
-.topbar a {
-  text-decoration: none;
-}
-
-.topbar a.active {
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+.layout {
+  min-height: 100vh;
 }
 
 .topbar__user {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--spacing-3);
 }
 
 .brand {
-  font-weight: 700;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
 }
 
-main {
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
-.placeholder p {
-  color: var(--muted);
-}
-
-.btn {
-  font: inherit;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid var(--accent);
-  cursor: pointer;
-}
-
-.btn--primary {
-  background: var(--accent);
-  color: var(--accent-contrast);
-}
-
-.btn--secondary {
-  background: transparent;
-  color: var(--accent);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.auth-card {
-  max-width: 24rem;
-  margin: 2rem auto;
-}
-
-.auth-card form {
+.app-shell {
   display: grid;
-  gap: 1rem;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--color-bg-primary);
 }
 
-.auth-card label {
-  display: grid;
-  gap: 0.25rem;
+.app-shell:has(.sidebar--collapsed) {
+  grid-template-columns: 4.5rem minmax(0, 1fr);
 }
 
-.auth-card input {
-  font: inherit;
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
+.app-main {
+  min-width: 0;
+}
+
+.app-content {
+  min-width: 0;
+  padding: var(--spacing-6);
+  background: var(--color-bg-primary);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  min-height: 100vh;
+  padding: var(--spacing-4);
+  background: var(--color-sidebar-bg);
+  color: var(--color-text-on-dark);
+}
+
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.sidebar__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--color-text-on-dark) 25%, transparent);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: inherit;
 }
 
+.sidebar__toggle:hover {
+  background: color-mix(in srgb, var(--color-text-on-dark) 14%, transparent);
+}
+
+.sidebar--collapsed {
+  align-items: center;
+}
+
+.sidebar--collapsed .sidebar__header {
+  flex-direction: column;
+}
+
+.sidebar--collapsed .sidebar__title {
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sidebar--collapsed .sidebar__link {
+  justify-content: center;
+  padding-inline: var(--spacing-2);
+}
+
+.sidebar--collapsed .sidebar__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.sidebar__title {
+  margin: 0 0 var(--spacing-3);
+  color: color-mix(in srgb, var(--color-text-on-dark) 72%, transparent);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sidebar__nav {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-sm);
+  color: inherit;
+}
+
+.sidebar__nav a {
+  color: inherit;
+}
+
+.sidebar__link:hover,
+.sidebar__link.active,
+.sidebar__nav a:hover,
+.sidebar__nav a.active {
+  background: color-mix(in srgb, var(--color-text-on-dark) 14%, transparent);
+}
+
+.sidebar__link.active,
+.sidebar__nav a.active {
+  font-weight: var(--font-weight-semibold);
+}
+
+.placeholder p {
+  color: var(--color-text-secondary);
+}
+
+.auth-card {
+  width: min(100%, 24rem);
+  margin: var(--spacing-8) auto;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-card h1 {
+  margin-bottom: var(--spacing-6);
+}
+
+.auth-card form {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.auth-card label {
+  display: grid;
+  gap: var(--spacing-2);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.auth-card .button {
+  width: 100%;
+}
+
+.auth-card [role='alert'] {
+  margin: 0;
+  color: var(--color-danger-text);
+  font-size: var(--font-size-small);
+}
+
 .spinner {
-  padding: 2rem;
+  padding: var(--spacing-8);
+  color: var(--color-text-secondary);
   text-align: center;
-  color: var(--muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+@media (max-width: 48rem) {
+  .app-shell {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+  }
+
+  .app-shell:has(.sidebar--collapsed) {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    min-height: auto;
+  }
+
+  .sidebar--collapsed {
+    align-items: stretch;
+  }
+
+  .sidebar--collapsed .sidebar__header {
+    flex-direction: row;
   }
 }

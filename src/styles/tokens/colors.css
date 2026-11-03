@@ -1,0 +1,40 @@
+:root {
+  /* --- Neutros (Fundo, Texto e Bordas) --- */
+  --color-bg-primary: #f8f9fd;
+  --color-bg-secondary: #ffffff;
+  --color-text-primary: #1e1e1e;
+  --color-text-secondary: #555555;
+  --color-border: #e2e2e8;
+  --color-sidebar-bg: #001a38;
+  --color-button-secondary-hover: #eef5ff;
+
+  /* --- Cores da Marca / Destaques --- */
+  --color-primary: #0f64ca;
+  --color-primary-hover: #0b4fa3;
+
+  /* --- Cores de Feedback / Status --- */
+  --color-success: #16a34a;
+  --color-danger: #dc2626;
+  --color-warning: #f59e0b;
+  --color-info: #2563eb;
+
+  /* --- Transparências --- */
+  --color-overlay: rgba(0, 0, 0, 0.5);
+
+  --color-bg-subtle: #eef5ff;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-dark: #ffffff;
+  --color-primary-soft: #eef5ff;
+  --color-success-soft: #ecfdf3;
+  --color-success-text: #166534;
+  --color-warning-soft: #fffbeb;
+  --color-warning-text: #92400e;
+  --color-danger-soft: #fef2f2;
+  --color-danger-hover: #b91c1c;
+  --color-danger-text: #991b1b;
+  --color-info-soft: #eff6ff;
+  --color-bg-rail: var(--color-sidebar-bg);
+  --color-bg-surface: var(--color-bg-secondary);
+  --color-text: var(--color-text-primary);
+  --color-text-muted: var(--color-text-secondary);
+}

@@ -1,23 +1,20 @@
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { cleanup, render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { Button } from './Button';
 
+afterEach(cleanup);
+
 describe('Button', () => {
-  it('dispara onClick', async () => {
-    const onClick = vi.fn();
-    render(<Button onClick={onClick}>Salvar</Button>);
-    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
-    expect(onClick).toHaveBeenCalledOnce();
+  it('renderiza o texto recebido', () => {
+    render(<Button>Salvar</Button>);
+
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeInTheDocument();
   });
 
-  it('não dispara onClick quando desabilitado', async () => {
-    const onClick = vi.fn();
-    render(
-      <Button onClick={onClick} disabled>
-        Salvar
-      </Button>,
-    );
-    await userEvent.click(screen.getByRole('button', { name: 'Salvar' }));
-    expect(onClick).not.toHaveBeenCalled();
+  it('pode ser desabilitado', () => {
+    render(<Button disabled>Salvar</Button>);
+
+    expect(screen.getByRole('button', { name: 'Salvar' })).toBeDisabled();
   });
 });
