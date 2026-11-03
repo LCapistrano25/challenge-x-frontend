@@ -1,0 +1,40 @@
+.list {
+  display: flex;
+  gap: var(--space-1);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border);
+  scrollbar-width: none;
+}
+.list::-webkit-scrollbar {
+  display: none;
+}
+
+.trigger {
+  flex-shrink: 0;
+  padding: 12px 18px;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+.trigger:hover {
+  color: var(--color-text-primary);
+}
+.trigger[data-state='active'] {
+  color: var(--color-primary);
+  box-shadow: inset 0 -3px 0 var(--color-primary);
+}
+
+.content {
+  padding-top: var(--space-5);
+}
+.content:focus-visible {
+  outline-offset: 6px;
+}

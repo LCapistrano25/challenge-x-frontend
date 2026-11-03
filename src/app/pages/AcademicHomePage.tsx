@@ -1,4 +1,4 @@
-import { PagePlaceholder } from '@/shared/ui';
+import { PagePlaceholder } from '@/shared/ui/dev/PagePlaceholder';
 
 /**
  * Home do perfil Acadêmico (task #9). Esta página só compõe componentes das features

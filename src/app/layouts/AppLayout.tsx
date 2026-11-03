@@ -1,8 +1,8 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { Button } from '@/shared/ui';
-
-export type NavItem = { to: string; label: string; end?: boolean };
+import type { NavItem } from '@/app/config/navigation';
+import { Sidebar } from './Sidebar';
 
 type AppLayoutProps = {
   /** Nome do perfil exibido no topo. */
@@ -21,26 +21,21 @@ export function AppLayout({ area, nav }: AppLayoutProps) {
   }
 
   return (
-    <div className="layout">
-      <header className="topbar">
-        <span className="brand">{area}</span>
-        <nav aria-label={`Menu ${area}`}>
-          {nav.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.end}>
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="topbar__user">
-          <span>{user?.name}</span>
-          <Button variant="secondary" onClick={handleLogout}>
-            Sair
-          </Button>
-        </div>
-      </header>
-      <main>
-        <Outlet />
-      </main>
+    <div className="layout app-shell">
+      <Sidebar area={area} nav={nav} />
+      <div className="app-main">
+        <header className="topbar">
+          <div className="topbar__user">
+            <span>{user?.name}</span>
+            <Button variant="secondary" onClick={handleLogout}>
+              Sair
+            </Button>
+          </div>
+        </header>
+        <main className="app-content">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
