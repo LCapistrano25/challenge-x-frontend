@@ -31,6 +31,7 @@ export const routes: RouteObject[] = [
       { path: '/projetos/:projectId', lazy: lazyPage(projects, 'ProjectDetailPage') },
       { path: '/acervo', lazy: lazyPage(publicPanel, 'HistoricArchivePage') },
       { path: '/login', element: <LoginPage /> },
+      { path: '/admin/login', element: <LoginPage adminOnly /> },
       { path: '/cadastro', element: <RegisterPage /> },
       { path: '/recuperar-senha', element: <ForgotPasswordPage /> },
       { path: '/acesso-negado', element: <ForbiddenPage /> },
@@ -91,7 +92,7 @@ export const routes: RouteObject[] = [
     ],
   },
   {
-    element: <RequireRole allowedRoles={['ADMIN']} />,
+    element: <RequireRole allowedRoles={['ADMIN']} loginPath="/admin/login" />,
     children: [
       {
         element: <AppLayout area="Administração" nav={NAV_ITEMS.ADMIN} />,
