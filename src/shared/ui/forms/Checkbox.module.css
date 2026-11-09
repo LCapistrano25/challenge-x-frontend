@@ -1,0 +1,63 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  cursor: pointer;
+  font-size: var(--text-md);
+  line-height: 1.4;
+}
+
+.box {
+  appearance: none;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  margin: 1px 0 0;
+  border: 1.5px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg-secondary);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+.box::after {
+  content: '';
+  width: 5px;
+  height: 10px;
+  border: solid var(--color-bg-secondary);
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg) translate(-1px, -1px);
+  opacity: 0;
+}
+.box:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+.box:checked {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.box:checked::after {
+  opacity: 1;
+}
+.box:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.box[aria-invalid='true'] {
+  border-color: var(--color-danger);
+}
+
+.error {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-danger);
+}
