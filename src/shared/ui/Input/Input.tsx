@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes } from 'react';
-import './Input.css';
+import { cn } from '@/shared/lib/cn';
+import styles from './Input.module.css';
 
 type InputSize = 'small' | 'medium' | 'large';
 
@@ -8,15 +9,12 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   invalid?: boolean;
 }
 
-export function Input({
-  inputSize = 'medium',
-  invalid = false,
-  className = '',
-  ...props
-}: InputProps) {
-  const classes = ['input', `input--${inputSize}`, invalid ? 'input--invalid' : '', className]
-    .filter(Boolean)
-    .join(' ');
-
-  return <input {...props} className={classes} aria-invalid={invalid || props['aria-invalid']} />;
+export function Input({ inputSize = 'medium', invalid = false, className, ...props }: InputProps) {
+  return (
+    <input
+      {...props}
+      className={cn(styles.input, styles[inputSize], invalid && styles.invalid, className)}
+      aria-invalid={invalid || props['aria-invalid']}
+    />
+  );
 }

@@ -1,6 +1,6 @@
 import { forwardRef, useId, type SelectHTMLAttributes } from 'react';
 import { cn } from '@/shared/lib/cn';
-import field from '../Input.module.css';
+import field from './Field.module.css';
 import styles from './Select.module.css';
 
 export interface SelectOption {

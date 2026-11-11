@@ -1,0 +1,48 @@
+/* ProjectCard.module.css */
+.card {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.cover {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+.body {
+  padding: 16px;
+  display: grid;
+  gap: 8px;
+}
+.ods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.ods li {
+  color: var(--color-text-on-primary);
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.summary {
+  color: var(--color-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.meta {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+.actions {
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border);
+}

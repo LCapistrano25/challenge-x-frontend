@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import type { NavItem } from '@/app/config/navigation';
+import { cn } from '@/shared/lib/cn';
 import { IconChevronLeft, IconChevronRight } from '@/shared/ui/icons';
+import styles from './Sidebar.module.css';
 
 type SidebarProps = {
   area: string;
@@ -14,19 +16,24 @@ export function Sidebar({ area, nav }: SidebarProps) {
   const loginItem = nav.find((item) => item.to === '/login');
   const mainNav = nav.filter((item) => item.to !== '/login');
 
+  // NavLink aplica a classe "active" global; com CSS Modules precisamos montar a nossa.
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    cn(styles.link, isActive && styles.active);
+
   return (
     <aside
-      className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}
+      className={cn(styles.sidebar, collapsed && styles.collapsed)}
+      data-collapsed={collapsed}
       aria-label={`Navegação ${area}`}
     >
-      <div className="sidebar__header">
-        <span className="brand" aria-label="Desafio X">
-          <img src="/logo.svg" alt="" className="brand__logo" />
-          <span className="brand__name">Desafio X</span>
+      <div className={styles.header}>
+        <span className={styles.brand} aria-label="Desafio X">
+          <img src="/logo.svg" alt="" className={styles.brandLogo} />
+          <span className={styles.brandName}>Desafio X</span>
         </span>
         <button
           type="button"
-          className="sidebar__toggle"
+          className={styles.toggle}
           onClick={() => setCollapsed((value) => !value)}
           aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
           aria-expanded={!collapsed}
@@ -36,46 +43,46 @@ export function Sidebar({ area, nav }: SidebarProps) {
         </button>
         <button
           type="button"
-          className="sidebar__menu-toggle"
+          className={styles.menuToggle}
           onClick={() => setMobileMenuOpen((value) => !value)}
           aria-label={mobileMenuOpen ? 'Fechar menu' : 'Abrir menu'}
           aria-expanded={mobileMenuOpen}
         >
-          <span className="sidebar__hamburger" aria-hidden="true">
+          <span className={styles.hamburger} aria-hidden="true">
             <span />
             <span />
             <span />
           </span>
         </button>
       </div>
-      <div className={`sidebar__menu${mobileMenuOpen ? ' sidebar__menu--open' : ''}`}>
-        <p className="sidebar__title">Menu</p>
-        <nav className="sidebar__nav">
+      <div className={cn(styles.menu, mobileMenuOpen && styles.menuOpen)}>
+        <p className={styles.title}>Menu</p>
+        <nav className={styles.nav}>
           {mainNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
-              className="sidebar__link"
+              className={linkClass}
               title={collapsed ? item.label : undefined}
               onClick={() => setMobileMenuOpen(false)}
             >
               {item.icon}
-              <span className="sidebar__label">{item.label}</span>
+              <span className={styles.label}>{item.label}</span>
             </NavLink>
           ))}
         </nav>
         {loginItem && (
-          <div className="sidebar__footer">
+          <div className={styles.footer}>
             <NavLink
               to={loginItem.to}
               end={loginItem.end}
-              className="sidebar__link"
+              className={linkClass}
               title={collapsed ? loginItem.label : undefined}
               onClick={() => setMobileMenuOpen(false)}
             >
               {loginItem.icon}
-              <span className="sidebar__label">{loginItem.label}</span>
+              <span className={styles.label}>{loginItem.label}</span>
             </NavLink>
           </div>
         )}

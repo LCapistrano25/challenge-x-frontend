@@ -1,0 +1,57 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4.5rem;
+  padding: 0 var(--spacing-8);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.brand {
+  color: var(--color-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+}
+
+.help {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.help:hover {
+  color: var(--color-primary);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-6);
+}
+
+.footer {
+  padding: var(--spacing-4);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  text-align: center;
+}
+
+@media (max-width: 48rem) {
+  .header {
+    padding-inline: var(--spacing-4);
+  }
+
+  .content {
+    padding-inline: 0;
+  }
+}

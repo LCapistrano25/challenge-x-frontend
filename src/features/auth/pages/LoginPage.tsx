@@ -1,9 +1,10 @@
 import { useState, type SyntheticEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { cn } from '@/shared/lib/cn';
 import { Button, Input } from '@/shared/ui';
 import { ROLE_HOME } from '../roles';
 import { useAuth } from '../useAuth';
-import './LoginPage.css';
+import styles from './LoginPage.module.css';
 
 type LoginMode = 'academic' | 'external';
 
@@ -62,132 +63,114 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
   }
 
   return (
-    <div className="login-page">
-      <header className="login-page__header">
-        <strong>Desafio X</strong>
-        <a href="mailto:suporte@desafiox.com">Precisa de ajuda?</a>
-      </header>
+    <section className={styles.card}>
+      <div className={styles.header}>
+        <h1>{adminOnly ? 'Acesso administrativo' : 'Bem-vindo ao Desafio X'}</h1>
+        <p>
+          {adminOnly
+            ? 'Entre com suas credenciais de administrador.'
+            : 'Entre para continuar na plataforma.'}
+        </p>
+      </div>
 
-      <main className="login-page__content">
-        <section className={`auth-card login-card${adminOnly ? ' login-card--admin' : ''}`}>
-          <div className="login-card__header">
-            <h1>{adminOnly ? 'Acesso administrativo' : 'Bem-vindo ao Desafio X'}</h1>
-            <p>
-              {adminOnly
-                ? 'Entre com suas credenciais de administrador.'
-                : 'Entre para continuar na plataforma.'}
-            </p>
-          </div>
+      {!adminOnly && (
+        <div className={styles.switcher} role="group" aria-label="Tipo de acesso">
+          <button
+            type="button"
+            className={cn(styles.switcherOption, mode === 'academic' && styles.active)}
+            aria-pressed={mode === 'academic'}
+            onClick={() => {
+              setMode('academic');
+              setError(null);
+            }}
+          >
+            Aluno ou professor
+          </button>
+          <button
+            type="button"
+            className={cn(styles.switcherOption, mode === 'external' && styles.active)}
+            aria-pressed={mode === 'external'}
+            onClick={() => {
+              setMode('external');
+              setError(null);
+            }}
+          >
+            Avaliador externo
+          </button>
+        </div>
+      )}
 
-          {!adminOnly && (
-            <div className="login-switcher" role="group" aria-label="Tipo de acesso">
+      {mode === 'academic' && !adminOnly ? (
+        <div className={styles.academic}>
+          <Button
+            type="button"
+            variant="secondary"
+            size="large"
+            fullWidth
+            className={styles.microsoftButton}
+            onClick={() => setError('O login com a Microsoft ainda não está configurado.')}
+          >
+            <MicrosoftIcon />
+            Entrar com a Microsoft
+          </Button>
+          <p>Use sua conta institucional para acessar.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} noValidate>
+          <label>
+            E-mail
+            <Input
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </label>
+          <label>
+            Senha
+            <span className={styles.passwordField}>
+              <Input
+                className={styles.passwordInput}
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
               <button
                 type="button"
-                className={
-                  mode === 'academic'
-                    ? 'login-switcher__option is-active'
-                    : 'login-switcher__option'
-                }
-                aria-pressed={mode === 'academic'}
-                onClick={() => {
-                  setMode('academic');
-                  setError(null);
-                }}
+                className={styles.passwordToggle}
+                aria-label={showPassword ? 'Ocultar senha' : 'Visualizar senha'}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}
               >
-                Aluno ou professor
+                {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
-              <button
-                type="button"
-                className={
-                  mode === 'external'
-                    ? 'login-switcher__option is-active'
-                    : 'login-switcher__option'
-                }
-                aria-pressed={mode === 'external'}
-                onClick={() => {
-                  setMode('external');
-                  setError(null);
-                }}
-              >
-                Avaliador externo
-              </button>
-            </div>
-          )}
-
-          {mode === 'academic' && !adminOnly ? (
-            <div className="login-card__academic">
-              <Button
-                type="button"
-                variant="secondary"
-                size="large"
-                className="microsoft-button"
-                onClick={() => setError('O login com a Microsoft ainda não está configurado.')}
-              >
-                <MicrosoftIcon />
-                Entrar com a Microsoft
-              </Button>
-              <p>Use sua conta institucional para acessar.</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} noValidate>
-              <label>
-                E-mail
-                <Input
-                  type="email"
-                  autoComplete="username"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </label>
-              <label>
-                Senha
-                <span className="password-field">
-                  <Input
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="password-field__toggle"
-                    aria-label={showPassword ? 'Ocultar senha' : 'Visualizar senha'}
-                    aria-pressed={showPassword}
-                    onClick={() => setShowPassword((visible) => !visible)}
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </span>
-              </label>
-              <label className="remember-me">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(event) => setRememberMe(event.target.checked)}
-                />
-                <span>Lembrar de mim</span>
-              </label>
-              {error && <p role="alert">{error}</p>}
-              <Button type="submit" size="large" disabled={submitting}>
-                {submitting ? 'Entrando…' : 'Entrar'}
-              </Button>
-            </form>
-          )}
-          {mode === 'academic' && error && <p role="alert">{error}</p>}
-        </section>
-      </main>
-      <footer className="login-page__footer">
-        © 2026 Desafio X. Todos os direitos reservados.
-      </footer>
-    </div>
+            </span>
+          </label>
+          <label className={styles.rememberMe}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(event) => setRememberMe(event.target.checked)}
+            />
+            <span>Lembrar de mim</span>
+          </label>
+          {error && <p role="alert">{error}</p>}
+          <Button type="submit" size="large" fullWidth disabled={submitting}>
+            {submitting ? 'Entrando…' : 'Entrar'}
+          </Button>
+        </form>
+      )}
+      {mode === 'academic' && error && <p role="alert">{error}</p>}
+    </section>
   );
 }
 
 function MicrosoftIcon() {
   return (
-    <span className="microsoft-icon" aria-hidden="true">
+    <span className={styles.microsoftIcon} aria-hidden="true">
       <span />
       <span />
       <span />
