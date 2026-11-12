@@ -1,8 +1,16 @@
 import { useState, type SyntheticEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { env } from '@/shared/config/env';
 import { cn } from '@/shared/lib/cn';
+import { redirectTo } from '@/shared/lib/redirect';
 import { Button, Input } from '@/shared/ui';
-import { ROLE_HOME } from '../roles';
+import {
+  getLoginErrorMessage,
+  getMicrosoftLoginUrl,
+  simulateMicrosoftLogin,
+} from '../api/auth.api';
+import { MicrosoftMockPicker } from '../components/MicrosoftMockPicker';
+import { homePathFor, needsProfile } from '../roles';
 import { useAuth } from '../useAuth';
 import styles from './LoginPage.module.css';
 
@@ -12,10 +20,23 @@ type LoginPageProps = {
   adminOnly?: boolean;
 };
 
+/** Regra de negócio violada no login (ex.: aluno tentando entrar por senha). */
+class LoginRuleError extends Error {}
+
+/** Códigos que o back-end pode devolver em /login?error= após o retorno da Microsoft. */
+const MICROSOFT_ERRORS: Record<string, string> = {
+  microsoft_denied: 'O login com a Microsoft foi cancelado.',
+  account_not_allowed: 'Esta conta Microsoft não tem acesso à plataforma.',
+};
+
+/** Seletor de contas simuladas: só em desenvolvimento com mocks ligados. */
+const USE_MICROSOFT_MOCK = import.meta.env.DEV && env.enableMocks;
+
 export function LoginPage({ adminOnly = false }: LoginPageProps) {
-  const { user, login, logout } = useAuth();
+  const { user, login, logout, refresh } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const [mode, setMode] = useState<LoginMode>(adminOnly ? 'external' : 'academic');
   const [email, setEmail] = useState(
     () => window.localStorage.getItem('challenge-x.remembered-email') ?? '',
@@ -27,17 +48,44 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
   );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showMockPicker, setShowMockPicker] = useState(false);
 
   if (user) {
     return (
       <Navigate
-        to={adminOnly && user.role !== 'ADMIN' ? '/acesso-negado' : ROLE_HOME[user.role]}
+        to={adminOnly && user.role !== 'ADMIN' ? '/acesso-negado' : homePathFor(user)}
         replace
       />
     );
   }
 
   const from = (location.state as { from?: string } | null)?.from;
+  const callbackCode = searchParams.get('error');
+  const callbackError = callbackCode
+    ? (MICROSOFT_ERRORS[callbackCode] ??
+      'Não foi possível entrar com a Microsoft. Tente novamente.')
+    : null;
+
+  function handleMicrosoft() {
+    setError(null);
+    if (USE_MICROSOFT_MOCK) {
+      setShowMockPicker((visible) => !visible);
+      return;
+    }
+    redirectTo(getMicrosoftLoginUrl(from));
+  }
+
+  async function handleMockPick(email: string) {
+    setError(null);
+    setSubmitting(true);
+    try {
+      await simulateMicrosoftLogin(email);
+      await refresh(); // com a sessão aberta, o redirecionamento acontece no topo desta página
+    } catch (err) {
+      setError(getLoginErrorMessage(err));
+      setSubmitting(false);
+    }
+  }
 
   async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,16 +95,25 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
       const loggedUser = await login({ email, password });
       if (adminOnly && loggedUser.role !== 'ADMIN') {
         await logout();
-        throw new Error('Acesso administrativo não autorizado.');
+        throw new LoginRuleError('Acesso administrativo não autorizado.');
+      }
+      if (!adminOnly && (loggedUser.role === 'STUDENT' || loggedUser.role === 'TEACHER')) {
+        // Defesa extra: o back-end já deve recusar, mas o front não mantém essa sessão.
+        await logout();
+        throw new LoginRuleError('Alunos e professores entram com a conta Microsoft.');
       }
       if (rememberMe) {
         window.localStorage.setItem('challenge-x.remembered-email', email);
       } else {
         window.localStorage.removeItem('challenge-x.remembered-email');
       }
-      navigate(from ?? ROLE_HOME[loggedUser.role], { replace: true });
-    } catch {
-      setError('E-mail ou senha incorretos. Confira os dados e tente novamente.');
+      // Primeiro acesso pendente tem prioridade sobre qualquer rota de origem.
+      const destination = needsProfile(loggedUser)
+        ? homePathFor(loggedUser)
+        : (from ?? homePathFor(loggedUser));
+      navigate(destination, { replace: true });
+    } catch (err) {
+      setError(err instanceof LoginRuleError ? err.message : getLoginErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -108,12 +165,16 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
             size="large"
             fullWidth
             className={styles.microsoftButton}
-            onClick={() => setError('O login com a Microsoft ainda não está configurado.')}
+            disabled={submitting}
+            onClick={handleMicrosoft}
           >
             <MicrosoftIcon />
             Entrar com a Microsoft
           </Button>
           <p>Use sua conta institucional para acessar.</p>
+          {USE_MICROSOFT_MOCK && showMockPicker && (
+            <MicrosoftMockPicker onPick={handleMockPick} disabled={submitting} />
+          )}
         </div>
       ) : (
         <form onSubmit={handleSubmit} noValidate>
@@ -163,7 +224,9 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
           </Button>
         </form>
       )}
-      {mode === 'academic' && error && <p role="alert">{error}</p>}
+      {mode === 'academic' && (error ?? callbackError) && (
+        <p role="alert">{error ?? callbackError}</p>
+      )}
     </section>
   );
 }

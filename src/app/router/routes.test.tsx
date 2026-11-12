@@ -17,7 +17,7 @@ function renderAt(path: string) {
 }
 
 describe('rotas e layouts', () => {
-  it.each(['/login', '/admin/login', '/cadastro', '/recuperar-senha'])(
+  it.each(['/login', '/admin/login', '/recuperar-senha'])(
     '%s usa o AuthLayout, sem sidebar',
     async (path) => {
       renderAt(path);

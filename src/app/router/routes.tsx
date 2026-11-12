@@ -1,12 +1,14 @@
 import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router-dom';
-import { ForgotPasswordPage, LoginPage, RegisterPage } from '@/features/auth';
+import { CompleteProfilePage, ForgotPasswordPage, LoginPage } from '@/features/auth';
+import { RequireProfilePending } from '../guards/RequireProfilePending';
 import { RequireRole } from '../guards/RequireRole';
 import { AppLayout } from '../layouts/AppLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { NAV_ITEMS } from '@/app/config/navigation';
 import { Spinner } from '@/shared/ui';
+import { PagePlaceholder } from '@/shared/ui/dev/PagePlaceholder';
 import { AcademicHomePage } from '../pages/AcademicHomePage';
 import { ErrorPage } from '../pages/ErrorPage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
@@ -27,12 +29,25 @@ const publicPanel = () => import('@/features/public-panel');
 
 /** Telas de acesso: moldura própria, sem sidebar. */
 const authRoutes: RouteObject = {
-  element: <AuthLayout />,
+  element: <AuthLayout variant="photo" />, // antes: <AuthLayout />
   children: [
     { path: '/login', element: <LoginPage /> },
     { path: '/admin/login', element: <LoginPage adminOnly /> },
-    { path: '/cadastro', element: <RegisterPage /> },
     { path: '/recuperar-senha', element: <ForgotPasswordPage /> },
+  ],
+};
+
+/**
+ * Primeiro acesso de aluno e professor após o login Microsoft. Obrigatório e único:
+ * o guard só deixa passar quem ainda não concluiu o cadastro.
+ */
+const profileRoutes: RouteObject = {
+  element: <AuthLayout variant="photo" />,
+  children: [
+    {
+      element: <RequireProfilePending />,
+      children: [{ path: '/cadastro', element: <CompleteProfilePage /> }],
+    },
   ],
 };
 
@@ -44,6 +59,8 @@ const publicRoutes: RouteObject = {
     { path: '/projetos', lazy: lazyPage(publicPanel, 'ProjectShowcasePage') },
     { path: '/projetos/:projectId', lazy: lazyPage(projects, 'ProjectDetailPage') },
     { path: '/acervo', lazy: lazyPage(publicPanel, 'HistoricArchivePage') },
+    { path: '/termos', element: <PagePlaceholder title="Termos de uso" /> },
+    { path: '/privacidade', element: <PagePlaceholder title="Política de privacidade" /> },
     { path: '/acesso-negado', element: <ForbiddenPage /> },
     { path: '*', element: <NotFoundPage /> },
   ],
@@ -125,6 +142,6 @@ export const routes: RouteObject[] = [
     // Raiz sem path: concentra o tratamento de erro e o fallback do carregamento inicial.
     errorElement: <ErrorPage />,
     hydrateFallbackElement: <Spinner label="Carregando a plataforma…" />,
-    children: [authRoutes, publicRoutes, ...roleRoutes],
+    children: [authRoutes, profileRoutes, publicRoutes, ...roleRoutes],
   },
 ];
