@@ -1,11 +1,16 @@
 import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router-dom';
-import { ForgotPasswordPage, LoginPage, RegisterPage } from '@/features/auth';
+import { CompleteProfilePage, ForgotPasswordPage, LoginPage } from '@/features/auth';
+import { RequireProfilePending } from '../guards/RequireProfilePending';
 import { RequireRole } from '../guards/RequireRole';
 import { AppLayout } from '../layouts/AppLayout';
+import { AuthLayout } from '../layouts/AuthLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { NAV_ITEMS } from '@/app/config/navigation';
+import { Spinner } from '@/shared/ui';
+import { PagePlaceholder } from '@/shared/ui/dev/PagePlaceholder';
 import { AcademicHomePage } from '../pages/AcademicHomePage';
+import { ErrorPage } from '../pages/ErrorPage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
@@ -22,21 +27,47 @@ const support = () => import('@/features/support');
 const admin = () => import('@/features/admin');
 const publicPanel = () => import('@/features/public-panel');
 
-export const routes: RouteObject[] = [
-  {
-    element: <PublicLayout />,
-    children: [
-      { path: '/', lazy: lazyPage(publicPanel, 'PublicHomePage') },
-      { path: '/projetos', lazy: lazyPage(publicPanel, 'ProjectShowcasePage') },
-      { path: '/projetos/:projectId', lazy: lazyPage(projects, 'ProjectDetailPage') },
-      { path: '/acervo', lazy: lazyPage(publicPanel, 'HistoricArchivePage') },
-      { path: '/login', element: <LoginPage /> },
-      { path: '/cadastro', element: <RegisterPage /> },
-      { path: '/recuperar-senha', element: <ForgotPasswordPage /> },
-      { path: '/acesso-negado', element: <ForbiddenPage /> },
-      { path: '*', element: <NotFoundPage /> },
-    ],
-  },
+/** Telas de acesso: moldura própria, sem sidebar. */
+const authRoutes: RouteObject = {
+  element: <AuthLayout variant="photo" />, // antes: <AuthLayout />
+  children: [
+    { path: '/login', element: <LoginPage /> },
+    { path: '/admin/login', element: <LoginPage adminOnly /> },
+    { path: '/recuperar-senha', element: <ForgotPasswordPage /> },
+  ],
+};
+
+/**
+ * Primeiro acesso de aluno e professor após o login Microsoft. Obrigatório e único:
+ * o guard só deixa passar quem ainda não concluiu o cadastro.
+ */
+const profileRoutes: RouteObject = {
+  element: <AuthLayout variant="photo" />,
+  children: [
+    {
+      element: <RequireProfilePending />,
+      children: [{ path: '/cadastro', element: <CompleteProfilePage /> }],
+    },
+  ],
+};
+
+/** Área pública: vitrine, acervo e páginas de status. */
+const publicRoutes: RouteObject = {
+  element: <PublicLayout />,
+  children: [
+    { path: '/', lazy: lazyPage(publicPanel, 'PublicHomePage') },
+    { path: '/projetos', lazy: lazyPage(publicPanel, 'ProjectShowcasePage') },
+    { path: '/projetos/:projectId', lazy: lazyPage(projects, 'ProjectDetailPage') },
+    { path: '/acervo', lazy: lazyPage(publicPanel, 'HistoricArchivePage') },
+    { path: '/termos', element: <PagePlaceholder title="Termos de uso" /> },
+    { path: '/privacidade', element: <PagePlaceholder title="Política de privacidade" /> },
+    { path: '/acesso-negado', element: <ForbiddenPage /> },
+    { path: '*', element: <NotFoundPage /> },
+  ],
+};
+
+/** Áreas autenticadas, uma por perfil. */
+const roleRoutes: RouteObject[] = [
   {
     element: <RequireRole allowedRoles={['STUDENT']} />,
     children: [
@@ -91,7 +122,7 @@ export const routes: RouteObject[] = [
     ],
   },
   {
-    element: <RequireRole allowedRoles={['ADMIN']} />,
+    element: <RequireRole allowedRoles={['ADMIN']} loginPath="/admin/login" />,
     children: [
       {
         element: <AppLayout area="Administração" nav={NAV_ITEMS.ADMIN} />,
@@ -103,5 +134,14 @@ export const routes: RouteObject[] = [
         ],
       },
     ],
+  },
+];
+
+export const routes: RouteObject[] = [
+  {
+    // Raiz sem path: concentra o tratamento de erro e o fallback do carregamento inicial.
+    errorElement: <ErrorPage />,
+    hydrateFallbackElement: <Spinner label="Carregando a plataforma…" />,
+    children: [authRoutes, profileRoutes, publicRoutes, ...roleRoutes],
   },
 ];

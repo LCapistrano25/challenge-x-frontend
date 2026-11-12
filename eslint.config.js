@@ -52,6 +52,12 @@ export default defineConfig([
     },
   },
   {
+    files: ['src/features/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [deepFeatureImport] }],
+    },
+  },
+  {
     files: ['src/shared/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': ['error', { patterns: [deepFeatureImport, noApp, noFeatures] }],

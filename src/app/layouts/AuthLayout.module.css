@@ -1,0 +1,83 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4rem;
+  padding: 0 var(--spacing-8);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-secondary);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+}
+
+.help {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.help:hover {
+  color: var(--color-primary);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-6);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--spacing-2) var(--spacing-4);
+  padding: var(--spacing-4) var(--spacing-8);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* ---- Variante com foto de fundo (primeiro acesso) ----
+   Coloque a imagem em public/images/auth-bg.jpg. Sem ela, o fundo cai no gradiente. */
+.photo .content {
+  background:
+    linear-gradient(rgb(255 255 255 / 0.12), rgb(255 255 255 / 0.12)),
+    url('/images/auth-bg.jpg') center / cover no-repeat,
+    linear-gradient(135deg, var(--color-primary-soft), var(--color-bg-primary));
+}
+
+.photo .footer {
+  background: linear-gradient(transparent, rgb(255 255 255 / 0.85));
+  color: var(--color-text-primary);
+  margin-top: -3.5rem;
+  padding-top: 2rem;
+  position: relative;
+}
+
+@media (max-width: 48rem) {
+  .header,
+  .footer {
+    padding-inline: var(--spacing-4);
+  }
+
+  .content {
+    padding-inline: 0;
+  }
+}

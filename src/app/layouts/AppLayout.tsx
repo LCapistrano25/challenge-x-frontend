@@ -2,6 +2,8 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { Button } from '@/shared/ui';
 import type { NavItem } from '@/app/config/navigation';
+import styles from './AppLayout.module.css';
+import shell from './AppShell.module.css';
 import { Sidebar } from './Sidebar';
 
 type AppLayoutProps = {
@@ -16,23 +18,24 @@ export function AppLayout({ area, nav }: AppLayoutProps) {
   const navigate = useNavigate();
 
   async function handleLogout() {
+    const wasAdmin = user?.role === 'ADMIN';
     await logout();
-    navigate('/login', { replace: true });
+    navigate(wasAdmin ? '/admin/login' : '/login', { replace: true });
   }
 
   return (
-    <div className="layout app-shell">
+    <div className={shell.shell}>
       <Sidebar area={area} nav={nav} />
-      <div className="app-main">
-        <header className="topbar">
-          <div className="topbar__user">
+      <div className={shell.main}>
+        <header className={styles.topbar}>
+          <div className={styles.user}>
             <span>{user?.name}</span>
             <Button variant="secondary" onClick={handleLogout}>
               Sair
             </Button>
           </div>
         </header>
-        <main className="app-content">
+        <main className={shell.content}>
           <Outlet />
         </main>
       </div>
