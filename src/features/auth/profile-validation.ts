@@ -5,7 +5,7 @@ export const PERIODS = Array.from({ length: 10 }, (_, index) => index + 1);
 
 /** Matrícula: apenas dígitos. Ajustar o intervalo quando a regra da instituição for definida. */
 export const REGISTRATION_MAX_LENGTH = 11;
-export const REGISTRATION_PATTERN = /^[A-Z0-9]{6,11}$/;
+export const REGISTRATION_PATTERN = /^\d{6,11}$/;
 
 export type StudentFormValues = {
   courseId: string;
@@ -31,7 +31,7 @@ export function validateStudent(values: StudentFormValues): FormErrors<StudentFo
   if (!values.registration.trim()) {
     errors.registration = 'Informe sua matrícula.';
   } else if (!REGISTRATION_PATTERN.test(values.registration.trim())) {
-    errors.registration = 'Use apenas números (de 6 a 15 dígitos).';
+    errors.registration = 'Use apenas números (de 6 a 11 dígitos).';
   }
 
   if (!values.period) errors.period = 'Selecione o período.';
@@ -65,5 +65,5 @@ export function toTeacherPayload(values: TeacherFormValues): CompleteProfileInpu
 }
 
 export function normalizeRegistration(value: string): string {
-  return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  return value.replace(/\D/g, '');
 }
