@@ -1,6 +1,11 @@
 import { http, HttpResponse } from 'msw';
 
-type MockUser = { id: string; name: string; email: string; role: string };
+type MockUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+};
 
 const users: Record<string, MockUser> = {
   'academico@exemplo.com': {
@@ -29,25 +34,56 @@ const users: Record<string, MockUser> = {
   },
 };
 
-// Sessão simulada em memória (some ao recarregar a página).
+// Sessão simulada em memória.
 let session: MockUser | null = null;
 
-// "*/" casa com qualquer base de URL (VITE_API_URL).
 export const handlers = [
+  // Lista de cursos para o cadastro.
+  http.get('*/api/courses', () => {
+    return HttpResponse.json([
+      {
+        id: 1,
+        name: 'Engenharia de Software',
+        slug: 'ES',
+      },
+      {
+        id: 2,
+        name: 'Sistemas de Informação',
+        slug: 'SI',
+      },
+      {
+        id: 3,
+        name: 'Direito',
+        slug: 'DIR',
+      },
+    ]);
+  }),
+
+  // Login simulado.
   http.post('*/auth/login', async ({ request }) => {
-    const { email, password } = (await request.json()) as { email: string; password: string };
+    const { email, password } = (await request.json()) as {
+      email: string;
+      password: string;
+    };
+
     const user = users[email];
+
     if (!user || password !== '123456') {
       return HttpResponse.json({ message: 'Credenciais inválidas' }, { status: 401 });
     }
+
     session = user;
     return HttpResponse.json(user);
   }),
+
+  // Consulta da sessão atual.
   http.get('*/auth/me', () =>
     session
       ? HttpResponse.json(session)
       : HttpResponse.json({ message: 'Não autenticado' }, { status: 401 }),
   ),
+
+  // Encerramento da sessão.
   http.post('*/auth/logout', () => {
     session = null;
     return new HttpResponse(null, { status: 204 });
