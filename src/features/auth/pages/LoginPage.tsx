@@ -1,5 +1,5 @@
 import { useState, type SyntheticEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Input } from '@/shared/ui';
 import { ROLE_HOME } from '../roles';
 import { useAuth } from '../useAuth';
@@ -8,6 +8,7 @@ export function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -21,6 +22,7 @@ export function LoginPage() {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
+
     try {
       const loggedUser = await login({ email, password });
       navigate(from ?? ROLE_HOME[loggedUser.role], { replace: true });
@@ -34,6 +36,7 @@ export function LoginPage() {
   return (
     <section className="auth-card">
       <h1>Entrar</h1>
+
       <form onSubmit={handleSubmit} noValidate>
         <label>
           E-mail
@@ -45,6 +48,7 @@ export function LoginPage() {
             required
           />
         </label>
+
         <label>
           Senha
           <Input
@@ -55,7 +59,13 @@ export function LoginPage() {
             required
           />
         </label>
+
+        <div style={{ textAlign: 'right', marginBottom: '16px' }}>
+          <Link to="/recuperar-senha">Esqueceu sua senha?</Link>
+        </div>
+
         {error && <p role="alert">{error}</p>}
+
         <Button type="submit" disabled={submitting}>
           {submitting ? 'Entrando…' : 'Entrar'}
         </Button>
