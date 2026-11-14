@@ -1,0 +1,142 @@
+/* Figma: 03 - Acadêmico › HOME - DESK (227:1798), área de conteúdo com 1368px. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding-bottom: var(--spacing-6);
+}
+
+/* Blocos com 20px de margem lateral; cronograma e edital vão de borda a borda. */
+.inset {
+  padding: 0 var(--spacing-5);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+/* Situação da equipe (352px) + Notificações */
+.teamRow {
+  display: grid;
+  grid-template-columns: 22rem minmax(0, 1fr);
+  gap: var(--spacing-5);
+  align-items: start;
+}
+
+.teamRow > :first-child {
+  align-self: stretch;
+}
+
+.projects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+.projectsAction {
+  align-self: center;
+}
+
+/* Status das entregas por etapas */
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding: var(--spacing-4) var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4375rem;
+  padding: 1.875rem 3.125rem;
+}
+
+.timelineTitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.timelineBox {
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+/* Notícias (799px, com 20px internos) + Precisa de Ajuda? (11px internos) */
+.infoRow {
+  display: grid;
+  grid-template-columns: minmax(0, 799fr) minmax(0, 529fr);
+  align-items: start;
+}
+
+.news {
+  padding: 0 var(--spacing-5);
+}
+
+.help {
+  padding: 0 0.6875rem;
+}
+
+.requirements {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+@media (max-width: 64rem) {
+  .teamRow,
+  .infoRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .infoRow {
+    gap: var(--spacing-8);
+  }
+
+  .news,
+  .help {
+    padding: 0;
+  }
+
+  .timeline {
+    padding: var(--spacing-4) 0;
+  }
+}
+
+@media (max-width: 48rem) {
+  .inset {
+    padding: 0 var(--spacing-4);
+  }
+
+  .stages {
+    padding: var(--spacing-4);
+  }
+
+  .timeline {
+    padding: 0;
+  }
+
+  .timelineTitle {
+    font-size: var(--font-size-body);
+  }
+
+  .timelineBox {
+    padding: var(--spacing-4);
+  }
+
+  .projectsAction {
+    align-self: stretch;
+  }
+}

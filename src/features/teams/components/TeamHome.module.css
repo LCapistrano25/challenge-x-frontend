@@ -1,0 +1,110 @@
+/* Cartões da equipe na home do acadêmico (Figma: 03 - Acadêmico › HOME - DESK). */
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+/* --- Vagas / Pendências / Prazo --- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--spacing-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stat {
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-6);
+}
+
+.statHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.statIcon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-50);
+  color: var(--color-primary);
+}
+
+.statValue {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.statDescription {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+/* --- Situação da equipe --- */
+.members {
+  gap: var(--spacing-5);
+  padding: var(--spacing-6) var(--spacing-3);
+}
+
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.personText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.personName {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+}
+
+.personMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+@media (max-width: 48rem) {
+  .stat {
+    padding: var(--spacing-4);
+  }
+}

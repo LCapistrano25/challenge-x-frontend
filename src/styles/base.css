@@ -65,3 +65,13 @@ ul,
 ol {
   padding-left: var(--spacing-6);
 }
+
+/* Texto só para leitores de tela. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

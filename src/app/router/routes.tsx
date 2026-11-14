@@ -4,7 +4,7 @@ import { ForgotPasswordPage, LoginPage, RegisterPage } from '@/features/auth';
 import { RequireRole } from '../guards/RequireRole';
 import { AppLayout } from '../layouts/AppLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
-import { NAV_ITEMS } from '@/app/config/navigation';
+import { NAV_ITEMS, ROLE_AREA } from '@/app/config/navigation';
 import { AcademicHomePage } from '../pages/AcademicHomePage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -41,7 +41,7 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['STUDENT']} />,
     children: [
       {
-        element: <AppLayout area="Acadêmico" nav={NAV_ITEMS.STUDENT} />,
+        element: <AppLayout area={ROLE_AREA.STUDENT} nav={NAV_ITEMS.STUDENT} />,
         children: [
           { path: '/academico', element: <AcademicHomePage /> },
           { path: '/academico/equipe/buscar', lazy: lazyPage(teams, 'FindTeamPage') },
@@ -53,6 +53,7 @@ export const routes: RouteObject[] = [
             path: '/academico/avaliacao-membro',
             lazy: lazyPage(evaluations, 'MemberEvaluationPage'),
           },
+          { path: '/academico/notas', lazy: lazyPage(evaluations, 'StudentScoresPage') },
           { path: '/academico/duvidas', lazy: lazyPage(support, 'HelpCenterPage') },
         ],
       },
@@ -62,7 +63,7 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['TEACHER']} />,
     children: [
       {
-        element: <AppLayout area="Professor" nav={NAV_ITEMS.TEACHER} />,
+        element: <AppLayout area={ROLE_AREA.TEACHER} nav={NAV_ITEMS.TEACHER} />,
         children: [
           { path: '/professor', lazy: lazyPage(deliveries, 'DeliveryTrackingPage') },
           { path: '/professor/integrantes', lazy: lazyPage(teams, 'MemberObservationsPage') },
@@ -74,7 +75,9 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['EXTERNAL_EVALUATOR']} />,
     children: [
       {
-        element: <AppLayout area="Avaliador externo" nav={NAV_ITEMS.EXTERNAL_EVALUATOR} />,
+        element: (
+          <AppLayout area={ROLE_AREA.EXTERNAL_EVALUATOR} nav={NAV_ITEMS.EXTERNAL_EVALUATOR} />
+        ),
         children: [
           { path: '/avaliador', lazy: lazyPage(projects, 'FinalistProjectsPage') },
           {
@@ -94,7 +97,7 @@ export const routes: RouteObject[] = [
     element: <RequireRole allowedRoles={['ADMIN']} />,
     children: [
       {
-        element: <AppLayout area="Administração" nav={NAV_ITEMS.ADMIN} />,
+        element: <AppLayout area={ROLE_AREA.ADMIN} nav={NAV_ITEMS.ADMIN} />,
         children: [
           { path: '/admin', lazy: lazyPage(admin, 'AdminDashboardPage') },
           { path: '/admin/cursos-professores', lazy: lazyPage(admin, 'CoursesTeachersPage') },

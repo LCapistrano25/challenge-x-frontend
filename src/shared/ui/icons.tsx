@@ -113,6 +113,7 @@ export const IconUpload = make(
 );
 export const IconCheck = make(<path d="m5 12.5 4.5 4.5L19 7.5" />, 'IconCheck');
 export const IconClose = make(<path d="M6 6l12 12M18 6 6 18" />, 'IconClose');
+export const IconMenu = make(<path d="M4 6h16M4 12h16M4 18h16" />, 'IconMenu');
 export const IconPlus = make(<path d="M12 5v14M5 12h14" />, 'IconPlus');
 export const IconTrash = make(
   <>
