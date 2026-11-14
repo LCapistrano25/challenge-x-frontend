@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import {
   Alert,
+  Avatar,
+  AvatarGroup,
+  Badge,
   Button,
   Checkbox,
   ConfirmDialog,
@@ -176,6 +179,25 @@ export function UiPlayground() {
             { id: 'three', label: 'Resultado', date: '30/05', status: 'upcoming' },
           ]}
         />
+        <Stepper
+          variant="timeline"
+          label="Cronograma (variante timeline)"
+          steps={[
+            { id: 't1', label: 'Inscrições', date: '04/10/2026', status: 'done' },
+            { id: 't2', label: 'Formação das equipes', date: '24/10/2026', status: 'current' },
+            { id: 't3', label: 'Avaliação técnica', date: '14/12/2026', status: 'upcoming' },
+          ]}
+        />
+        <div className="ui-playground__row">
+          <Badge tone="brand" shape="tag">
+            Atualização
+          </Badge>
+          <Badge tone="success">Concluída</Badge>
+          <Badge tone="progress">Em andamento</Badge>
+          <Badge>Em breve</Badge>
+          <Avatar name="Ana Maria" tone="pink" />
+          <AvatarGroup names={['Gabriel Gomes', 'Maria Souza', 'Fernanda Silva', 'Lucas Lima']} />
+        </div>
       </section>
 
       <section className="ui-playground__section" aria-labelledby="overlay-title">

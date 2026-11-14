@@ -1,23 +1,7 @@
 @import './styles/globals.css';
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--spacing-4);
-  padding: var(--spacing-3) var(--spacing-6);
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-bg-secondary);
-}
-
 .layout {
   min-height: 100vh;
-}
-
-.topbar__user {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-3);
 }
 
 .brand {
@@ -27,131 +11,323 @@
 
 .app-shell {
   display: grid;
-  grid-template-columns: 15rem minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr);
   min-height: 100vh;
   background: var(--color-bg-primary);
 }
 
-.app-shell:has(.sidebar--collapsed) {
-  grid-template-columns: 4.5rem minmax(0, 1fr);
-}
-
 .app-main {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
 }
 
+/* O conteúdo fica sempre na 2ª coluna, mesmo quando a barra aberta sai do fluxo (celular). */
+.app-shell > .app-main,
+.app-shell > .app-content {
+  grid-column: 2;
+}
+
 .app-content {
+  flex: 1 1 auto;
   min-width: 0;
   padding: var(--spacing-6);
   background: var(--color-bg-primary);
 }
 
-.sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-6);
-  min-height: 100vh;
-  padding: var(--spacing-4);
-  background: var(--color-sidebar-bg);
-  color: var(--color-text-on-dark);
+/* Páginas desenhadas de borda a borda no Figma (ex.: home do acadêmico). */
+.app-content:has(> .page-flush) {
+  padding: 0;
 }
 
-.sidebar__header {
+/* --- Cabeçalho (Figma: main-content › header) --- */
+.app-header {
+  /* Fixo no topo durante a rolagem (desktop e celular). */
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-2);
+  gap: var(--spacing-4);
+  min-height: 5.3125rem;
+  padding: 0.625rem var(--spacing-5);
+  background: var(--color-bg-secondary);
+  box-shadow: 0 1px 0 var(--color-border);
 }
 
-.sidebar__toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  flex: 0 0 auto;
-  padding: 0;
-  border: 1px solid color-mix(in srgb, var(--color-text-on-dark) 25%, transparent);
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: inherit;
-}
-
-.sidebar__toggle:hover {
-  background: color-mix(in srgb, var(--color-text-on-dark) 14%, transparent);
-}
-
-.sidebar--collapsed {
-  align-items: center;
-}
-
-.sidebar--collapsed .sidebar__header {
+.app-header__title {
+  display: flex;
   flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+  line-height: 1.4;
 }
 
-.sidebar--collapsed .sidebar__title {
-  overflow: hidden;
-  width: 1px;
-  height: 1px;
+.app-header__title h1 {
   margin: 0;
-  clip: rect(0 0 0 0);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.app-header__title p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.app-header__account {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.app-header__profile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--spacing-1);
+  line-height: 1.4;
   white-space: nowrap;
 }
 
-.sidebar--collapsed .sidebar__link {
-  justify-content: center;
-  padding-inline: var(--spacing-2);
+.app-header__name {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
 }
 
-.sidebar--collapsed .sidebar__label {
+.app-header__meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* --- Barra lateral (Figma: "Tab Bar - Acadêmico", 72px fechada / 202px aberta) --- */
+.sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 4.5rem;
+  height: 100vh;
+  height: 100dvh;
+  padding: 2.375rem 0.625rem 1.25rem;
+  overflow: hidden;
+  border-radius: 0 1.25rem 1.25rem 0;
+  background: var(--color-sidebar-bg);
+  color: var(--color-text-on-dark);
+  transition: width 0.2s ease;
+}
+
+.sidebar--expanded {
+  align-items: stretch;
+  width: 12.625rem;
+}
+
+.sidebar__label {
+  /* Como no Figma, o rótulo pode encostar na borda (ex.: "Observações" na barra do líder). */
+  overflow: visible;
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.sidebar:not(.sidebar--expanded) .sidebar__label {
   position: absolute;
   width: 1px;
   height: 1px;
-  overflow: hidden;
   clip: rect(0 0 0 0);
-  white-space: nowrap;
 }
 
-.sidebar__title {
-  margin: 0 0 var(--spacing-3);
-  color: color-mix(in srgb, var(--color-text-on-dark) 72%, transparent);
-  font-size: var(--font-size-caption);
-  font-weight: var(--font-weight-bold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.sidebar__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-3);
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-on-dark);
+  cursor: pointer;
+  filter: drop-shadow(0 4px 2px rgba(0, 0, 0, 0.25));
+}
+
+.sidebar--expanded .sidebar__brand {
+  justify-content: flex-start;
 }
 
 .sidebar__nav {
-  display: grid;
-  gap: var(--spacing-1);
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.625rem;
+  width: 100%;
+  min-height: 0;
+  padding: 0.625rem;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.sidebar--expanded .sidebar__nav {
+  align-items: stretch;
+  padding: 0.625rem 0;
 }
 
 .sidebar__link {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: var(--spacing-2);
-  padding: var(--spacing-3);
-  border-radius: var(--radius-sm);
-  color: inherit;
+  justify-content: center;
+  width: 2.8125rem;
+  height: 2.8125rem;
+  border-radius: 99px;
+  color: var(--color-text-on-dark);
 }
 
-.sidebar__nav a {
-  color: inherit;
+.sidebar--expanded .sidebar__link {
+  justify-content: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: 0 0.625rem;
+  border-radius: 0.625rem;
 }
 
-.sidebar__link:hover,
-.sidebar__link.active,
-.sidebar__nav a:hover,
-.sidebar__nav a.active {
-  background: color-mix(in srgb, var(--color-text-on-dark) 14%, transparent);
+.sidebar__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
 }
 
-.sidebar__link.active,
-.sidebar__nav a.active {
+/* Ícones genéricos (outros perfis) ocupam o mesmo espaço dos ícones do Figma. */
+.sidebar__icon > svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar__link:hover {
+  background: color-mix(in srgb, var(--color-text-on-dark) 10%, transparent);
+}
+
+.sidebar__link.active {
+  background: var(--color-nav-active);
+}
+
+.sidebar__footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  width: 100%;
+  min-height: 3.625rem;
+  padding: 0.8125rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-text-on-dark);
+  cursor: pointer;
+}
+
+.sidebar--expanded .sidebar__footer {
+  padding: 0.8125rem 0.625rem;
+}
+
+/* --- Navegação híbrida (celular): ☰ no cabeçalho + barra inferior --- */
+.app-header__menu,
+.bottom-nav {
+  display: none;
+}
+
+.app-header__menu {
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.app-header__menu:hover {
+  background: var(--color-bg-primary);
+}
+
+.bottom-nav {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: 25;
+  align-items: stretch;
+  justify-content: space-around;
+  gap: var(--spacing-1);
+  padding: 0.375rem 0.5rem calc(0.375rem + env(safe-area-inset-bottom));
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: var(--color-sidebar-bg);
+}
+
+.bottom-nav__link {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 0.25rem 0;
+  color: var(--color-text-on-dark);
+  font-size: var(--font-size-caption);
+  line-height: 1.3;
+}
+
+.bottom-nav__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 2rem;
+  border-radius: 99px;
+}
+
+.bottom-nav__icon > svg {
+  width: 1.625rem;
+  height: 1.625rem;
+}
+
+.bottom-nav__label {
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bottom-nav__link.active {
   font-weight: var(--font-weight-semibold);
+}
+
+.bottom-nav__link.active .bottom-nav__icon {
+  background: var(--color-nav-active);
+}
+
+/* Fundo escuro atrás da barra aberta (só no celular). */
+.sidebar-backdrop {
+  display: none;
+}
+
+.sidebar__footer:hover {
+  opacity: 0.85;
 }
 
 .placeholder p {
@@ -210,25 +386,120 @@
 }
 
 @media (max-width: 48rem) {
+  /* No celular a barra continua à esquerda: fechada com 60px; aberta, cobre o conteúdo. */
   .app-shell {
-    grid-template-columns: 1fr;
-    gap: var(--spacing-4);
-  }
-
-  .app-shell:has(.sidebar--collapsed) {
-    grid-template-columns: 1fr;
+    grid-template-columns: 3.75rem minmax(0, 1fr);
   }
 
   .sidebar {
-    position: static;
-    min-height: auto;
+    width: 3.75rem;
+    padding: var(--spacing-6) 0.375rem var(--spacing-4);
   }
 
-  .sidebar--collapsed {
-    align-items: stretch;
+  .sidebar--expanded {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    width: 12.625rem;
+    padding: var(--spacing-6) 0.625rem var(--spacing-4);
+    box-shadow: 8px 0 24px color-mix(in srgb, var(--color-sidebar-bg) 25%, transparent);
   }
 
-  .sidebar--collapsed .sidebar__header {
-    flex-direction: row;
+  .sidebar__brand svg {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  .sidebar__nav {
+    gap: var(--spacing-4);
+    padding: 0.625rem 0;
+  }
+
+  .sidebar:not(.sidebar--expanded) .sidebar__link {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .sidebar:not(.sidebar--expanded) .sidebar__icon {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    display: block;
+    padding: 0;
+    border: 0;
+    background: color-mix(in srgb, var(--color-sidebar-bg) 45%, transparent);
+  }
+
+  .app-header {
+    min-height: 4rem;
+    padding: 0.625rem var(--spacing-4);
+  }
+
+  .app-header__title h1 {
+    font-size: var(--font-size-h2);
+  }
+
+  .app-header__title p {
+    font-size: var(--font-size-small);
+  }
+
+  .app-header__profile {
+    display: none;
+  }
+
+  /* Perfis com navegação híbrida (acadêmico): sem trilho lateral fixo. */
+  .app-shell.app-shell--hybrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell.app-shell--hybrid > .app-main {
+    grid-column: 1;
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+
+  .app-shell--hybrid .app-header__menu,
+  .app-shell--hybrid .bottom-nav {
+    display: flex;
+  }
+
+  .app-shell--hybrid .app-header {
+    justify-content: flex-start;
+    gap: var(--spacing-3);
+  }
+
+  .app-shell--hybrid .app-header__title {
+    flex: 1 1 auto;
+  }
+
+  /* A barra lateral vira gaveta: escondida até tocar no ☰. */
+  .sidebar.sidebar--hybrid {
+    display: none;
+  }
+
+  .sidebar.sidebar--hybrid.sidebar--drawer-open {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 40;
+    display: flex;
+    width: 12.625rem;
+    padding: var(--spacing-6) 0.625rem var(--spacing-4);
+    box-shadow: 8px 0 24px color-mix(in srgb, var(--color-sidebar-bg) 25%, transparent);
+  }
+
+  /* Na gaveta ficam só os itens que não estão na barra inferior. */
+  .sidebar--hybrid .sidebar__link[data-bar] {
+    display: none;
+  }
+
+  .sidebar--hybrid .sidebar__nav {
+    justify-content: flex-start;
+    padding-top: var(--spacing-8);
   }
 }

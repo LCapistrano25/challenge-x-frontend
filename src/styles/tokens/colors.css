@@ -37,4 +37,21 @@
   --color-bg-surface: var(--color-bg-secondary);
   --color-text: var(--color-text-primary);
   --color-text-muted: var(--color-text-secondary);
+
+  /* --- Figma: 01 - Design System (cores usadas nas telas do acadêmico) --- */
+  --color-bg-50: #f3f2fa; /* "Background 50": fundo de ícones e tags */
+  --color-nav-active: #004fae; /* item ativo da barra lateral/inferior */
+  --color-scrollbar-thumb: #a6a6b4;
+
+  /* Avatares (componente "User") */
+  --color-avatar-blue: #2067ff;
+  --color-avatar-orange: #ffa220;
+  --color-avatar-pink: #ff2072;
+  --color-avatar-green: #26c786;
+
+  /* Situação de etapas do cronograma */
+  --color-status-done-bg: #baffbd;
+  --color-status-done-text: #318e29;
+  --color-status-current-bg: #bae0ff;
+  --color-status-current-text: #295d8e;
 }
