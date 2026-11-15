@@ -1,0 +1,474 @@
+/*
+ * Figma: 03 - Acadêmico › "Equipe — gerenciar" (551:11998), "Equipe — participante" (554:7879)
+ * e "Equipe — sem líder / solicitar liderança" (554:8007). Área de conteúdo com 1368px.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  line-height: 1.4;
+}
+
+/* --- Cartão (branco, borda 1px, radius 16, padding 24, gap 20) --- */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.text,
+.caption,
+.body {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.text {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+}
+
+.body {
+  font-size: var(--font-size-body);
+}
+
+/* --- Situação (tags arredondadas: padding 4×10, Inter 12) --- */
+.tag {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  width: fit-content;
+  padding: var(--spacing-1) 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.tagPrimary {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.tagNeutral {
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+}
+
+.tagAttention {
+  background: var(--color-attention-soft);
+  color: var(--color-attention-text);
+}
+
+/* --- Botões do Figma: 48px, padding 16px, radius 8px, Inter Medium 16px --- */
+.action {
+  flex: 0 0 auto;
+  min-height: 3rem;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* --- Informações da equipe --- */
+.teamHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.teamIdentity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.teamName {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-10);
+  margin: 0;
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.fact dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.fact dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+/* --- Aviso "Sua equipe está sem líder" --- */
+.leaderless {
+  display: flex;
+  gap: var(--spacing-5);
+  align-items: center;
+  padding: var(--spacing-6);
+  border-radius: var(--radius-xl);
+  background: var(--color-attention-soft);
+}
+
+.leaderlessIcon {
+  flex: 0 0 auto;
+}
+
+.leaderlessText {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.leaderlessTitle {
+  margin: 0;
+  color: var(--color-attention-text);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+/* --- Colunas: integrantes | 456px (convites/participação) --- */
+.columns {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: flex-start;
+}
+
+.mainColumn,
+.sideColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+.mainColumn {
+  flex: 1 1 0;
+}
+
+.sideColumn {
+  flex: 0 0 28.5rem;
+}
+
+/* --- Integrantes --- */
+.memberList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.memberListReadOnly {
+  gap: var(--spacing-3);
+}
+
+.member {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: center;
+  min-height: 3.9rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.memberListReadOnly .member {
+  gap: var(--spacing-3);
+  min-height: 0;
+  padding: 0.875rem 0;
+}
+
+.memberRole {
+  width: 5.9375rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.person {
+  display: flex;
+  flex: 1 1 0;
+  gap: var(--spacing-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.personText {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.personName {
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.personMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* Faixa cinza "2 vagas disponíveis" (radius 8, padding 16, Inter 14). */
+.slots {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-muted);
+  font-size: var(--font-size-small);
+}
+
+.slots p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.slots .slotsTitle {
+  color: var(--color-text-primary);
+}
+
+/* --- Permissões e participação --- */
+.row {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.row > p {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Faixa azul "Gestão exclusiva da liderança" (gap 8). */
+.permissions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  font-size: var(--font-size-small);
+}
+
+.permissions p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.permissions .permissionsTitle {
+  color: var(--color-text-primary);
+}
+
+.leaveBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-1);
+}
+
+.leaveAction {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* --- Convidar estudante --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.field input {
+  min-height: 3rem;
+  padding-left: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-caption);
+}
+
+.code {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.codeValue {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+/* --- Pendências --- */
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.joinRequest {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.answer {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+.invitation {
+  display: flex;
+  gap: var(--spacing-2);
+  align-items: center;
+}
+
+/* --- Diálogos --- */
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+/* --- Rodapé --- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) 0 var(--spacing-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: inherit;
+}
+
+/* --- Responsivo (RNF05) --- */
+@media (max-width: 64rem) {
+  .columns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sideColumn {
+    flex-basis: auto;
+  }
+
+  .facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-5);
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: var(--spacing-4) var(--spacing-4) 0;
+  }
+
+  .card,
+  .leaderless {
+    padding: var(--spacing-4);
+  }
+
+  .leaderless,
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .member {
+    flex-wrap: wrap;
+  }
+
+  .memberRole {
+    width: auto;
+  }
+}

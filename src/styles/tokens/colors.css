@@ -54,4 +54,9 @@
   --color-status-done-text: #318e29;
   --color-status-current-bg: #bae0ff;
   --color-status-current-text: #295d8e;
+
+  /* Tags e avisos de "Minha equipe" (Situação: Participante, Sem líder, Solicitação recebida) */
+  --color-bg-muted: #f3f4f7;
+  --color-attention-soft: #fff7e8;
+  --color-attention-text: #875b17;
 }

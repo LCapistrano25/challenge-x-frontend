@@ -8,6 +8,13 @@ export { fetchStudentDashboard } from './api/dashboard.api';
 export { getFormationDeadline, describeRequirement } from './lib/dashboard';
 export type {
   AvailableTeamsParams,
+  Invitation,
+  InvitationCreate,
+  InvitationStatus,
+  JoinRequestDecision,
+  LeadershipRequest,
+  TeamUpdate,
+  UserSummary,
   DashboardStage,
   IncompleteRequirement,
   InterestArea,

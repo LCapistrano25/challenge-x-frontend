@@ -33,6 +33,16 @@ export interface Team {
   members: TeamMember[];
   created_at: string;
   updated_at: string;
+  /**
+   * PROPOSTA (ainda não está no openapi): apresentação da equipe, a mesma enviada no cadastro
+   * (TeamCreate.description). O Figma mostra o texto no cartão de "Minha equipe".
+   */
+  description?: string | null;
+  /**
+   * PROPOSTA (ainda não está no openapi): último líder, quando a equipe está sem líder ativo.
+   * O Figma mostra "Ana Maria saiu da equipe sem transferir a liderança".
+   */
+  previous_leader?: { name: string } | null;
 }
 
 export type IncompleteRequirement =
@@ -144,6 +154,8 @@ export interface JoinRequest {
   status: RequestStatus;
   created_at: string;
   responded_at: string | null;
+  /** PROPOSTA (ainda não está no openapi): mensagem do aluno ao solicitar entrada. */
+  message?: string | null;
 }
 
 /** Parâmetros de GET /api/teams (Search, Page, PageSize). */
@@ -153,4 +165,56 @@ export interface AvailableTeamsParams {
   interest_area?: InterestArea;
   page?: number;
   page_size?: number;
+}
+
+/* --- Minha equipe (task #11): convites, solicitações, liderança e saída --- */
+
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED' | 'CANCELLED';
+
+/** UserSummary */
+export interface UserSummary {
+  user_id: string;
+  name: string;
+}
+
+/** InvitationCreate — informe exatamente um entre student_id e email institucional. */
+export type InvitationCreate = { student_id: string } | { email: string };
+
+/** Invitation — convite enviado pela equipe. */
+export interface Invitation {
+  id: number;
+  team: TeamRef;
+  /** null quando o convite foi feito por e-mail a quem ainda não tem cadastro (P-13). */
+  student: UserSummary | null;
+  invited_email: string | null;
+  status: InvitationStatus;
+  created_at: string;
+  responded_at: string | null;
+}
+
+/** JoinRequestDecision — POST /api/join-requests/{id}/respond */
+export interface JoinRequestDecision {
+  status: 'APPROVED' | 'REJECTED';
+}
+
+/** LeadershipRequest — pedido para assumir a liderança de equipe sem líder (RF28). */
+export interface LeadershipRequest {
+  id: number;
+  team: TeamRef;
+  requester: UserSummary;
+  justification: string;
+  status: RequestStatus;
+  teacher: UserSummary | null;
+  decision_justification: string | null;
+  created_at: string;
+  decided_at: string | null;
+}
+
+/**
+ * PROPOSTA (ainda não está no openapi): PATCH /api/teams/{team_id} para o líder editar o nome
+ * e a apresentação ("Editar informações" no Figma).
+ */
+export interface TeamUpdate {
+  name?: string;
+  description?: string;
 }

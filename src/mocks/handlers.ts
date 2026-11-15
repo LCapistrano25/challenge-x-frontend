@@ -6,12 +6,31 @@ import {
   publicProjects,
 } from './fixtures/academic-home';
 import {
+  MOCK_MAX_MEMBERS,
   STUDENT_WITHOUT_TEAM,
   buildMockJoinRequests,
   buildMockTeams,
   toTeamListing,
 } from './fixtures/teams';
-import type { JoinRequest, Team, TeamCreate } from '@/features/teams';
+import {
+  LEADERLESS_MEMBER_ID,
+  LEADERLESS_TEAM_ID,
+  LEADER_MEMBER_ID,
+  MY_TEAM_ID,
+  PARTICIPANT_MEMBER_ID,
+  buildLeaderlessTeam,
+  buildMyTeam,
+  buildMyTeamInvitations,
+  buildMyTeamJoinRequests,
+} from './fixtures/my-team';
+import type {
+  Invitation,
+  JoinRequest,
+  LeadershipRequest,
+  Team,
+  TeamCreate,
+  TeamUpdate,
+} from '@/features/teams';
 
 /** Pagina uma lista no formato Paginated<T> da API (page/page_size). */
 function paginate<T>(items: T[], url: URL) {
@@ -68,6 +87,19 @@ const users: Record<string, MockUser> = {
     email: 'sem-equipe@exemplo.com',
     role: 'STUDENT',
   },
+  // Minha equipe (task #11): participante com líder e participante de equipe sem líder.
+  'participante@exemplo.com': {
+    id: '6',
+    name: 'João Silva',
+    email: 'participante@exemplo.com',
+    role: 'STUDENT',
+  },
+  'sem-lider@exemplo.com': {
+    id: '7',
+    name: 'João Silva',
+    email: 'sem-lider@exemplo.com',
+    role: 'STUDENT',
+  },
   'admin@exemplo.com': {
     id: '4',
     name: 'Adriano Admin',
@@ -84,6 +116,66 @@ let mockTeams = buildMockTeams();
 let joinRequests = buildMockJoinRequests();
 let createdTeam: Team | null = null;
 let nextId = 1000;
+
+// Minha equipe (task #11): equipes com integrantes, convites, solicitações e liderança.
+let myTeams = new Map<number, Team>();
+let teamInvitations: Invitation[] = [];
+let receivedJoinRequests: JoinRequest[] = [];
+let leadershipRequests: LeadershipRequest[] = [];
+
+function resetMyTeams() {
+  myTeams = new Map([
+    [MY_TEAM_ID, buildMyTeam()],
+    [LEADERLESS_TEAM_ID, buildLeaderlessTeam()],
+  ]);
+  teamInvitations = buildMyTeamInvitations();
+  receivedJoinRequests = buildMyTeamJoinRequests();
+  leadershipRequests = [];
+}
+resetMyTeams();
+
+/** Vínculo de cada login simulado. Sem sessão (testes), vale o líder da Equipe Aurora. */
+const MEMBERSHIP: Record<string, { teamId: number; memberId: number }> = {
+  'academico@exemplo.com': { teamId: MY_TEAM_ID, memberId: LEADER_MEMBER_ID },
+  'participante@exemplo.com': { teamId: MY_TEAM_ID, memberId: PARTICIPANT_MEMBER_ID },
+  'sem-lider@exemplo.com': { teamId: LEADERLESS_TEAM_ID, memberId: LEADERLESS_MEMBER_ID },
+};
+
+/** Equipe e vínculo ativo de quem está logado (null se saiu ou foi removido). */
+function currentViewer() {
+  if (session?.email === 'sem-equipe@exemplo.com') {
+    const member = createdTeam?.members.find((m) => m.role === 'LEADER');
+    return createdTeam && member ? { team: createdTeam, member } : null;
+  }
+  const link = MEMBERSHIP[session?.email ?? 'academico@exemplo.com'];
+  const team = link ? myTeams.get(link.teamId) : undefined;
+  const member = team?.members.find((m) => m.id === link?.memberId);
+  return team && member ? { team, member } : null;
+}
+
+function saveTeam(team: Team) {
+  const saved = { ...team, updated_at: new Date().toISOString() };
+  myTeams.set(saved.id, saved);
+  if (createdTeam?.id === saved.id) createdTeam = saved;
+  return saved;
+}
+
+/** Equipe da rota acessível ao aluno logado; `leader` exige o papel LEADER. */
+function viewerTeam(teamId: unknown, { leader = false } = {}) {
+  const viewer = currentViewer();
+  if (!viewer || viewer.team.id !== Number(teamId)) {
+    return { error: apiError(404, 'not_found', 'Equipe não encontrada.') } as const;
+  }
+  if (leader && viewer.member.role !== 'LEADER') {
+    return {
+      error: apiError(403, 'forbidden', 'Somente o líder da equipe pode fazer esta ação.'),
+    } as const;
+  }
+  return { ...viewer } as const;
+}
+
+const teamRef = (team: Team) => ({ id: team.id, name: team.name, code: team.code });
+const isTeamFull = (team: Team) => team.members.length >= MOCK_MAX_MEMBERS;
 
 const apiError = (status: number, code: string, message: string, details = null) =>
   HttpResponse.json({ error: { code, message, details } }, { status });
@@ -149,11 +241,14 @@ export const handlers = [
   // Home do acadêmico (task #9) — formatos de docs/api/openapi.yaml.
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();
-    if (session?.email !== 'sem-equipe@exemplo.com') return HttpResponse.json(dashboard);
+    const viewer = currentViewer();
+    if (session?.email !== 'sem-equipe@exemplo.com' && viewer?.member.role === 'LEADER') {
+      return HttpResponse.json({ ...dashboard, team: viewer.team });
+    }
     return HttpResponse.json({
       ...dashboard,
-      team: createdTeam,
-      is_leader: createdTeam !== null,
+      team: viewer?.team ?? null,
+      is_leader: viewer?.member.role === 'LEADER',
       pending_actions: [],
     });
   }),
@@ -212,6 +307,7 @@ export const handlers = [
     const now = new Date().toISOString();
     const id = nextId++;
     createdTeam = {
+      description: body.description ?? null,
       id,
       edition_id: 3,
       name,
@@ -230,6 +326,7 @@ export const handlers = [
       created_at: now,
       updated_at: now,
     };
+    myTeams.set(createdTeam.id, createdTeam);
     return HttpResponse.json(createdTeam, { status: 201 });
   }),
   http.post('*/api/teams/:teamId/join-requests', ({ params }) => {
@@ -282,6 +379,243 @@ export const handlers = [
     joinRequests = joinRequests.map((r) => (r.id === cancelled.id ? cancelled : r));
     return HttpResponse.json(cancelled);
   }),
+
+  // Minha equipe (task #11) — formatos de docs/api/openapi.yaml (+ propostas marcadas).
+  http.get('*/api/teams/:teamId', ({ params }) => {
+    const found = viewerTeam(params.teamId);
+    return 'error' in found ? found.error : HttpResponse.json(found.team);
+  }),
+  // PROPOSTA (ainda não está no openapi): o líder edita nome e apresentação.
+  http.patch('*/api/teams/:teamId', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const body = (await request.json()) as TeamUpdate;
+    const name = body.name?.trim() ?? found.team.name;
+    if (!name) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'validation_error',
+            message: 'Dados inválidos.',
+            details: { name: ['Campo obrigatório.'] },
+          },
+        },
+        { status: 400 },
+      );
+    }
+    if (mockTeams.some((team) => normalize(team.name) === normalize(name))) {
+      return apiError(409, 'team_name_taken', 'Já existe equipe com este nome na edição.');
+    }
+    const team = saveTeam({
+      ...found.team,
+      name,
+      description: body.description ?? found.team.description ?? null,
+    });
+    return HttpResponse.json(team);
+  }),
+  http.get('*/api/teams/:teamId/invitations', ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const status = new URL(request.url).searchParams.get('status');
+    return HttpResponse.json(
+      teamInvitations.filter(
+        (i) => i.team.id === found.team.id && (!status || i.status === status),
+      ),
+    );
+  }),
+  http.post('*/api/teams/:teamId/invitations', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const body = (await request.json()) as { email?: string; student_id?: string };
+    const email = body.email?.trim().toLowerCase();
+    if (!email && !body.student_id) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'validation_error',
+            message: 'Dados inválidos.',
+            details: { email: ['Informe o e-mail institucional.'] },
+          },
+        },
+        { status: 400 },
+      );
+    }
+    if (isTeamFull(found.team)) {
+      return apiError(409, 'team_full', 'A equipe atingiu o limite máximo de integrantes.');
+    }
+    if (
+      teamInvitations.some(
+        (i) => i.team.id === found.team.id && i.status === 'PENDING' && i.invited_email === email,
+      )
+    ) {
+      return apiError(
+        409,
+        'invitation_pending_exists',
+        'Já existe convite pendente para este aluno.',
+      );
+    }
+    const invitation: Invitation = {
+      id: nextId++,
+      team: teamRef(found.team),
+      student: null,
+      invited_email: email ?? null,
+      status: 'PENDING',
+      created_at: new Date().toISOString(),
+      responded_at: null,
+    };
+    teamInvitations = [invitation, ...teamInvitations];
+    return HttpResponse.json(invitation, { status: 201 });
+  }),
+  // PROPOSTA (ainda não está no openapi): o líder cancela um convite pendente.
+  http.post('*/api/invitations/:invitationId/cancel', ({ params }) => {
+    const invitation = teamInvitations.find((i) => i.id === Number(params.invitationId));
+    if (!invitation) return apiError(404, 'not_found', 'Convite não encontrado.');
+    const found = viewerTeam(invitation.team.id, { leader: true });
+    if ('error' in found) return found.error;
+    if (invitation.status !== 'PENDING') {
+      return apiError(409, 'invitation_not_pending', 'O convite não está pendente.');
+    }
+    const cancelled: Invitation = {
+      ...invitation,
+      status: 'CANCELLED',
+      responded_at: new Date().toISOString(),
+    };
+    teamInvitations = teamInvitations.map((i) => (i.id === cancelled.id ? cancelled : i));
+    return HttpResponse.json(cancelled);
+  }),
+  http.get('*/api/teams/:teamId/join-requests', ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const status = new URL(request.url).searchParams.get('status');
+    return HttpResponse.json(
+      receivedJoinRequests.filter(
+        (r) => r.team.id === found.team.id && (!status || r.status === status),
+      ),
+    );
+  }),
+  http.post('*/api/join-requests/:joinRequestId/respond', async ({ params, request }) => {
+    const joinRequest = receivedJoinRequests.find((r) => r.id === Number(params.joinRequestId));
+    if (!joinRequest) return apiError(404, 'not_found', 'Solicitação não encontrada.');
+    const found = viewerTeam(joinRequest.team.id, { leader: true });
+    if ('error' in found) return found.error;
+    if (joinRequest.status !== 'PENDING') {
+      return apiError(409, 'join_request_not_pending', 'A solicitação não está pendente.');
+    }
+    const { status } = (await request.json()) as { status: 'APPROVED' | 'REJECTED' };
+    if (status === 'APPROVED') {
+      if (isTeamFull(found.team)) {
+        return apiError(409, 'team_full', 'A equipe atingiu o limite máximo de integrantes.');
+      }
+      saveTeam({
+        ...found.team,
+        members: [
+          ...found.team.members,
+          {
+            id: nextId++,
+            student: joinRequest.student,
+            role: 'MEMBER',
+            joined_at: new Date().toISOString(),
+          },
+        ],
+      });
+    }
+    const answered: JoinRequest = {
+      ...joinRequest,
+      status,
+      responded_at: new Date().toISOString(),
+    };
+    receivedJoinRequests = receivedJoinRequests.map((r) => (r.id === answered.id ? answered : r));
+    return HttpResponse.json(answered);
+  }),
+  // PROPOSTA (ainda não está no openapi): o líder remove um integrante.
+  http.delete('*/api/teams/:teamId/members/:memberId', ({ params }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const target = found.team.members.find((m) => m.id === Number(params.memberId));
+    if (!target) return apiError(404, 'not_found', 'Integrante não encontrado.');
+    if (target.id === found.member.id) {
+      return apiError(400, 'validation_error', 'Para sair da equipe, use a opção de saída.');
+    }
+    saveTeam({ ...found.team, members: found.team.members.filter((m) => m.id !== target.id) });
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.post('*/api/teams/:teamId/leadership-transfer', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const { member_id: memberId } = (await request.json()) as { member_id: number };
+    const target = found.team.members.find((m) => m.id === memberId);
+    if (!target || target.id === found.member.id) {
+      return apiError(400, 'validation_error', 'Escolha um integrante ativo da equipe.');
+    }
+    const team = saveTeam({
+      ...found.team,
+      members: found.team.members.map((m) => ({
+        ...m,
+        role: m.id === target.id ? 'LEADER' : 'MEMBER',
+      })),
+    });
+    return HttpResponse.json(team);
+  }),
+  http.post('*/api/teams/:teamId/leave', ({ params }) => {
+    const found = viewerTeam(params.teamId);
+    if ('error' in found) return found.error;
+    const others = found.team.members.filter((m) => m.id !== found.member.id);
+    if (found.member.role === 'LEADER' && others.length > 0) {
+      return apiError(
+        409,
+        'leader_must_transfer',
+        'Transfira a liderança antes de sair da equipe.',
+      );
+    }
+    if (others.length === 0) {
+      myTeams.delete(found.team.id);
+      if (createdTeam?.id === found.team.id) createdTeam = null;
+    } else {
+      saveTeam({ ...found.team, members: others });
+    }
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.get('*/api/teams/:teamId/leadership-requests', ({ params }) => {
+    const found = viewerTeam(params.teamId);
+    if ('error' in found) return found.error;
+    return HttpResponse.json(leadershipRequests.filter((r) => r.team.id === found.team.id));
+  }),
+  http.post('*/api/teams/:teamId/leadership-requests', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId);
+    if ('error' in found) return found.error;
+    const { justification } = (await request.json()) as { justification?: string };
+    if (!justification?.trim()) {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'validation_error',
+            message: 'Dados inválidos.',
+            details: { justification: ['Campo obrigatório.'] },
+          },
+        },
+        { status: 400 },
+      );
+    }
+    if (found.team.members.some((m) => m.role === 'LEADER')) {
+      return apiError(409, 'team_has_leader', 'A equipe já possui líder ativo.');
+    }
+    if (leadershipRequests.some((r) => r.team.id === found.team.id && r.status === 'PENDING')) {
+      return apiError(409, 'leadership_request_pending_exists', 'Já existe solicitação pendente.');
+    }
+    const leadershipRequest: LeadershipRequest = {
+      id: nextId++,
+      team: teamRef(found.team),
+      requester: { user_id: found.member.student.user_id, name: found.member.student.name },
+      justification: justification.trim(),
+      status: 'PENDING',
+      teacher: null,
+      decision_justification: null,
+      created_at: new Date().toISOString(),
+      decided_at: null,
+    };
+    leadershipRequests = [...leadershipRequests, leadershipRequest];
+    return HttpResponse.json(leadershipRequest, { status: 201 });
+  }),
   http.get('*/api/public/editions/current', () => HttpResponse.json(buildCurrentEdition())),
   http.get('*/api/public/projects', ({ request }) =>
     HttpResponse.json(paginate(publicProjects, new URL(request.url))),
@@ -318,4 +652,5 @@ export function resetMockSession() {
   mockTeams = buildMockTeams();
   joinRequests = buildMockJoinRequests();
   createdTeam = null;
+  resetMyTeams();
 }
