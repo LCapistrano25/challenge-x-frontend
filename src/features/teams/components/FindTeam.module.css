@@ -1,0 +1,330 @@
+/* Figma: 03 - Acadêmico › "Equipe — criar ou entrar" (551:11848), área de conteúdo com 1368px. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  line-height: 1.4;
+}
+
+/* --- Orientação (faixa azul-clara) --- */
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  font-size: var(--font-size-small);
+}
+
+.noticeTitle {
+  margin: 0;
+  color: var(--color-primary);
+}
+
+.noticeText {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+/* --- Colunas: 408px (criar + código) | restante (equipes com vagas) --- */
+.columns {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: flex-start;
+}
+
+.sideColumn {
+  display: flex;
+  flex: 0 0 25.5rem;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.teamsCard {
+  flex: 1 1 0;
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.text {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* --- Campos (Figma: "Entrada" 48px, padding 16px, radius 8px, Inter 16px) --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+/* Rótulos regulares de 14px, também nos campos compartilhados (Select e Textarea). */
+.field label,
+.label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
+}
+
+.field input,
+.field select {
+  min-height: 3rem;
+  padding-left: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+}
+
+.field textarea {
+  min-height: 6rem;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+}
+
+.field p {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-caption);
+}
+
+/* Botões do Figma: 48px, radius 8px, Inter Medium 16px. */
+.action {
+  min-height: 3rem;
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+.fullWidth {
+  width: 100%;
+}
+
+/* --- Resultado da verificação de código --- */
+.codeResult {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.codeResultHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.codeResultName {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* --- Equipes com vagas --- */
+.filters {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-start;
+}
+
+.searchField {
+  flex: 1 1 0;
+}
+
+.areaField {
+  flex: 0 0 17.5rem;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  font-size: var(--font-size-small);
+}
+
+.summaryCount {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.summaryOrder {
+  margin: 0;
+  color: var(--color-primary);
+}
+
+.teamList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.team {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.teamHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.teamName {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.vacancies {
+  padding: var(--spacing-1) 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.vacanciesFull {
+  background: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.teamProfile {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: center;
+}
+
+.person {
+  display: flex;
+  flex: 1 1 0;
+  gap: var(--spacing-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.personText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.personName {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.personMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* --- Rodapé --- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) 0 var(--spacing-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: inherit;
+}
+
+/* --- Responsivo (RNF05) --- */
+@media (max-width: 64rem) {
+  .columns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sideColumn {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: var(--spacing-4) var(--spacing-4) 0;
+  }
+
+  .card {
+    padding: var(--spacing-4);
+  }
+
+  .filters,
+  .teamProfile {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .areaField {
+    flex-basis: auto;
+  }
+}

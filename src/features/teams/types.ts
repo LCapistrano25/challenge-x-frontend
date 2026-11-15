@@ -86,3 +86,71 @@ export interface StudentDashboard {
    */
   max_members?: number | null;
 }
+
+/* --- Formação de equipe (task #10): /api/teams, /api/me/join-requests --- */
+
+/**
+ * Áreas de interesse da equipe. PROPOSTA (ainda não está no openapi): o Figma pede a área no
+ * cadastro e no filtro de "Equipes com vagas", mas TeamCreate/TeamListing não têm esse campo.
+ * Os códigos seguem o padrão de enum da API (MAIÚSCULAS); confirme a lista com o back-end.
+ */
+export type InterestArea =
+  'TECHNOLOGY' | 'HEALTH' | 'EDUCATION' | 'ENVIRONMENT' | 'SOCIAL' | 'BUSINESS';
+
+/** TeamRef */
+export interface TeamRef {
+  id: number;
+  name: string;
+  code: string;
+}
+
+/** TeamCreate — POST /api/teams */
+export interface TeamCreate {
+  /** Contrato: maxLength 150. O Figma limita a 60 caracteres na tela. */
+  name: string;
+  /** PROPOSTA: área de interesse da equipe. */
+  interest_area?: InterestArea;
+  /** PROPOSTA: apresentação da equipe (até 300 caracteres). */
+  description?: string;
+}
+
+/** TeamListing — item de GET /api/teams (equipes com vagas). */
+export interface TeamListing {
+  id: number;
+  name: string;
+  code: string;
+  member_count: number;
+  available_slots: number;
+  courses: CourseSummary[];
+  /** PROPOSTA: apresentação exibida no cartão ("Soluções digitais para…"). */
+  description?: string | null;
+  /** PROPOSTA: área de interesse, usada no filtro. */
+  interest_area?: InterestArea | null;
+  /** PROPOSTA: líder exibido no cartão (nome e curso). */
+  leader?: { name: string; course: CourseSummary } | null;
+}
+
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+
+/** JoinRequest — solicitação de entrada em equipe. */
+export interface JoinRequest {
+  id: number;
+  team: TeamRef;
+  student: {
+    user_id: string;
+    name: string;
+    course: CourseSummary;
+  };
+  status: RequestStatus;
+  created_at: string;
+  responded_at: string | null;
+}
+
+/** Parâmetros de GET /api/teams (Search, Page, PageSize). */
+export interface AvailableTeamsParams {
+  search?: string;
+  /** PROPOSTA: filtro por área de interesse (ainda não é parâmetro do openapi). */
+  interest_area?: InterestArea;
+  page?: number;
+  page_size?: number;
+}

@@ -56,3 +56,14 @@ export interface StageSchedule {
   points_value: string | null;
   phase_status: PhaseStatus;
 }
+
+/** Error — formato padrão de erro da API (P-37). Regras de negócio violadas respondem 409. */
+export interface ApiErrorBody {
+  error: {
+    /** Código estável, em snake_case (ex.: formation_closed, team_full). */
+    code: string;
+    message: string;
+    /** Em erros de validação: campo → lista de mensagens. */
+    details: Record<string, unknown> | null;
+  };
+}
