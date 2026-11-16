@@ -1,0 +1,202 @@
+/* Conteúdos institucionais da edição (Figma: 03 - Acadêmico › HOME - DESK). */
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-4);
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.cardText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.icon {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.sectionHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.link {
+  color: var(--color-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* --- Hero da edição --- */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  /* Figma: área de 392px com 55px/28px + 10px internos; texto com 754px */
+  max-width: 51.875rem;
+  padding: 4.0625rem 2.375rem;
+}
+
+.heroTitle {
+  margin: 0;
+  color: #000;
+  font-size: clamp(2.25rem, 6vw, 3rem);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.heroEdition {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: clamp(1.375rem, 4vw, 1.75rem);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.heroText {
+  margin: 0 0 0.9375rem;
+  color: var(--color-text-secondary);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-5);
+}
+
+.heroNote {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+/* --- Notícias --- */
+.news {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  min-width: 0;
+}
+
+.newsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.newsCard {
+  min-height: 13.0625rem;
+  padding: var(--spacing-6);
+}
+
+.readMore {
+  color: var(--color-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.readMore:hover {
+  text-decoration: underline;
+}
+
+/* --- Precisa de ajuda? --- */
+.help {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+  min-width: 0;
+}
+
+.helpCard {
+  padding: var(--spacing-8);
+}
+
+/* --- Edital --- */
+.notice {
+  padding: var(--spacing-8);
+}
+
+.noticeHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.noticeText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+@media (max-width: 48rem) {
+  .hero {
+    padding: var(--spacing-6) var(--spacing-4);
+  }
+
+  .actions {
+    width: 100%;
+    gap: var(--spacing-3);
+  }
+
+  .actions > * {
+    flex: 1 1 12rem;
+  }
+
+  .sectionTitle {
+    font-size: var(--font-size-h3);
+  }
+
+  .newsList,
+  .help {
+    gap: var(--spacing-4);
+  }
+
+  .newsCard,
+  .helpCard,
+  .notice {
+    padding: var(--spacing-5);
+  }
+
+  .helpCard > :last-child,
+  .notice > :last-child {
+    width: 100%;
+  }
+}

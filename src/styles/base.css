@@ -76,7 +76,7 @@ ol {
   }
 }
 
-/* Oculta visualmente, mas mantém o conteúdo disponível para leitores de tela. */
+/* Texto só para leitores de tela. */
 .sr-only {
   position: absolute;
   width: 1px;

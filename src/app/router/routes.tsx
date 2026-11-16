@@ -6,7 +6,7 @@ import { RequireRole } from '../guards/RequireRole';
 import { AppLayout } from '../layouts/AppLayout';
 import { AuthLayout } from '../layouts/AuthLayout';
 import { PublicLayout } from '../layouts/PublicLayout';
-import { NAV_ITEMS } from '@/app/config/navigation';
+import { NAV_ITEMS, ROLE_AREA } from '@/app/config/navigation';
 import { Spinner } from '@/shared/ui';
 import { PagePlaceholder } from '@/shared/ui/dev/PagePlaceholder';
 import { AcademicHomePage } from '../pages/AcademicHomePage';
@@ -72,7 +72,7 @@ const roleRoutes: RouteObject[] = [
     element: <RequireRole allowedRoles={['STUDENT']} />,
     children: [
       {
-        element: <AppLayout area="Acadêmico" nav={NAV_ITEMS.STUDENT} />,
+        element: <AppLayout area={ROLE_AREA.STUDENT} nav={NAV_ITEMS.STUDENT} />,
         children: [
           { path: '/academico', element: <AcademicHomePage /> },
           { path: '/academico/equipe/buscar', lazy: lazyPage(teams, 'FindTeamPage') },
@@ -93,7 +93,7 @@ const roleRoutes: RouteObject[] = [
     element: <RequireRole allowedRoles={['TEACHER']} />,
     children: [
       {
-        element: <AppLayout area="Professor" nav={NAV_ITEMS.TEACHER} />,
+        element: <AppLayout area={ROLE_AREA.TEACHER} nav={NAV_ITEMS.TEACHER} />,
         children: [
           { path: '/professor', lazy: lazyPage(deliveries, 'DeliveryTrackingPage') },
           { path: '/professor/integrantes', lazy: lazyPage(teams, 'MemberObservationsPage') },
@@ -105,7 +105,9 @@ const roleRoutes: RouteObject[] = [
     element: <RequireRole allowedRoles={['EXTERNAL_EVALUATOR']} />,
     children: [
       {
-        element: <AppLayout area="Avaliador externo" nav={NAV_ITEMS.EXTERNAL_EVALUATOR} />,
+        element: (
+          <AppLayout area={ROLE_AREA.EXTERNAL_EVALUATOR} nav={NAV_ITEMS.EXTERNAL_EVALUATOR} />
+        ),
         children: [
           { path: '/avaliador', lazy: lazyPage(projects, 'FinalistProjectsPage') },
           {
