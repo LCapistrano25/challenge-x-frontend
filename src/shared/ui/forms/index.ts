@@ -1,6 +1,10 @@
 export { Checkbox } from './Checkbox';
 export { Dropzone } from './Dropzone';
+export { MultiSelect } from './MultiSelect';
+export type { MultiSelectProps } from './MultiSelect';
 export { Select } from './Select';
 export type { SelectOption } from './Select';
 export { Switch } from './Switch';
+export { TextField } from './TextField';
+export type { TextFieldProps } from './TextField';
 export { Textarea } from './Textarea';

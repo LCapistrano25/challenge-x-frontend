@@ -1,6 +1,6 @@
 import { forwardRef, useId, useState, type ChangeEvent, type TextareaHTMLAttributes } from 'react';
 import { cn } from '@/shared/lib/cn';
-import field from '../Input.module.css'; // reaproveita o visual de campo do Input
+import field from './Field.module.css'; // visual compartilhado dos campos de formulário
 import styles from './Textarea.module.css';
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {

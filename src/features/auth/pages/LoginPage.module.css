@@ -1,0 +1,170 @@
+.card {
+  width: min(100% - 2rem, 27rem);
+  margin: 0;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.card h1 {
+  margin-bottom: 0.5rem;
+}
+
+.card form {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.card label {
+  display: grid;
+  gap: var(--spacing-2);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.card [role='alert'] {
+  margin: 0;
+  color: var(--color-danger-text);
+  font-size: var(--font-size-small);
+}
+
+.header {
+  margin-bottom: 1.75rem;
+  text-align: left;
+}
+
+.header p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  text-align: left;
+}
+
+/* ---- Alternador aluno/professor x avaliador ---- */
+.switcher {
+  display: flex;
+  margin-bottom: 1.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  padding: 0.25rem;
+}
+
+.switcherOption {
+  flex: 1;
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: calc(var(--radius-sm) - 2px);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.25;
+  padding: 0.5rem 0.625rem;
+}
+
+.switcherOption.active {
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-primary);
+}
+
+/* ---- Login Microsoft ---- */
+.academic {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.academic p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  text-align: center;
+}
+
+.microsoftButton {
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.microsoftButton:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-button-secondary-hover);
+}
+
+.microsoftIcon {
+  display: grid;
+  grid-template-columns: repeat(2, 0.625rem);
+  grid-template-rows: repeat(2, 0.625rem);
+  gap: 0.125rem;
+}
+
+.microsoftIcon span:nth-child(1) {
+  background: #f35325;
+}
+
+.microsoftIcon span:nth-child(2) {
+  background: #81bc06;
+}
+
+.microsoftIcon span:nth-child(3) {
+  background: #05a6f0;
+}
+
+.microsoftIcon span:nth-child(4) {
+  background: #ffba08;
+}
+
+/* ---- Campo de senha ---- */
+.passwordField {
+  position: relative;
+}
+
+/* Dois seletores de classe para vencer o padding do Input independente da ordem dos CSS. */
+.passwordField .passwordInput {
+  padding-right: 3rem;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  padding: 0;
+}
+
+.passwordToggle svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+}
+
+/* .card .rememberMe (0,2,0) vence .card label (0,1,1) sem precisar de !important. */
+.card .rememberMe {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+}
+
+.rememberMe input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--color-primary);
+}
