@@ -1,0 +1,373 @@
+/*
+ * Figma: 03 - Acadêmico › "Projeto — cadastro" (551:12196). Área de conteúdo com 1368px:
+ * formulário (flex) | 408px (equipe, orientações e prazo), gap 24.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  line-height: 1.4;
+}
+
+/* --- Faixas de orientação (radius 8, padding 16, gap 4, Inter 14) --- */
+.notice,
+.deadline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-small);
+}
+
+.notice p,
+.deadline p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.notice {
+  background: var(--color-primary-soft);
+}
+
+.notice .noticeTitle {
+  color: var(--color-primary);
+}
+
+.noticeClosed {
+  background: var(--color-attention-soft);
+}
+
+.noticeClosed .noticeTitle {
+  color: var(--color-attention-text);
+}
+
+.deadline {
+  background: var(--color-attention-soft);
+}
+
+.deadline .deadlineTitle {
+  color: var(--color-text-primary);
+}
+
+/* --- Colunas --- */
+.columns {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: flex-start;
+}
+
+.mainColumn {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.sideColumn {
+  display: flex;
+  flex: 0 0 25.5rem;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+/* --- Cartão (branco, borda 1px, radius 16, padding 24, gap 20) --- */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.text,
+.caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.text {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+}
+
+/* --- Formulário (gap 20; linhas com dois campos, gap 20) --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.row {
+  display: flex;
+  gap: var(--spacing-5);
+  align-items: flex-start;
+}
+
+.row > * {
+  flex: 1 1 0;
+}
+
+/* Campo do Figma: rótulo 14 regular, gap 8, "Entrada" 48px (96px no texto longo). */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.field label,
+.label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
+}
+
+.field input,
+.field select {
+  min-height: 3rem;
+  padding-left: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+}
+
+.field select {
+  padding-right: var(--spacing-10);
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.field textarea {
+  min-height: 6rem;
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+}
+
+/* Orientação (12px, #555) e erro abaixo do campo. */
+.field p {
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+/* Rodapé do campo: orientação à esquerda, contador à direita. */
+.fieldFooter {
+  display: flex;
+  gap: var(--spacing-3);
+  justify-content: space-between;
+}
+
+.fieldFooter > p {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.counter {
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.4;
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-caption);
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* Declaração de aceite (Inter 14, #1e1e1e). */
+.declaration label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+}
+
+.declaration p {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+}
+
+/* --- Ações: situação à esquerda, botões (gap 12) à direita --- */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+/* Botões do Figma: 48px, padding 16px, radius 8px, Inter Medium 16px. */
+.action {
+  flex: 0 0 auto;
+  min-height: 3rem;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+/* --- Equipe responsável --- */
+.teamName {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: var(--spacing-1) 0.625rem;
+  border-radius: var(--radius-full);
+  background: var(--color-attention-soft);
+  color: var(--color-attention-text);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.person {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.personText {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.personName {
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.personMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* O botão Ghost do Figma fica alinhado à esquerda, com a largura do rótulo. */
+.ghost {
+  align-self: flex-start;
+}
+
+/* --- Antes de cadastrar --- */
+.tips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.tipTitle {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.tipText {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* --- Rodapé --- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) 0 var(--spacing-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: inherit;
+}
+
+/* --- Responsivo (RNF05) --- */
+@media (max-width: 64rem) {
+  .columns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sideColumn {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: var(--spacing-4) var(--spacing-4) 0;
+  }
+
+  .card {
+    padding: var(--spacing-4);
+  }
+
+  .row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .actions,
+  .buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
