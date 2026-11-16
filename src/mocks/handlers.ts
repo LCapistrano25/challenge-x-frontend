@@ -266,7 +266,11 @@ export const handlers = [
     if (!user || password !== '123456') {
       return HttpResponse.json({ message: 'Credenciais inválidas' }, { status: 401 });
     }
-    if (user.role === 'STUDENT' || user.role === 'TEACHER') {
+    const legacyTeamFixture =
+      user.email === 'participante@exemplo.com' ||
+      user.email === 'sem-lider@exemplo.com' ||
+      user.email === 'sem-equipe@exemplo.com';
+    if ((user.role === 'STUDENT' || user.role === 'TEACHER') && !legacyTeamFixture) {
       return HttpResponse.json(
         { message: 'Alunos e professores entram com a conta Microsoft.' },
         { status: 403 },
