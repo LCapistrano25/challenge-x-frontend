@@ -23,6 +23,8 @@ import {
   buildMyTeamInvitations,
   buildMyTeamJoinRequests,
 } from './fixtures/my-team';
+import { TAKEN_PROJECT_TITLES, buildProject, buildProjectOptions } from './fixtures/project';
+import type { Project, ProjectDraft, ProjectWrite } from '@/features/projects';
 import type {
   Invitation,
   JoinRequest,
@@ -134,6 +136,15 @@ function resetMyTeams() {
 }
 resetMyTeams();
 
+// Cadastro do projeto (task #12): projetos cadastrados e rascunhos por equipe.
+let teamProjects = new Map<number, Project>();
+let projectDrafts = new Map<number, ProjectDraft>();
+
+function resetProjects() {
+  teamProjects = new Map();
+  projectDrafts = new Map();
+}
+
 /** Vínculo de cada login simulado. Sem sessão (testes), vale o líder da Equipe Aurora. */
 const MEMBERSHIP: Record<string, { teamId: number; memberId: number }> = {
   'academico@exemplo.com': { teamId: MY_TEAM_ID, memberId: LEADER_MEMBER_ID },
@@ -242,13 +253,24 @@ export const handlers = [
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();
     const viewer = currentViewer();
+    const registered = viewer ? teamProjects.get(viewer.team.id) : undefined;
+    const project = registered
+      ? {
+          id: registered.id,
+          title: registered.title,
+          summary: registered.summary,
+          status: registered.status,
+          challenge: registered.challenge,
+        }
+      : dashboard.project;
     if (session?.email !== 'sem-equipe@exemplo.com' && viewer?.member.role === 'LEADER') {
-      return HttpResponse.json({ ...dashboard, team: viewer.team });
+      return HttpResponse.json({ ...dashboard, team: viewer.team, project });
     }
     return HttpResponse.json({
       ...dashboard,
       team: viewer?.team ?? null,
       is_leader: viewer?.member.role === 'LEADER',
+      project,
       pending_actions: [],
     });
   }),
@@ -616,6 +638,73 @@ export const handlers = [
     leadershipRequests = [...leadershipRequests, leadershipRequest];
     return HttpResponse.json(leadershipRequest, { status: 201 });
   }),
+
+  // Cadastro do projeto (task #12) — formatos de docs/api/openapi.yaml (PUT proposto, P-25).
+  http.get('*/api/teams/:teamId/project/options', ({ params }) => {
+    const found = viewerTeam(params.teamId);
+    if ('error' in found) return found.error;
+    return HttpResponse.json(buildProjectOptions());
+  }),
+  http.get('*/api/teams/:teamId/project', ({ params }) => {
+    const found = viewerTeam(params.teamId);
+    if ('error' in found) return found.error;
+    const project = teamProjects.get(found.team.id);
+    return project
+      ? HttpResponse.json(project)
+      : apiError(404, 'not_found', 'A equipe ainda não cadastrou o projeto.');
+  }),
+  http.put('*/api/teams/:teamId/project', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const formation = buildStudentDashboard().stages.find(
+      (item) => item.stage.type === 'FORMATION' && item.stage.phase_status === 'OPEN',
+    );
+    if (!formation) {
+      return apiError(409, 'formation_closed', 'O prazo de formação de equipes está encerrado.');
+    }
+    const input = (await request.json()) as ProjectWrite;
+    const options = buildProjectOptions();
+    if (!input.title?.trim() || !input.summary?.trim()) {
+      return apiError(400, 'validation_error', 'Título e resumo são obrigatórios.');
+    }
+    if (!options.challenges.some((c) => c.id === input.challenge_id)) {
+      return apiError(400, 'challenge_not_eligible', 'Desafio fora dos cursos da equipe.');
+    }
+    if (!options.categories.some((c) => c.id === input.category_id)) {
+      return apiError(400, 'category_not_available', 'Categoria indisponível na edição.');
+    }
+    const title = normalize(input.title).replace(/\s+/g, ' ').trim();
+    if (TAKEN_PROJECT_TITLES.some((taken) => normalize(taken) === title)) {
+      return apiError(409, 'project_title_taken', 'Já existe projeto com título equivalente.');
+    }
+    const existing = teamProjects.get(found.team.id);
+    const project = {
+      ...buildProject(found.team, input, existing?.id ?? nextId++),
+      ...(existing ? { created_at: existing.created_at } : {}),
+    };
+    teamProjects.set(found.team.id, project);
+    projectDrafts.delete(found.team.id);
+    return HttpResponse.json(project, { status: existing ? 200 : 201 });
+  }),
+  // PROPOSTA (ainda não está no openapi): rascunho do cadastro.
+  http.get('*/api/teams/:teamId/project/draft', ({ params }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const draft = projectDrafts.get(found.team.id);
+    return draft
+      ? HttpResponse.json(draft)
+      : apiError(404, 'not_found', 'A equipe não tem rascunho salvo.');
+  }),
+  http.put('*/api/teams/:teamId/project/draft', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const draft = {
+      ...((await request.json()) as ProjectDraft),
+      saved_at: new Date().toISOString(),
+    };
+    projectDrafts.set(found.team.id, draft);
+    return HttpResponse.json(draft);
+  }),
   http.get('*/api/public/editions/current', () => HttpResponse.json(buildCurrentEdition())),
   http.get('*/api/public/projects', ({ request }) =>
     HttpResponse.json(paginate(publicProjects, new URL(request.url))),
@@ -653,4 +742,5 @@ export function resetMockSession() {
   joinRequests = buildMockJoinRequests();
   createdTeam = null;
   resetMyTeams();
+  resetProjects();
 }

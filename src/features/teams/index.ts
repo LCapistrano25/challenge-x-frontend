@@ -6,6 +6,8 @@ export { TeamMembersCard } from './components/TeamMembersCard';
 export { useStudentDashboard, studentDashboardKey } from './hooks/useStudentDashboard';
 export { fetchStudentDashboard } from './api/dashboard.api';
 export { getFormationDeadline, describeRequirement } from './lib/dashboard';
+export { formatDate, formatLongDate, getFormationWindow } from './lib/team-formation';
+export type { FormationWindow } from './lib/team-formation';
 export type {
   AvailableTeamsParams,
   Invitation,
