@@ -81,6 +81,10 @@ const roleRoutes: RouteObject[] = [
           { path: '/academico/projeto', lazy: lazyPage(projects, 'TeamProjectPage') },
           { path: '/academico/projeto/entrega', lazy: lazyPage(deliveries, 'SubmitDeliveryPage') },
           {
+            path: '/academico/projeto/entrega/confirmacao',
+            lazy: lazyPage(deliveries, 'DeliveryConfirmationPage'),
+          },
+          {
             path: '/academico/avaliacao-membro',
             lazy: lazyPage(evaluations, 'MemberEvaluationPage'),
           },

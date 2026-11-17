@@ -36,6 +36,8 @@ export interface ProjectFormProps {
   onRegistered: (project: Project) => void;
   /** A API respondeu formation_closed: a página passa a mostrar o prazo encerrado. */
   onFormationClosed?: () => void;
+  /** "edit": o projeto já foi cadastrado e a liderança atualiza os dados (sem rascunho). */
+  mode?: 'register' | 'edit';
 }
 
 interface FieldProps {
@@ -186,7 +188,9 @@ export function ProjectForm({
   disabled = false,
   onRegistered,
   onFormationClosed,
+  mode = 'register',
 }: ProjectFormProps) {
+  const editing = mode === 'edit';
   const [values, setValues] = useState<ProjectFormValues>(initialValues);
   const [errors, setErrors] = useState<ProjectFormErrors>({});
   const saveDraft = useSaveProjectDraft(teamId);
@@ -248,10 +252,20 @@ export function ProjectForm({
     }
     register.mutate(toProjectWrite(values), {
       onSuccess: (project) => {
-        notify.success('Projeto cadastrado. Agora a equipe já pode acompanhar as etapas.');
+        notify.success(
+          editing
+            ? 'Dados do projeto atualizados.'
+            : 'Projeto cadastrado. Agora a equipe já pode acompanhar as etapas.',
+        );
         onRegistered(project);
       },
-      onError: (error) => handleApiError(error, 'Não foi possível cadastrar o projeto.'),
+      onError: (error) =>
+        handleApiError(
+          error,
+          editing
+            ? 'Não foi possível salvar as alterações.'
+            : 'Não foi possível cadastrar o projeto.',
+        ),
     });
   }
 
@@ -406,19 +420,23 @@ export function ProjectForm({
 
           <div className={styles.actions}>
             <p className={styles.caption} aria-live="polite">
-              {describeFillStatus(savedAt)}
+              {editing
+                ? 'As alterações ficam visíveis para a equipe e a orientação.'
+                : describeFillStatus(savedAt)}
             </p>
             <div className={styles.buttons}>
-              <Button
-                variant="secondary"
-                size="large"
-                className={styles.action}
-                onClick={handleSaveDraft}
-                loading={saveDraft.isPending}
-                disabled={register.isPending}
-              >
-                Salvar rascunho
-              </Button>
+              {!editing && (
+                <Button
+                  variant="secondary"
+                  size="large"
+                  className={styles.action}
+                  onClick={handleSaveDraft}
+                  loading={saveDraft.isPending}
+                  disabled={register.isPending}
+                >
+                  Salvar rascunho
+                </Button>
+              )}
               <Button
                 type="submit"
                 size="large"
@@ -426,7 +444,7 @@ export function ProjectForm({
                 loading={register.isPending}
                 disabled={saveDraft.isPending}
               >
-                Cadastrar projeto
+                {editing ? 'Salvar alterações' : 'Cadastrar projeto'}
               </Button>
             </div>
           </div>

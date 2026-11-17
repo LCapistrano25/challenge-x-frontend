@@ -24,10 +24,27 @@ import {
   buildMyTeamJoinRequests,
 } from './fixtures/my-team';
 import { TAKEN_PROJECT_TITLES, buildProject, buildProjectOptions } from './fixtures/project';
+import {
+  PROJECT_LEADER_MEMBER_ID,
+  PROJECT_MEMBER_ID,
+  PROJECT_TEAM_ID,
+  SEEDED_PROJECT_ID,
+  buildDeliverables,
+  buildProjectTeam,
+  buildSeededProject,
+} from './fixtures/deliverables';
+import type {
+  DeliverableItem,
+  DeliverableVersion,
+  Project,
+  ProjectDraft,
+  ProjectWrite,
+  StageDeliverable,
+} from '@/features/projects';
+import type { DeliverableSubmissionItem } from '@/features/deliveries';
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import type { MemberNoteCreate } from '@/features/evaluations';
 import type { SupportTicket, SupportTicketCreate } from '@/features/support';
-import type { Project, ProjectDraft, ProjectWrite } from '@/features/projects';
 import type {
   Invitation,
   JoinRequest,
@@ -106,6 +123,19 @@ const initialUsers: Record<string, MockUser> = {
     email: 'sem-lider@exemplo.com',
     role: 'STUDENT',
   },
+  // Projeto da equipe (task #13): equipe "Conexão Verde" com projeto e entregas cadastrados.
+  'lider.projeto@exemplo.com': {
+    id: '10',
+    name: 'Ana Maria',
+    email: 'lider.projeto@exemplo.com',
+    role: 'STUDENT',
+  },
+  'integrante.projeto@exemplo.com': {
+    id: '11',
+    name: 'João Silva',
+    email: 'integrante.projeto@exemplo.com',
+    role: 'STUDENT',
+  },
   'admin@exemplo.com': {
     id: '4',
     name: 'Adriano Admin',
@@ -153,6 +183,7 @@ function resetMyTeams() {
   myTeams = new Map([
     [MY_TEAM_ID, buildMyTeam()],
     [LEADERLESS_TEAM_ID, buildLeaderlessTeam()],
+    [PROJECT_TEAM_ID, buildProjectTeam()],
   ]);
   teamInvitations = buildMyTeamInvitations();
   receivedJoinRequests = buildMyTeamJoinRequests();
@@ -165,17 +196,23 @@ resetMyTeams();
 // Cadastro do projeto (task #12): projetos cadastrados e rascunhos por equipe.
 let teamProjects = new Map<number, Project>();
 let projectDrafts = new Map<number, ProjectDraft>();
+// Projeto da equipe (task #13): entregas por etapa de cada projeto.
+let projectDeliverables = new Map<number, StageDeliverable[]>();
 
 function resetProjects() {
-  teamProjects = new Map();
+  teamProjects = new Map([[PROJECT_TEAM_ID, buildSeededProject()]]);
   projectDrafts = new Map();
+  projectDeliverables = new Map([[SEEDED_PROJECT_ID, buildDeliverables({ seeded: true })]]);
 }
+resetProjects();
 
 /** Vínculo de cada login simulado. Sem sessão (testes), vale o líder da Equipe Aurora. */
 const MEMBERSHIP: Record<string, { teamId: number; memberId: number }> = {
   'academico@exemplo.com': { teamId: MY_TEAM_ID, memberId: LEADER_MEMBER_ID },
   'participante@exemplo.com': { teamId: MY_TEAM_ID, memberId: PARTICIPANT_MEMBER_ID },
   'sem-lider@exemplo.com': { teamId: LEADERLESS_TEAM_ID, memberId: LEADERLESS_MEMBER_ID },
+  'lider.projeto@exemplo.com': { teamId: PROJECT_TEAM_ID, memberId: PROJECT_LEADER_MEMBER_ID },
+  'integrante.projeto@exemplo.com': { teamId: PROJECT_TEAM_ID, memberId: PROJECT_MEMBER_ID },
 };
 
 /** Equipe e vínculo ativo de quem está logado (null se saiu ou foi removido). */
@@ -210,6 +247,31 @@ function viewerTeam(teamId: unknown, { leader = false } = {}) {
   }
   return { ...viewer } as const;
 }
+
+/** Projeto da equipe de quem está logado (404 se o id não for o dela). */
+function viewerProject(projectId: unknown) {
+  const viewer = currentViewer();
+  const project = viewer ? teamProjects.get(viewer.team.id) : undefined;
+  if (!viewer || !project || project.id !== Number(projectId)) {
+    return { error: apiError(404, 'not_found', 'Projeto não encontrado.') } as const;
+  }
+  return { ...viewer, project } as const;
+}
+
+function deliverablesOf(projectId: number) {
+  let list = projectDeliverables.get(projectId);
+  if (!list) {
+    list = buildDeliverables();
+    projectDeliverables.set(projectId, list);
+  }
+  return list;
+}
+
+const validationError = (details: Record<string, string[]>) =>
+  HttpResponse.json(
+    { error: { code: 'validation_error', message: 'Dados inválidos.', details } },
+    { status: 400 },
+  );
 
 const teamRef = (team: Team) => ({ id: team.id, name: team.name, code: team.code });
 const isTeamFull = (team: Team) => team.members.length >= MOCK_MAX_MEMBERS;
@@ -278,7 +340,9 @@ export const handlers = [
     const legacyTeamFixture =
       user.email === 'participante@exemplo.com' ||
       user.email === 'sem-lider@exemplo.com' ||
-      user.email === 'sem-equipe@exemplo.com';
+      user.email === 'sem-equipe@exemplo.com' ||
+      user.email === 'lider.projeto@exemplo.com' ||
+      user.email === 'integrante.projeto@exemplo.com';
     if ((user.role === 'STUDENT' || user.role === 'TEACHER') && !legacyTeamFixture) {
       return HttpResponse.json(
         { message: 'Alunos e professores entram com a conta Microsoft.' },
@@ -773,6 +837,7 @@ export const handlers = [
     const project = {
       ...buildProject(found.team, input, existing?.id ?? nextId++),
       ...(existing ? { created_at: existing.created_at } : {}),
+      updated_by: { user_id: found.member.student.user_id, name: found.member.student.name },
     };
     teamProjects.set(found.team.id, project);
     projectDrafts.delete(found.team.id);
@@ -797,6 +862,120 @@ export const handlers = [
     projectDrafts.set(found.team.id, draft);
     return HttpResponse.json(draft);
   }),
+  // Projeto da equipe (task #13) — GET confirmado (RF31); POST proposto (P-23, P-43).
+  http.get('*/api/projects/:projectId/deliverables', ({ params }) => {
+    const found = viewerProject(params.projectId);
+    if ('error' in found) return found.error;
+    return HttpResponse.json(deliverablesOf(found.project.id));
+  }),
+  // PROPOSTA: qualquer integrante ativo envia (o contrato hoje exige o LEADER).
+  http.post('*/api/projects/:projectId/stages/:stageId/versions', async ({ params, request }) => {
+    const found = viewerProject(params.projectId);
+    if ('error' in found) return found.error;
+    const list = deliverablesOf(found.project.id);
+    const item = list.find((entry) => entry.stage.id === Number(params.stageId));
+    if (!item) return apiError(404, 'not_found', 'Etapa não encontrada.');
+
+    const now = Date.now();
+    const latest = item.versions[0];
+    const review = latest && item.review?.version_id === latest.id ? item.review : null;
+    const deadline =
+      review?.status === 'CHANGES_REQUESTED'
+        ? (review.resubmission_deadline ?? item.stage.ends_at)
+        : item.stage.ends_at;
+    if (now < new Date(item.stage.starts_at).getTime()) {
+      return apiError(409, 'stage_not_open', 'A etapa ainda não está aberta para envio.');
+    }
+    if (now > new Date(deadline).getTime() || review?.status === 'APPROVED') {
+      return apiError(409, 'stage_deadline_closed', 'O prazo da etapa está encerrado.');
+    }
+
+    const form = await request.formData();
+    let entries: DeliverableSubmissionItem[];
+    try {
+      entries = JSON.parse(String(form.get('items') ?? '[]')) as DeliverableSubmissionItem[];
+    } catch {
+      return validationError({ items: ['JSON inválido.'] });
+    }
+    // Sem instanceof: nos testes, o File do jsdom e o do Node são classes diferentes.
+    const files = form.getAll('files').filter((value): value is File => typeof value !== 'string');
+    const notes = String(form.get('notes') ?? '').trim();
+
+    const items: DeliverableItem[] = [];
+    const details: Record<string, string[]> = {};
+    for (const field of item.fields) {
+      const entry = entries.find((candidate) => candidate.field_id === field.id);
+      if (!entry) {
+        if (field.required) details[`field_${field.id}`] = ['Campo obrigatório.'];
+        continue;
+      }
+      if (field.type === 'FILE' && 'file_index' in entry) {
+        const file = files[entry.file_index];
+        const extension = file?.name.split('.').pop()?.toLowerCase() ?? '';
+        const formats = (field.formats ?? '')
+          .split(',')
+          .map((f) => f.trim())
+          .filter(Boolean);
+        if (!file) details[`field_${field.id}`] = ['Arquivo não enviado.'];
+        else if (formats.length > 0 && !formats.includes(extension)) {
+          details[`field_${field.id}`] = ['Formato não aceito.'];
+        } else if (field.max_size_mb && file.size > field.max_size_mb * 1024 * 1024) {
+          details[`field_${field.id}`] = ['Arquivo maior que o permitido.'];
+        } else {
+          items.push({
+            id: nextId++,
+            field_id: field.id,
+            type: 'FILE',
+            link: null,
+            file_url: null,
+            file_name: file.name,
+            size_bytes: file.size,
+          });
+        }
+      } else if (field.type === 'LINK' && 'link' in entry) {
+        if (!/^https:\/\/[^\s.]+\.[^\s]+$/.test(entry.link.trim())) {
+          details[`field_${field.id}`] = ['Informe um endereço https:// válido.'];
+        } else {
+          items.push({
+            id: nextId++,
+            field_id: field.id,
+            type: 'LINK',
+            link: entry.link.trim(),
+            file_url: null,
+            file_name: null,
+            size_bytes: null,
+          });
+        }
+      }
+    }
+    if (Object.keys(details).length > 0) return validationError(details);
+
+    const submittedAt = new Date().toISOString();
+    const id = nextId++;
+    const created: DeliverableVersion = {
+      id,
+      version_number: (latest?.version_number ?? 0) + 1,
+      submitted_by: { user_id: found.member.student.user_id, name: found.member.student.name },
+      submitted_at: submittedAt,
+      notes: notes || null,
+      items,
+      receipt: {
+        verification_code: `DX-2027-${id}`,
+        file_url: null,
+        generated_at: submittedAt,
+      },
+    };
+    projectDeliverables.set(
+      found.project.id,
+      list.map((entry) =>
+        entry === item
+          ? { ...entry, status: 'SUBMITTED', versions: [created, ...entry.versions] }
+          : entry,
+      ),
+    );
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
   // Avaliação de membro (task #14) — POST confirmado (RF33); o resumo é PROPOSTA.
   http.get('*/api/teams/:teamId/member-notes/summary', ({ params }) => {
     const found = viewerTeam(params.teamId, { leader: true });

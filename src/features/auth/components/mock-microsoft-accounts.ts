@@ -4,4 +4,6 @@ export const MOCK_MICROSOFT_ACCOUNTS = [
   { email: 'novo.professor@exemplo.com', label: 'Professor — primeiro acesso' },
   { email: 'academico@exemplo.com', label: 'Aluno — já cadastrado' },
   { email: 'professor@exemplo.com', label: 'Professor — já cadastrado' },
+  { email: 'lider.projeto@exemplo.com', label: 'Aluno — líder com projeto cadastrado' },
+  { email: 'integrante.projeto@exemplo.com', label: 'Aluno — integrante com projeto cadastrado' },
 ] as const;

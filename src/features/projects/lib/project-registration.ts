@@ -1,6 +1,12 @@
 import type { SelectOption } from '@/shared/ui';
 import { getApiError } from '@/shared/lib/api-error';
-import type { EligibleChallenge, ProjectCategory, ProjectDraft, ProjectWrite } from '../types';
+import type {
+  EligibleChallenge,
+  Project,
+  ProjectCategory,
+  ProjectDraft,
+  ProjectWrite,
+} from '../types';
 
 /* --- Limites (Figma: "Até 100 caracteres" e "Até 1.000 caracteres") --- */
 
@@ -179,6 +185,24 @@ export function toProjectDraft(values: ProjectFormValues): ProjectDraft {
     advisor_name: optional(values.advisorName),
     advisor_email: optional(values.advisorEmail),
     reference_url: optional(values.referenceUrl),
+  };
+}
+
+/** Dados do projeto cadastrado no formato do rascunho, para preencher a edição. */
+export function projectToDraft(project: Project): ProjectDraft {
+  return {
+    challenge_id: project.challenge.id,
+    category_id: project.category?.id ?? null,
+    title: project.title,
+    summary: project.summary,
+    objective: project.objective,
+    problem: project.problem,
+    methodology: project.methodology,
+    target_audience: project.target_audience,
+    location: project.location,
+    advisor_name: project.advisor_name,
+    advisor_email: project.advisor_email,
+    reference_url: project.reference_url,
   };
 }
 
