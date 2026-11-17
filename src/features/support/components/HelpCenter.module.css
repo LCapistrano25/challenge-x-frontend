@@ -1,0 +1,425 @@
+/*
+ * Figma: 03 - Acadêmico › "Dúvidas — Central de ajuda" (621:6989). Área de conteúdo com 1368px:
+ * busca; perguntas frequentes (flex) | atendimento (344px), gap 24.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+  padding-top: var(--spacing-6);
+  line-height: 1.4;
+}
+
+.text,
+.caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.text {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+}
+
+.h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+/* Ícone em círculo de 48px. */
+.iconCircle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+}
+
+/* --- Busca de dúvidas (padding 24×20, radius 16, gap 24) --- */
+.search {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: center;
+  padding: var(--spacing-6) var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.searchIntro {
+  display: flex;
+  flex: 1 1 0;
+  gap: var(--spacing-4);
+  align-items: center;
+  min-width: 0;
+}
+
+.searchIntro .iconCircle {
+  background: var(--color-bg-50);
+}
+
+.searchText {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.searchField {
+  display: flex;
+  flex: 0 1 33.75rem;
+  gap: var(--spacing-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.searchIcon {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.searchInput {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+}
+
+/* --- Perguntas e atendimento (padding lateral 20, gap 24) --- */
+.columns {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: flex-start;
+  padding: 0 var(--spacing-5);
+}
+
+.faq {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.faqHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topics {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: stretch;
+}
+
+/* Grupo de perguntas (padding 24, radius 16, gap 8). */
+.topic {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.topicHeader {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+  padding-bottom: var(--spacing-2);
+}
+
+.topicIcon {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.topicTitle {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.questions {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Pergunta e resposta: borda superior, padding 16, gap 8, Inter 16. */
+.question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4) 0;
+  border-top: 1px solid var(--color-border);
+  font-size: var(--font-size-body);
+}
+
+.question:last-child {
+  padding-bottom: 0;
+}
+
+.question h4 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+.question p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.noResults {
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+/* --- Atendimento (344px, alinhado ao primeiro grupo: padding-top 44) --- */
+.support {
+  display: flex;
+  flex: 0 0 21.5rem;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+  padding-top: 2.75rem;
+}
+
+.contact {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.contactInvite {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  background: var(--color-primary-soft);
+}
+
+.contactInvite .iconCircle {
+  background: var(--color-bg-secondary);
+}
+
+.contactText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.contactText h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.contactText p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.action {
+  min-height: 3rem;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+.tips {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+}
+
+.tipsTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+.tipList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tip {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.tip svg {
+  flex: 0 0 auto;
+  margin-top: 0.0625rem;
+  color: var(--color-primary);
+}
+
+/* Lembrete de prazos (padding 16, radius 12, gap 12). */
+.reminder {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-start;
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-secondary);
+  font-size: var(--font-size-small);
+}
+
+.reminder svg {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+}
+
+.reminder div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.reminder p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.reminder .reminderTitle {
+  color: var(--color-text-primary);
+}
+
+/* --- Diálogo "Falar com a organização" --- */
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+}
+
+.label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+}
+
+.field input {
+  min-height: 3rem;
+  padding-left: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+}
+
+.fieldError {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-caption);
+}
+
+/* --- Rodapé (padding 8×20, Inter 12) --- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) var(--spacing-5) var(--spacing-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.footer p {
+  margin: 0;
+}
+
+/* --- Responsivo (RNF05) --- */
+@media (max-width: 70rem) {
+  .topics {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 64rem) {
+  .columns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .support {
+    flex-basis: auto;
+    padding-top: 0;
+  }
+
+  .search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchField {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: var(--spacing-4) var(--spacing-4) 0;
+  }
+
+  .search,
+  .topic {
+    padding: var(--spacing-4);
+  }
+
+  .columns,
+  .footer {
+    padding-right: 0;
+    padding-left: 0;
+  }
+}

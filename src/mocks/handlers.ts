@@ -42,6 +42,9 @@ import type {
   StageDeliverable,
 } from '@/features/projects';
 import type { DeliverableSubmissionItem } from '@/features/deliveries';
+import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
+import type { MemberNoteCreate } from '@/features/evaluations';
+import type { SupportTicket, SupportTicketCreate } from '@/features/support';
 import type {
   Invitation,
   JoinRequest,
@@ -171,6 +174,10 @@ let myTeams = new Map<number, Team>();
 let teamInvitations: Invitation[] = [];
 let receivedJoinRequests: JoinRequest[] = [];
 let leadershipRequests: LeadershipRequest[] = [];
+// Avaliação de membro (task #14): observações registradas pelo líder.
+let memberNotes: MockMemberNote[] = [];
+// Central de dúvidas (task #14): chamados abertos na sessão.
+let supportTickets: SupportTicket[] = [];
 
 function resetMyTeams() {
   myTeams = new Map([
@@ -181,6 +188,8 @@ function resetMyTeams() {
   teamInvitations = buildMyTeamInvitations();
   receivedJoinRequests = buildMyTeamJoinRequests();
   leadershipRequests = [];
+  memberNotes = buildMemberNotes();
+  supportTickets = [];
 }
 resetMyTeams();
 
@@ -965,6 +974,80 @@ export const handlers = [
       ),
     );
     return HttpResponse.json(created, { status: 201 });
+  }),
+
+  // Avaliação de membro (task #14) — POST confirmado (RF33); o resumo é PROPOSTA.
+  http.get('*/api/teams/:teamId/member-notes/summary', ({ params }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const latest = new Map<number, string>();
+    for (const note of memberNotes.filter((n) => n.team_id === found.team.id)) {
+      const current = latest.get(note.member_id);
+      if (!current || note.created_at > current) latest.set(note.member_id, note.created_at);
+    }
+    return HttpResponse.json(
+      [...latest].map(([member_id, created_at]) => ({ member_id, created_at })),
+    );
+  }),
+  http.post('*/api/teams/:teamId/member-notes', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const body = (await request.json()) as Partial<MemberNoteCreate>;
+    if (!body.content?.trim() || typeof body.member_id !== 'number') {
+      return HttpResponse.json(
+        {
+          error: {
+            code: 'validation_error',
+            message: 'Dados inválidos.',
+            details: { content: ['Campo obrigatório.'] },
+          },
+        },
+        { status: 400 },
+      );
+    }
+    if (!found.team.members.some((member) => member.id === body.member_id)) {
+      return apiError(404, 'not_found', 'Integrante não encontrado na equipe.');
+    }
+    const note: MockMemberNote = {
+      id: nextId++,
+      team_id: found.team.id,
+      member_id: body.member_id,
+      content: body.content,
+      created_at: new Date().toISOString(),
+    };
+    memberNotes = [...memberNotes, note];
+    return HttpResponse.json({ id: note.id, created_at: note.created_at }, { status: 201 });
+  }),
+
+  // Central de dúvidas (task #14) — POST /api/support/tickets (PROPOSTO, P-06).
+  http.post('*/api/support/tickets', async ({ request }) => {
+    const body = (await request.json()) as Partial<SupportTicketCreate>;
+    const title = body.title?.trim() ?? '';
+    const description = body.description?.trim() ?? '';
+    const details: Record<string, string[]> = {};
+    if (!title) details.title = ['Campo obrigatório.'];
+    else if (title.length > 150) details.title = ['Use até 150 caracteres.'];
+    if (!description) details.description = ['Campo obrigatório.'];
+    if (Object.keys(details).length > 0) {
+      return HttpResponse.json(
+        { error: { code: 'validation_error', message: 'Dados inválidos.', details } },
+        { status: 400 },
+      );
+    }
+    const now = new Date().toISOString();
+    const ticket: SupportTicket = {
+      id: crypto.randomUUID(),
+      title,
+      description,
+      status: 'OPEN',
+      priority: 'MEDIUM',
+      support_response: null,
+      created_at: now,
+      updated_at: now,
+      resolved_at: null,
+    };
+    supportTickets = [ticket, ...supportTickets];
+    return HttpResponse.json(ticket, { status: 201 });
   }),
 
   http.get('*/api/public/editions/current', () => HttpResponse.json(buildCurrentEdition())),
