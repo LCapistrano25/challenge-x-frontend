@@ -1,0 +1,480 @@
+/*
+ * Figma: 03 - Acadêmico › "Projeto — cadastrado" (líder 551:12364 · participante 555:8606).
+ * Área de conteúdo com 1368px: resumo (416px | dados), entregas por etapa e cronograma.
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  line-height: 1.4;
+}
+
+/* --- Cartão (branco, borda 1px, radius 16, padding 24, gap 20) --- */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.body,
+.text,
+.caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.body {
+  font-size: var(--font-size-body);
+}
+
+.text {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+}
+
+.strong {
+  color: var(--color-text-primary);
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* --- Situação (padding 4×10, Inter 12) --- */
+.tag {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  width: fit-content;
+  padding: var(--spacing-1) 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.tagNeutral {
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+}
+
+.tagPrimary {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.tagPositive {
+  background: var(--color-positive-soft);
+  color: var(--color-positive-text);
+}
+
+.tagAttention {
+  background: var(--color-attention-soft);
+  color: var(--color-attention-text);
+}
+
+.tagDanger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+/* --- Botões do Figma: 48px, padding 16px, radius 8px, Inter Medium 16px --- */
+.action {
+  flex: 0 0 auto;
+  min-height: 3rem;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+/* --- Resumo do projeto: cartão da ODS (416px) | dados --- */
+.summaryRow {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: stretch;
+}
+
+/* Cartão "Projeto cadastrado" (Design System 182:2860). */
+.projectCard {
+  display: flex;
+  flex: 0 0 26rem;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.projectCardBand {
+  display: flex;
+  align-items: flex-start;
+  height: 3.875rem;
+  padding: 0.625rem;
+  background: var(--color-bg-primary);
+}
+
+.odsTag {
+  padding: 0.1875rem 0.375rem;
+  border-radius: var(--radius-full);
+  background: var(--color-attention-soft);
+  color: var(--color-attention-text);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.projectCardBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  justify-content: space-between;
+  padding: 0.625rem 0.9375rem;
+}
+
+.projectCardTitle {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.infoRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3125rem;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.dot {
+  width: 0.3125rem;
+  height: 0.3125rem;
+  border-radius: var(--radius-full);
+  background: var(--color-border);
+}
+
+.projectCardFooter {
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.editLink {
+  flex: 1 1 auto;
+  min-height: 3rem;
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+}
+
+/* Cartão de dados (flex, gap 20). */
+.infoCard {
+  flex: 1 1 0;
+}
+
+.columns2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-6);
+}
+
+.fact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-6);
+  margin: 0;
+}
+
+.metric {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--spacing-1);
+  justify-content: flex-end;
+}
+
+.metric dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.metric dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* --- Entregas por etapa --- */
+.stageList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stageRow {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: center;
+}
+
+.stageName {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.stageDeadline {
+  display: flex;
+  flex: 0 0 12.5rem;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.stageStatus {
+  display: flex;
+  flex: 0 0 11.25rem;
+}
+
+.stageAction {
+  display: flex;
+  flex: 0 0 11.875rem;
+  justify-content: flex-end;
+}
+
+.materialRow {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.material {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.material > p:first-child {
+  overflow-wrap: anywhere;
+}
+
+/* Faixa "Atenção ao reenvio" (padding 16, radius 8, Inter 14). */
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-small);
+}
+
+.notice p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.notice .noticeTitle {
+  color: var(--color-text-primary);
+}
+
+.noticeAttention {
+  background: var(--color-attention-soft);
+}
+
+.noticePrimary {
+  background: var(--color-primary-soft);
+}
+
+/* --- Cronograma (padding 30×50, gap 23) --- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4375rem;
+  padding: 1.875rem 3.125rem;
+}
+
+.timelineTitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.timelineBox {
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+/* --- Diálogo "Detalhes da etapa" --- */
+.dialogBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  line-height: 1.4;
+}
+
+.versionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.version {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.version a {
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+}
+
+/* --- Rodapé (padding-top 8, Inter 12) --- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) 0 var(--spacing-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: inherit;
+}
+
+/* --- Responsivo (RNF05) --- */
+@media (max-width: 75rem) {
+  .stageRow {
+    flex-wrap: wrap;
+  }
+
+  .stageName {
+    flex-basis: 100%;
+  }
+
+  .stageDeadline,
+  .stageStatus {
+    flex-basis: auto;
+  }
+
+  .stageAction {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 64rem) {
+  .summaryRow {
+    flex-direction: column;
+  }
+
+  .projectCard {
+    flex-basis: auto;
+  }
+
+  .timeline {
+    padding: var(--spacing-4) 0;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: var(--spacing-4) var(--spacing-4) 0;
+  }
+
+  .card {
+    padding: var(--spacing-4);
+  }
+
+  .columns2,
+  .metrics {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-4);
+  }
+
+  .stageAction {
+    justify-content: stretch;
+  }
+
+  .stageAction > * {
+    flex: 1 1 auto;
+  }
+
+  .materialRow {
+    flex-wrap: wrap;
+  }
+
+  .timeline {
+    padding: 0;
+  }
+}

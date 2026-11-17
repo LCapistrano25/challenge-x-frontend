@@ -46,3 +46,36 @@ cadastro respeita o prazo da etapa `FORMATION` e, ao concluir, a equipe vai para
 ### Erros tratados
 
 `formation_closed` (409, bloqueia o formulário), `project_title_taken` (409, no campo título), `challenge_not_eligible` (400, no campo ODS), `category_not_available` (400, no campo eixo) e 403. Mensagens em `describeProjectError` (`lib/project-registration.ts`).
+
+## Projeto da equipe (task #13)
+
+Tela: Figma › 03 - Acadêmico › "Projeto da equipe", rota `/academico/projeto`. Qualquer integrante vê o
+projeto e as etapas; só o líder vê "Editar projeto" (`/academico/projeto/novo?editar=1`). Sem projeto
+cadastrado, o líder vai para o cadastro e os demais veem um aviso.
+
+| Tela                                 | Chamada                                       | Situação no openapi          |
+| ------------------------------------ | --------------------------------------------- | ---------------------------- |
+| Equipe, papel e cronograma da edição | `GET /api/me/dashboard`                       | proposta (P-23)              |
+| Resumo do projeto e informações      | `GET /api/teams/{team_id}/project`            | confirmada                   |
+| Etapas, status, versões e parecer    | `GET /api/projects/{project_id}/deliverables` | proposta                     |
+| Editar projeto (somente líder)       | `PUT /api/teams/{team_id}/project`            | proposta (P-25) — ver item 4 |
+
+### Como o front deriva o status da etapa (`getStageView`, `lib/deliverables.ts`)
+
+| Figma                | Regra                                                                       |
+| -------------------- | --------------------------------------------------------------------------- |
+| Em breve             | `stage.phase_status = UPCOMING` — bloqueada, mostra a data de abertura      |
+| Em andamento         | etapa aberta sem versão enviada                                             |
+| Aguardando avaliação | última versão enviada sem parecer sobre ela (enviar ≠ aprovar)              |
+| Aprovada             | `review.status = APPROVED` com `review.version_id` = última versão          |
+| Ajustes solicitados  | `review.status = CHANGES_REQUESTED` com `review.version_id` = última versão |
+| Não entregue         | prazo encerrado sem versão                                                  |
+
+Métricas do cabeçalho (entregas aprovadas, ajustes, prazo) são calculadas no front a partir da mesma lista.
+
+### Propostas para o back-end (pendentes de aprovação)
+
+1. **`StageDeliverable.description` e `guidance`** — texto da etapa e orientações exibidos na lista e em "Ver detalhes".
+2. **`StageDeliverable.review`** — parecer da orientação: `{ status: APPROVED | CHANGES_REQUESTED, version_id, comment, resubmission_deadline, reviewed_at }`. Alimenta o aviso "Atenção ao reenvio" e o prazo de reenvio.
+3. **`Project.updated_by`** — `{ user_id, name }` de quem fez a última alteração (linha "Atualizado por" no Figma).
+4. **Edição após a formação** — hoje o `PUT …/project` só vale durante a `FORMATION`. A task pede que o líder edite os dados do cadastro; confirmar se a edição continua permitida depois e com quais campos.

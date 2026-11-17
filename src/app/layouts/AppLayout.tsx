@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, ScrollRestoration, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { useCurrentEdition } from '@/features/public-panel';
 import { useStudentDashboard } from '@/features/teams';
@@ -93,6 +93,8 @@ export function AppLayout({ area, nav }: AppLayoutProps) {
           </main>
         </div>
         {hybrid && <BottomNav area={area} items={barItems} />}
+        {/* Cada navegação nova abre no topo; voltar/avançar recupera a posição anterior. */}
+        <ScrollRestoration />
       </div>
     </PageHeaderProvider>
   );

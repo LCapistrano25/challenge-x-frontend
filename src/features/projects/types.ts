@@ -1,4 +1,4 @@
-import type { CourseSummary, SdgSummary } from '@/shared/types/api';
+import type { CourseSummary, SdgSummary, StageSchedule } from '@/shared/types/api';
 
 /**
  * Tipos do domínio de projetos, espelhando docs/api/openapi.yaml (snake_case).
@@ -57,6 +57,11 @@ export interface Project extends ProjectDetails {
   courses: CourseSummary[];
   created_at: string;
   updated_at: string;
+  /**
+   * PROPOSTA (ainda não está no openapi): quem fez a última edição dos dados cadastrais. O Figma
+   * mostra "Última edição por Ana Maria em 16/04/2027, às 15:10".
+   */
+  updated_by?: { user_id: string; name: string } | null;
 }
 
 /** ProjectWrite — PUT /api/teams/{team_id}/project (x-status: proposed, P-25). */
@@ -103,4 +108,82 @@ export interface ProjectCategory {
 export interface ProjectOptions {
   challenges: EligibleChallenge[];
   categories: ProjectCategory[];
+}
+
+/* --- Entregas por etapa (task #13): GET /api/projects/{project_id}/deliverables --- */
+
+/** FieldType */
+export type DeliverableFieldType = 'LINK' | 'FILE';
+
+/** DeliverableStatus — derivado (RF31, P-27): Não enviada, Enviada, Não entregue. */
+export type DeliverableStatus = 'NOT_SUBMITTED' | 'SUBMITTED' | 'NOT_DELIVERED';
+
+/** DeliverableField — campo exigido na entrega da etapa. */
+export interface DeliverableField {
+  id: number;
+  type: DeliverableFieldType;
+  label: string;
+  required: boolean;
+  /** Formatos permitidos (somente FILE), ex.: "pdf,zip". */
+  formats: string | null;
+  max_size_mb: number | null;
+}
+
+/** DeliverableItem — conteúdo de um campo numa versão enviada. */
+export interface DeliverableItem {
+  id: number;
+  field_id: number;
+  type: DeliverableFieldType;
+  link: string | null;
+  file_url: string | null;
+  file_name: string | null;
+  size_bytes: number | null;
+}
+
+/** ReceiptSummary — comprovante gerado a cada envio. */
+export interface ReceiptSummary {
+  verification_code: string;
+  file_url: string | null;
+  generated_at: string;
+}
+
+/** DeliverableVersion — versão imutável da entrega. */
+export interface DeliverableVersion {
+  id: number;
+  version_number: number;
+  submitted_by: { user_id: string; name: string };
+  submitted_at: string;
+  notes: string | null;
+  items: DeliverableItem[];
+  receipt: ReceiptSummary | null;
+}
+
+/**
+ * PROPOSTA (ainda não está no openapi): parecer da orientação sobre a versão enviada. O Figma
+ * mostra as situações "Aprovada" e "Ajustes solicitados", o parecer e o prazo de reenvio.
+ */
+export interface DeliverableReview {
+  status: 'APPROVED' | 'CHANGES_REQUESTED';
+  /** Versão avaliada: um envio posterior volta a ficar "Aguardando avaliação". */
+  version_id: number;
+  comment: string | null;
+  /** Até quando a equipe pode reenviar (só em CHANGES_REQUESTED). */
+  resubmission_deadline: string | null;
+  reviewed_at: string;
+}
+
+/** StageDeliverable — item de GET /api/projects/{project_id}/deliverables. */
+export interface StageDeliverable {
+  stage: StageSchedule;
+  fields: DeliverableField[];
+  status: DeliverableStatus;
+  official_version_id: number | null;
+  /** Histórico completo, da mais recente para a mais antiga. */
+  versions: DeliverableVersion[];
+  /** PROPOSTA: resumo da etapa ("Relatório do problema, público e evidências iniciais."). */
+  description?: string | null;
+  /** PROPOSTA: orientação "O que entregar nesta etapa". */
+  guidance?: string | null;
+  /** PROPOSTA: parecer da orientação sobre a última versão avaliada. */
+  review?: DeliverableReview | null;
 }

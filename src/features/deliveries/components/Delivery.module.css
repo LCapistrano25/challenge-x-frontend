@@ -1,0 +1,482 @@
+/*
+ * Figma: 03 - Acadêmico › "Entrega — Arquivo" (586:7669) e "Entrega — Sucesso" (586:8170).
+ * Área de conteúdo com 1368px: caminho, etapa, formulário/confirmação (flex) | projeto (416px).
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  line-height: 1.4;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.body,
+.text,
+.caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.body {
+  font-size: var(--font-size-body);
+}
+
+.text {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+}
+
+.strong {
+  color: var(--color-text-primary);
+}
+
+.divider {
+  height: 1px;
+  background: var(--color-border);
+}
+
+/* --- Botões do Figma: 48px, padding 16px, radius 8px, Inter Medium 16px --- */
+.action {
+  flex: 0 0 auto;
+  min-height: 3rem;
+  padding: 0 var(--spacing-4);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  line-height: 1.5;
+}
+
+/* --- Caminho de navegação (Inter 14, gap 8) --- */
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  list-style: none;
+}
+
+.breadcrumb li + li::before {
+  margin-right: var(--spacing-2);
+  content: '/';
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb [aria-current='page'] {
+  color: var(--color-text-primary);
+}
+
+/* --- Identificação da etapa (prazo 210px) --- */
+.stageHeader {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: center;
+}
+
+.stageName {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.stageDeadline {
+  display: flex;
+  flex: 0 0 13.125rem;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+/* --- Colunas: formulário/confirmação | contexto do projeto (416px) --- */
+.columns {
+  display: flex;
+  gap: var(--spacing-6);
+  align-items: flex-start;
+}
+
+.mainColumn {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+.sideColumn {
+  display: flex;
+  flex: 0 0 26rem;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+.sideColumn > article {
+  flex: 0 0 auto;
+  min-height: 18.75rem;
+}
+
+/* --- Faixas de orientação (padding 16, radius 8, Inter 14) --- */
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-soft);
+  font-size: var(--font-size-small);
+}
+
+.notice p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.notice .noticeTitle {
+  color: var(--color-text-primary);
+}
+
+/* --- Formulário --- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.label {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+}
+
+.input,
+.textarea {
+  display: block;
+  width: 100%;
+  padding: 0 var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+}
+
+.input {
+  min-height: 3rem;
+}
+
+.textarea {
+  min-height: 5rem;
+  padding: var(--spacing-3) var(--spacing-4);
+  resize: vertical;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: var(--color-text-secondary);
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.invalid {
+  border-color: var(--color-danger);
+}
+
+.error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-caption);
+}
+
+/* Área de upload: borda tracejada, padding 16, radius 8, gap 8. */
+.dropzone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast);
+}
+
+.dropzoneActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.dropzoneInvalid {
+  border-color: var(--color-danger);
+}
+
+.dropzoneRow {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+}
+
+.dropzoneRow > p {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.dropzoneRow svg {
+  flex: 0 0 auto;
+  color: var(--color-text-primary);
+}
+
+/* Arquivo selecionado: borda, padding 16, radius 8, gap 12. */
+.fileRow {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+  padding: var(--spacing-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.fileRow > svg {
+  flex: 0 0 auto;
+  color: var(--color-text-primary);
+}
+
+.fileInfo {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.fileInfo > p:first-child {
+  overflow-wrap: anywhere;
+}
+
+.remove {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.375rem;
+  align-items: center;
+  color: var(--color-text-primary);
+}
+
+/* Confirmação do envio: divisória, aviso e ações (gap 16). */
+.confirm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  justify-content: space-between;
+}
+
+/* --- Confirmação --- */
+.success {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  align-items: center;
+  padding: var(--spacing-2) 0;
+  text-align: center;
+}
+
+.successIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: var(--radius-full);
+  background: var(--color-positive-soft);
+  color: var(--color-positive-text);
+}
+
+.successTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-5) var(--spacing-6);
+  margin: 0;
+}
+
+.summaryGrid > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--spacing-1);
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.summaryGrid dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.summaryGrid dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  overflow-wrap: anywhere;
+}
+
+.deliveredFile > svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.material a {
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+}
+
+.nextStage {
+  display: flex;
+  gap: var(--spacing-4);
+  align-items: center;
+}
+
+.nextStage > div {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+/* --- Rodapé (padding-top 8, Inter 12) --- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) 0 var(--spacing-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: inherit;
+}
+
+/* --- Responsivo (RNF05) --- */
+@media (max-width: 64rem) {
+  .columns {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sideColumn {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: var(--spacing-4) var(--spacing-4) 0;
+  }
+
+  .card {
+    padding: var(--spacing-4);
+  }
+
+  .stageHeader,
+  .dropzoneRow,
+  .fileRow {
+    flex-wrap: wrap;
+  }
+
+  .stageHeader {
+    align-items: flex-start;
+  }
+
+  .stageName {
+    flex-basis: 100%;
+  }
+
+  .stageDeadline {
+    flex-basis: auto;
+  }
+
+  /* Texto e botão do upload em linhas separadas quando não cabem lado a lado. */
+  .dropzoneRow > p {
+    flex: 1 1 10rem;
+  }
+
+  .fileInfo {
+    flex: 1 1 8rem;
+  }
+
+  .summaryGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions > * {
+    flex: 1 1 auto;
+  }
+}

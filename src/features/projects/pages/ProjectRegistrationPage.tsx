@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   formatDate,
   formatLongDate,
@@ -22,7 +22,8 @@ import {
   useProjectOptions,
   useTeamProject,
 } from '../hooks/useProjectRegistration';
-import { fromProjectDraft } from '../lib/project-registration';
+import { fromProjectDraft, projectToDraft } from '../lib/project-registration';
+import type { Project } from '../types';
 import styles from '../components/ProjectRegistration.module.css';
 
 const TEAM_PROJECT_PATH = '/academico/projeto';
@@ -72,9 +73,14 @@ function LoadError({ what, onRetry }: { what: string; onRetry: () => void }) {
  * do Figma em ProjectWrite (ver api/README.md).
  */
 export function ProjectRegistrationPage() {
+  // "Editar projeto" (task #13): mesmo formulário, preenchido com o projeto cadastrado.
+  const [params] = useSearchParams();
+  const editing = params.has('editar');
   usePageHeader(
-    'Cadastrar projeto',
-    'Apresente a proposta da equipe e dê o próximo passo no Desafio X.',
+    editing ? 'Editar projeto' : 'Cadastrar projeto',
+    editing
+      ? 'Atualize os dados cadastrais do projeto da equipe.'
+      : 'Apresente a proposta da equipe e dê o próximo passo no Desafio X.',
   );
 
   const dashboard = useStudentDashboard();
@@ -142,17 +148,24 @@ export function ProjectRegistrationPage() {
     );
   }
 
-  // Projeto já cadastrado: a equipe acompanha (e edita) pela tela do Projeto.
-  if (project.data) return <Navigate to={TEAM_PROJECT_PATH} replace />;
+  // Projeto já cadastrado: a equipe acompanha pela tela do Projeto; a liderança edita por lá.
+  if (project.data && !editing) return <Navigate to={TEAM_PROJECT_PATH} replace />;
 
   const formation = getFormationWindow(dashboard.data.stages.map((item) => item.stage));
-  return <RegistrationContent team={team} formation={formation} />;
+  return <RegistrationContent team={team} formation={formation} project={project.data} />;
 }
 
-function RegistrationContent({ team, formation }: { team: Team; formation: FormationWindow }) {
+interface RegistrationContentProps {
+  team: Team;
+  formation: FormationWindow;
+  /** Projeto já cadastrado: o formulário abre em modo de edição (sem rascunho). */
+  project: Project | null;
+}
+
+function RegistrationContent({ team, formation, project }: RegistrationContentProps) {
   const navigate = useNavigate();
   const options = useProjectOptions(team.id);
-  const draft = useProjectDraft(team.id);
+  const draft = useProjectDraft(team.id, { enabled: !project });
   // A API pode encerrar o prazo antes do que a tela calculou (409 formation_closed).
   const [closedByApi, setClosedByApi] = useState(false);
 
@@ -185,6 +198,14 @@ function RegistrationContent({ team, formation }: { team: Team; formation: Forma
                 : 'O cadastro abre com a formação das equipes.'}
             </p>
           </>
+        ) : project ? (
+          <>
+            <p className={styles.noticeTitle}>Você está editando os dados do projeto</p>
+            <p>
+              As alterações valem para toda a equipe e podem ser feitas
+              {deadline ? ` até ${deadline}` : ' durante a formação das equipes'}.
+            </p>
+          </>
         ) : (
           <>
             <p className={styles.noticeTitle}>O projeto da equipe ainda não foi cadastrado</p>
@@ -199,9 +220,9 @@ function RegistrationContent({ team, formation }: { team: Team; formation: Forma
 
       <div className={styles.columns}>
         <div className={styles.mainColumn}>
-          {options.isPending || draft.isPending ? (
+          {options.isPending || (!project && draft.isPending) ? (
             <Spinner label="Carregando o formulário…" />
-          ) : !options.data || draft.data === undefined ? (
+          ) : !options.data || (!project && draft.data === undefined) ? (
             <LoadError
               what="o formulário do projeto"
               onRetry={() => {
@@ -213,8 +234,12 @@ function RegistrationContent({ team, formation }: { team: Team; formation: Forma
             <ProjectForm
               teamId={team.id}
               options={options.data}
-              initialValues={fromProjectDraft(draft.data, options.data)}
-              savedAt={draft.data?.saved_at}
+              initialValues={fromProjectDraft(
+                project ? projectToDraft(project) : draft.data,
+                options.data,
+              )}
+              savedAt={project ? null : draft.data?.saved_at}
+              mode={project ? 'edit' : 'register'}
               disabled={closed || upcoming}
               onRegistered={() => navigate(TEAM_PROJECT_PATH)}
               onFormationClosed={() => setClosedByApi(true)}

@@ -27,13 +27,16 @@ async function openPicker() {
 }
 
 describe('LoginPage em modo mock: login Microsoft simulado', () => {
-  it('o botão abre o seletor com as quatro contas simuladas', async () => {
+  it('o botão abre o seletor com as contas simuladas', async () => {
     renderLogin();
 
     await openPicker();
 
     const picker = screen.getByRole('group', { name: 'Simulação do login Microsoft' });
-    expect(within(picker).getAllByRole('button')).toHaveLength(4);
+    expect(within(picker).getAllByRole('button')).toHaveLength(6);
+    expect(
+      within(picker).getByRole('button', { name: 'Aluno — líder com projeto cadastrado' }),
+    ).toBeInTheDocument();
   });
 
   it('aluno em primeiro acesso cai no cadastro obrigatório', async () => {
