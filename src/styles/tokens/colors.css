@@ -59,4 +59,8 @@
   --color-bg-muted: #f3f4f7;
   --color-attention-soft: #fff7e8;
   --color-attention-text: #875b17;
+  /* Situação "Enviada" (avaliação de membro) e borda do card de atendimento (Central de ajuda). */
+  --color-positive-soft: #edf8f0;
+  --color-positive-text: #18743a;
+  --color-primary-border: #caddf6;
 }
