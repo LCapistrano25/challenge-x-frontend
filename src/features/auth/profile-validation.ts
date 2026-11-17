@@ -5,7 +5,7 @@ export const PERIODS = Array.from({ length: 10 }, (_, index) => index + 1);
 
 /** Matrícula: apenas dígitos. Ajustar o intervalo quando a regra da instituição for definida. */
 export const REGISTRATION_MAX_LENGTH = 11;
-export const REGISTRATION_PATTERN = /^\d{6,11}$/;
+export const REGISTRATION_PATTERN = /^[A-Z0-9]{6,11}$/;
 
 export type StudentFormValues = {
   courseId: string;
@@ -65,5 +65,5 @@ export function toTeacherPayload(values: TeacherFormValues): CompleteProfileInpu
 }
 
 export function normalizeRegistration(value: string): string {
-  return value.replace(/\D/g, '');
+  return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
 }
