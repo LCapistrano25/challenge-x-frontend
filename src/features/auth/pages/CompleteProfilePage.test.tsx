@@ -60,13 +60,13 @@ describe('primeiro acesso do aluno', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('só aceita dígitos na matrícula', async () => {
+  it('normaliza a matrícula removendo separadores e usando letras maiúsculas', async () => {
     await renderAs('novo.aluno@exemplo.com');
     const registration = await screen.findByLabelText('Matrícula');
 
     fireEvent.change(registration, { target: { value: '20a26-001' } });
 
-    expect(registration).toHaveValue('2026001');
+    expect(registration).toHaveValue('20A26001');
   });
 
   it('envia os dados e leva para a home do aluno', async () => {
