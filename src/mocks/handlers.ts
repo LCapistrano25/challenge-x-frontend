@@ -23,6 +23,7 @@ import {
   buildMyTeamInvitations,
   buildMyTeamJoinRequests,
 } from './fixtures/my-team';
+import { buildTeacherDashboard } from './fixtures/teacher-dashboard';
 import { TAKEN_PROJECT_TITLES, buildProject, buildProjectOptions } from './fixtures/project';
 import {
   PROJECT_LEADER_MEMBER_ID,
@@ -406,6 +407,13 @@ export const handlers = [
   }),
 
   // Home do acadêmico (task #9) — formatos de docs/api/openapi.yaml.
+  // Painel inicial do professor (Figma: Professor › Home).
+  http.get('*/api/teacher/dashboard', () => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    return HttpResponse.json(buildTeacherDashboard());
+  }),
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();
     const viewer = currentViewer();

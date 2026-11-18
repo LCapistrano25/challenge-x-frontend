@@ -53,3 +53,13 @@ explicitamente para o axios não serializar o `FormData` como JSON.
 
 Etapas do mock: Pesquisa (aprovada), Proposta (ajustes solicitados), Protótipo (aberta, PDF/ZIP até 20 MB + link)
 e Apresentação final (em breve).
+
+## Painel do professor (tela inicial)
+
+Proposta de contrato (confirmar no `openapi.yaml`): `GET /api/teacher/dashboard`, só para `TEACHER`
+(`403` para os demais), devolve `TeacherDashboard` (ver `../types.ts`):
+`{ semester, stage_label, evaluation_deadline (AAAA-MM-DD), courses[], deliveries[] }`.
+Cada entrega traz `id`, `project_name`, `team_name`, `course`, `stage`, `submitted_at` (ISO 8601) e
+`status` (`PENDING_EVALUATION` | `SUBMITTED` | `EVALUATED`). A lista deve vir **já ordenada por
+prioridade de avaliação**: o botão "Avaliar próximo projeto" leva à primeira pendente.
+Totais, progresso e filtros são calculados no front a partir dessa lista.

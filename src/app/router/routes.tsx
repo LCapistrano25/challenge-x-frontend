@@ -101,6 +101,10 @@ const roleRoutes: RouteObject[] = [
         children: [
           { path: '/professor', lazy: lazyPage(deliveries, 'DeliveryTrackingPage') },
           { path: '/professor/integrantes', lazy: lazyPage(teams, 'MemberObservationsPage') },
+          {
+            path: '/professor/entregas/:deliveryId',
+            lazy: lazyPage(deliveries, 'DeliveryEvaluationPage'),
+          },
         ],
       },
     ],
