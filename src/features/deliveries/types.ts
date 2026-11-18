@@ -16,3 +16,32 @@ export interface DeliveryFormValues {
 
 /** Erros por campo (chave = id do campo) e da observação. */
 export type DeliveryFormErrors = Partial<Record<number | 'notes', string>>;
+
+// ---- Painel de acompanhamento do professor ----
+
+/** Situação da entrega do ponto de vista do professor avaliador. */
+export type DeliveryStatus = 'PENDING_EVALUATION' | 'SUBMITTED' | 'EVALUATED';
+
+export interface TeacherDelivery {
+  id: string;
+  project_name: string;
+  team_name: string;
+  course: string;
+  /** Número da etapa (ex.: 2). */
+  stage: number;
+  /** Data e hora do envio, ISO 8601. */
+  submitted_at: string;
+  status: DeliveryStatus;
+}
+
+/** Painel de acompanhamento do professor (tela inicial). A lista já vem por prioridade. */
+export interface TeacherDashboard {
+  semester: string;
+  /** Ex.: "Etapa 2 — Proposta e planejamento". */
+  stage_label: string;
+  /** Prazo para concluir as avaliações, AAAA-MM-DD. */
+  evaluation_deadline: string;
+  /** Cursos vinculados ao professor. */
+  courses: string[];
+  deliveries: TeacherDelivery[];
+}

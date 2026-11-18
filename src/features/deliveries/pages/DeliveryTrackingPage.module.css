@@ -1,0 +1,150 @@
+.page {
+  display: grid;
+  gap: var(--spacing-6);
+  padding: var(--spacing-8);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-secondary);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.04);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  margin: 0;
+}
+
+.card {
+  display: grid;
+  gap: var(--spacing-1);
+  padding: var(--spacing-5);
+  border-radius: 12px;
+}
+
+.card dt {
+  order: 2;
+  font-size: var(--font-size-small);
+}
+
+.card dd {
+  order: 1;
+  margin: 0;
+  font-size: 28px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.total {
+  background: #e4ebff;
+  color: var(--color-primary);
+}
+
+.pending {
+  background: #f2e9ff;
+  color: var(--color-text-primary);
+}
+
+.done {
+  background: #e3f5ee;
+  color: var(--color-success);
+}
+
+.progressRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-4) var(--spacing-8);
+}
+
+.progress {
+  display: grid;
+  flex: 0 1 26.25rem;
+  gap: var(--spacing-2);
+  min-width: 14rem;
+}
+
+.progressLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--font-size-small);
+}
+
+.progressLabels span:last-child {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.deadline {
+  flex: 1;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 2fr) auto;
+  gap: var(--spacing-4);
+  align-items: end;
+}
+
+.priority {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+  border-radius: 12px;
+  background: #fff4e5;
+}
+
+.priorityIcon {
+  flex: 0 0 auto;
+  color: var(--color-warning-text);
+}
+
+.priorityText {
+  display: grid;
+  flex: 1;
+  gap: var(--spacing-1);
+  min-width: 14rem;
+}
+
+.priorityText p {
+  margin: 0;
+  font-size: var(--font-size-small);
+}
+
+.priorityText p:last-child {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.context {
+  margin: 0;
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+@media (max-width: 64rem) {
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: var(--spacing-4);
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}
