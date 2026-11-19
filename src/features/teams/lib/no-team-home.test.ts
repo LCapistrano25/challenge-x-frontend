@@ -10,12 +10,16 @@ const AGRO = { id: 2, name: 'Agronomia', slug: 'AGRO' };
 
 describe('Home sem equipe', () => {
   it('descreve o prazo de formação', () => {
+    // Datas no fuso de quem roda o teste (o CI usa UTC): o cálculo é por dia de calendário local.
     const today = new Date(2027, 2, 10, 12);
-    expect(describeTeamlessDeadline('2027-03-15T23:59:00-03:00', today)).toEqual({
+    const deadline = new Date(2027, 2, 15, 18).toISOString();
+    expect(describeTeamlessDeadline(deadline, today)).toEqual({
       value: '5 dias',
       description: 'Formação de equipes até 15/03/2027',
     });
-    expect(describeTeamlessDeadline('2027-03-09T23:59:00-03:00', today).value).toBe('Encerrado');
+    expect(describeTeamlessDeadline(new Date(2027, 2, 9, 18).toISOString(), today).value).toBe(
+      'Encerrado',
+    );
     expect(describeTeamlessDeadline(null).value).toBe('—');
   });
 
