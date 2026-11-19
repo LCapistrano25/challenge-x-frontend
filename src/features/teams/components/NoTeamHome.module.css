@@ -1,0 +1,183 @@
+/* Home do acadêmico sem equipe (Figma: 03 - Acadêmico › Home — sem equipe, 551:11696). */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.text,
+.small,
+.caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.text {
+  font-size: var(--font-size-body);
+}
+
+.small {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+/* --- Convites recebidos: dois cartões lado a lado (fundo da página, radius 8, padding 16) --- */
+.invitations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: var(--spacing-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.invitation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+}
+
+.invitationHeader {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.teamName {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.4;
+}
+
+.person {
+  display: flex;
+  gap: var(--spacing-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.personText {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.personName {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.personMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.invitationFooter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2) var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.invitationActions {
+  display: flex;
+  gap: var(--spacing-2);
+  margin-left: auto;
+}
+
+.sentRequest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sentRequestText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.sentRequestText .small {
+  color: var(--color-text-primary);
+}
+
+/* --- Seu caminho no Desafio X: três etapas em colunas --- */
+.journey {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.journeyStep {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.journeyTitle {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.journeyCurrent {
+  color: var(--color-primary);
+}
+
+@media (max-width: 48rem) {
+  .card {
+    padding: var(--spacing-4);
+  }
+
+  .journey {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--spacing-4);
+  }
+}

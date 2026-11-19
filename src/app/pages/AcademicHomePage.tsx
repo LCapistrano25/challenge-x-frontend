@@ -12,15 +12,27 @@ import {
   usePublicProjects,
 } from '@/features/public-panel';
 import {
+  InvitationsCard,
+  JourneyCard,
+  NoTeamStatusCards,
   TeamMembersCard,
+  TeamStartCard,
   TeamStatusCards,
   describeRequirement,
+  describeTeamError,
   getFormationDeadline,
+  useCancelJoinRequest,
+  useMyPendingInvitations,
+  useMyPendingJoinRequests,
+  useRespondInvitation,
   useStudentDashboard,
+  type Invitation,
+  type JoinRequest,
 } from '@/features/teams';
 import { usePageHeader } from '@/app/layouts/page-header-context';
 import { toTimelineSteps } from '@/shared/lib/stage-timeline';
-import { Alert, Button, ButtonLink, EmptyState, Spinner, Stepper } from '@/shared/ui';
+import type { StageSchedule } from '@/shared/types/api';
+import { Alert, Button, ButtonLink, EmptyState, Spinner, Stepper, notify } from '@/shared/ui';
 import styles from './AcademicHomePage.module.css';
 
 const PROJECTS_ON_HOME = { page_size: 4 } as const;
@@ -67,6 +79,109 @@ function SectionState({
 }
 
 /**
+ * Notícias ainda não têm página própria (P-35): cada "Leia mais" leva ao conteúdo
+ * relacionado que já existe na área acadêmica, e "Ver todas" não aparece.
+ */
+function academicNews(noticeUrl: string | null) {
+  const href: Record<string, string | undefined> = {
+    'edital-publicado': noticeUrl ?? undefined,
+    'preparar-submissao': '/academico/duvidas',
+    'canal-duvidas': '/academico/duvidas',
+  };
+  return NEWS.map((item) => ({ ...item, href: item.href ?? href[item.id] }));
+}
+
+/**
+ * Home do aluno sem equipe (Figma: 03 - Acadêmico › Home — sem equipe, 551:11696).
+ * Convites: GET /api/me/invitations e POST /api/invitations/{id}/respond (RF23);
+ * solicitação enviada: GET /api/me/join-requests (RF24).
+ */
+function TeamlessHome({
+  formationDeadline,
+  noticeUrl,
+}: {
+  formationDeadline: string | null;
+  noticeUrl: string | null;
+}) {
+  const invitations = useMyPendingInvitations();
+  const joinRequests = useMyPendingJoinRequests();
+  const notifications = useNotifications(NOTIFICATIONS_ON_HOME);
+  const respond = useRespondInvitation();
+  const cancelRequest = useCancelJoinRequest();
+  const pending = invitations.data ?? [];
+  const sentRequest = joinRequests.data?.[0] ?? null;
+
+  function handleRespond(invitation: Invitation, status: 'ACCEPTED' | 'DECLINED') {
+    respond.mutate(
+      { id: invitation.id, status },
+      {
+        onSuccess: () =>
+          notify.success(
+            status === 'ACCEPTED'
+              ? `Você entrou na equipe ${invitation.team.name}.`
+              : `Convite da equipe ${invitation.team.name} recusado.`,
+          ),
+        onError: (error) =>
+          notify.error(describeTeamError(error, 'Não foi possível responder ao convite.')),
+      },
+    );
+  }
+
+  function handleCancel(request: JoinRequest) {
+    cancelRequest.mutate(request.id, {
+      onSuccess: () => notify.success('Solicitação cancelada.'),
+      onError: (error) =>
+        notify.error(describeTeamError(error, 'Não foi possível cancelar a solicitação.')),
+    });
+  }
+
+  return (
+    <>
+      <div className={styles.inset}>
+        <NoTeamStatusCards
+          invitationsCount={pending.length}
+          formationDeadline={formationDeadline}
+        />
+      </div>
+
+      <div className={`${styles.inset} ${styles.startRow}`}>
+        <TeamStartCard />
+        <SectionState query={notifications} label="as notificações">
+          <NotificationsCard
+            notifications={notifications.data?.results ?? []}
+            action={
+              noticeUrl ? (
+                <ButtonLink to={noticeUrl} variant="ghost" size="large">
+                  Ver regulamento
+                </ButtonLink>
+              ) : undefined
+            }
+          />
+        </SectionState>
+      </div>
+
+      <div className={styles.inset}>
+        <SectionState query={invitations} label="os convites">
+          <InvitationsCard
+            invitations={pending}
+            sentRequest={sentRequest}
+            formationDeadline={formationDeadline}
+            busyInvitationId={respond.isPending ? respond.variables?.id : null}
+            cancellingRequest={cancelRequest.isPending}
+            onRespond={handleRespond}
+            onCancelRequest={handleCancel}
+          />
+        </SectionState>
+      </div>
+
+      <div className={styles.inset}>
+        <JourneyCard formationDeadline={formationDeadline} />
+      </div>
+    </>
+  );
+}
+
+/**
  * Home do perfil Acadêmico (task #9, Figma: 03 - Acadêmico › HOME - DESK).
  * Fontes (docs/api/openapi.yaml):
  * - GET /api/me/dashboard          → equipe, pendências, prazo e cronograma (PROPOSTO, P-23)
@@ -80,6 +195,7 @@ export function AcademicHomePage() {
   const dashboard = useStudentDashboard();
   const currentEdition = useCurrentEdition();
   const projects = usePublicProjects(PROJECTS_ON_HOME);
+  const teamless = dashboard.data !== undefined && !dashboard.data.team;
   const notifications = useNotifications(NOTIFICATIONS_ON_HOME);
 
   const firstName = user?.name.trim().split(/\s+/)[0];
@@ -88,7 +204,6 @@ export function AcademicHomePage() {
     'Bem-vindo ao seu painel de acompanhamento.',
   );
   const noticeUrl = currentEdition.data?.notice_url ?? null;
-  const team = dashboard.data?.team ?? null;
   const timeline =
     dashboard.data?.stages.map((item) => item.stage) ?? currentEdition.data?.stages ?? [];
 
@@ -100,22 +215,49 @@ export function AcademicHomePage() {
         )}
       </SectionState>
 
+      {teamless && dashboard.data && (
+        <TeamlessHome
+          formationDeadline={getFormationDeadline(dashboard.data)}
+          noticeUrl={noticeUrl}
+        />
+      )}
+
+      {!teamless && (
+        <TeamHomeSections
+          dashboard={dashboard}
+          notifications={notifications}
+          projects={projects}
+          timeline={timeline}
+          noticeUrl={noticeUrl}
+        />
+      )}
+
+      {currentEdition.data && noticeUrl && !teamless && (
+        <EditalCard edition={currentEdition.data.edition} noticeUrl={noticeUrl} />
+      )}
+    </div>
+  );
+}
+
+/** Home de quem já tem equipe (Figma: HOME - DESK / HOME LÍDER). */
+function TeamHomeSections({
+  dashboard,
+  notifications,
+  projects,
+  timeline,
+  noticeUrl,
+}: {
+  dashboard: ReturnType<typeof useStudentDashboard>;
+  notifications: ReturnType<typeof useNotifications>;
+  projects: ReturnType<typeof usePublicProjects>;
+  timeline: StageSchedule[];
+  noticeUrl: string | null;
+}) {
+  const team = dashboard.data?.team ?? null;
+  return (
+    <>
       <div className={styles.inset}>
         <SectionState query={dashboard} label="sua equipe">
-          {dashboard.data && !team && (
-            <Alert
-              tone="info"
-              title="Você ainda não participa de uma equipe."
-              action={
-                <ButtonLink to="/academico/equipe/buscar" size="small">
-                  Encontrar equipe
-                </ButtonLink>
-              }
-            >
-              Crie uma equipe ou peça para entrar em uma com vagas.
-            </Alert>
-          )}
-
           {dashboard.data && dashboard.data.incomplete_requirements.length > 0 && (
             <Alert tone="warning" title="Sua equipe ainda está incompleta.">
               <ul className={styles.requirements}>
@@ -182,13 +324,9 @@ export function AcademicHomePage() {
       )}
 
       <div className={`${styles.inset} ${styles.infoRow}`}>
-        <NewsList items={NEWS} allNewsHref="/" className={styles.news} />
+        <NewsList items={academicNews(noticeUrl)} className={styles.news} />
         <HelpResources rulesUrl={noticeUrl} faqHref="/academico/duvidas" className={styles.help} />
       </div>
-
-      {currentEdition.data && noticeUrl && (
-        <EditalCard edition={currentEdition.data.edition} noticeUrl={noticeUrl} />
-      )}
-    </div>
+    </>
   );
 }

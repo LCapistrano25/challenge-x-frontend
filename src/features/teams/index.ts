@@ -3,6 +3,19 @@ export { MyTeamPage } from './pages/MyTeamPage';
 export { MemberObservationsPage } from './pages/MemberObservationsPage';
 export { TeamStatusCards } from './components/TeamStatusCards';
 export { TeamMembersCard } from './components/TeamMembersCard';
+export {
+  InvitationsCard,
+  JourneyCard,
+  NoTeamStatusCards,
+  TeamStartCard,
+} from './components/NoTeamHome';
+export {
+  useCancelJoinRequest,
+  useMyPendingInvitations,
+  useMyPendingJoinRequests,
+  useRespondInvitation,
+} from './hooks/useTeamFormation';
+export { describeTeamError } from './lib/team-formation';
 export { useStudentDashboard, studentDashboardKey } from './hooks/useStudentDashboard';
 export { useTeam } from './hooks/useMyTeam';
 export { describeMembersBadge, describeSlotsTitle, findLeader, orderMembers } from './lib/my-team';

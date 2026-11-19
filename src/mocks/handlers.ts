@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import {
   buildCurrentEdition,
+  buildEditionNotifications,
   buildNotifications,
   buildStudentDashboard,
   publicProjects,
@@ -10,6 +11,7 @@ import {
   STUDENT_WITHOUT_TEAM,
   buildMockJoinRequests,
   buildMockTeams,
+  buildReceivedInvitations,
   toTeamListing,
 } from './fixtures/teams';
 import {
@@ -49,6 +51,7 @@ import type {
 } from '@/features/projects';
 import type { DeliverableSubmissionItem, PublishEvaluationInput } from '@/features/deliveries';
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
+import { buildProjectScores } from './fixtures/scores';
 import type { MemberNoteCreate } from '@/features/evaluations';
 import type { SupportTicket, SupportTicketCreate } from '@/features/support';
 import type {
@@ -172,6 +175,7 @@ let session: MockUser | null = null;
 // Formação de equipe (task #10): equipes, solicitações e a equipe criada na sessão.
 let mockTeams = buildMockTeams();
 let joinRequests = buildMockJoinRequests();
+let receivedInvitations = buildReceivedInvitations();
 let createdTeam: Team | null = null;
 let nextId = 1000;
 
@@ -223,8 +227,12 @@ const MEMBERSHIP: Record<string, { teamId: number; memberId: number }> = {
 
 /** Equipe e vínculo ativo de quem está logado (null se saiu ou foi removido). */
 function currentViewer() {
-  if (session?.email === 'sem-equipe@exemplo.com') {
-    const member = createdTeam?.members.find((m) => m.role === 'LEADER');
+  if (session && !MEMBERSHIP[session.email]) {
+    // Aluno sem equipe (sem-equipe@ ou primeiro acesso): equipe criada (LEADER) ou aceita por
+    // convite (MEMBER) durante a sessão.
+    const member = createdTeam?.members.find(
+      (m) => m.student.user_id === STUDENT_WITHOUT_TEAM.user_id,
+    );
     return createdTeam && member ? { team: createdTeam, member } : null;
   }
   const link = MEMBERSHIP[session?.email ?? 'academico@exemplo.com'];
@@ -577,6 +585,72 @@ export const handlers = [
     joinRequests = [...joinRequests, joinRequest];
     return HttpResponse.json(joinRequest, { status: 201 });
   }),
+  // Convites recebidos (RF23). Só o aluno sem equipe tem convites PENDING no mock.
+  http.get('*/api/me/invitations', ({ request }) => {
+    const status = new URL(request.url).searchParams.get('status');
+    if (currentViewer()) return HttpResponse.json([]);
+    return HttpResponse.json(receivedInvitations.filter((i) => !status || i.status === status));
+  }),
+  http.post('*/api/invitations/:invitationId/respond', async ({ params, request }) => {
+    const invitation = receivedInvitations.find((i) => i.id === Number(params.invitationId));
+    if (!invitation) return apiError(404, 'not_found', 'Convite não encontrado.');
+    if (invitation.status !== 'PENDING') {
+      return apiError(409, 'invitation_not_pending', 'O convite não está mais pendente.');
+    }
+    const { status } = (await request.json()) as { status: 'ACCEPTED' | 'DECLINED' };
+    if (status === 'ACCEPTED') {
+      if (currentViewer() || createdTeam) {
+        return apiError(
+          409,
+          'student_already_in_team',
+          'O aluno já participa de uma equipe nesta edição.',
+        );
+      }
+      const team = mockTeams.find((t) => t.id === invitation.team.id);
+      if (!team || toTeamListing(team).available_slots <= 0) {
+        return apiError(409, 'team_full', 'A equipe atingiu o limite máximo de integrantes.');
+      }
+      const now = new Date().toISOString();
+      createdTeam = {
+        id: team.id,
+        edition_id: 3,
+        name: team.name,
+        code: team.code,
+        status: 'ACTIVE',
+        qualification: null,
+        disqualification_reason: null,
+        description: team.description ?? null,
+        members: [
+          {
+            id: nextId++,
+            student: {
+              user_id: `leader-${team.id}`,
+              name: team.leader?.name ?? 'Liderança',
+              course: team.leader?.course ?? STUDENT_WITHOUT_TEAM.course,
+            },
+            role: 'LEADER',
+            joined_at: team.created_at,
+          },
+          {
+            id: nextId++,
+            student: { ...STUDENT_WITHOUT_TEAM, name: session?.name ?? STUDENT_WITHOUT_TEAM.name },
+            role: 'MEMBER',
+            joined_at: now,
+          },
+        ],
+        created_at: team.created_at,
+        updated_at: now,
+      };
+      myTeams.set(createdTeam.id, createdTeam);
+    }
+    const answered: Invitation = {
+      ...invitation,
+      status,
+      responded_at: new Date().toISOString(),
+    };
+    receivedInvitations = receivedInvitations.map((i) => (i.id === answered.id ? answered : i));
+    return HttpResponse.json(answered);
+  }),
   http.get('*/api/me/join-requests', ({ request }) => {
     const status = new URL(request.url).searchParams.get('status');
     return HttpResponse.json(joinRequests.filter((r) => !status || r.status === status));
@@ -907,6 +981,15 @@ export const handlers = [
     if ('error' in found) return found.error;
     return HttpResponse.json(deliverablesOf(found.project.id));
   }),
+  // Notas da equipe (RF32, confirmado). Só o projeto semeado tem etapas avaliadas no mock.
+  http.get('*/api/projects/:projectId/scores', ({ params }) => {
+    const found = viewerProject(params.projectId);
+    if ('error' in found) return found.error;
+    const scores = buildProjectScores({ id: found.project.id, title: found.project.title });
+    return HttpResponse.json(
+      found.project.id === SEEDED_PROJECT_ID ? scores : { ...scores, stages: [] },
+    );
+  }),
   // PROPOSTA: qualquer integrante ativo envia (o contrato hoje exige o LEADER).
   http.post('*/api/projects/:projectId/stages/:stageId/versions', async ({ params, request }) => {
     const found = viewerProject(params.projectId);
@@ -1095,7 +1178,8 @@ export const handlers = [
   ),
   http.get('*/api/notifications', ({ request }) => {
     const url = new URL(request.url);
-    const all = buildNotifications().map((n) =>
+    const source = currentViewer() ? buildNotifications() : buildEditionNotifications();
+    const all = source.map((n) =>
       readNotifications.has(n.id) ? { ...n, read_at: n.read_at ?? new Date().toISOString() } : n,
     );
     const items = url.searchParams.get('unread') === 'true' ? all.filter((n) => !n.read_at) : all;
@@ -1127,6 +1211,7 @@ export function resetMockSession() {
   readNotifications.clear();
   mockTeams = buildMockTeams();
   joinRequests = buildMockJoinRequests();
+  receivedInvitations = buildReceivedInvitations();
   createdTeam = null;
   resetMyTeams();
   resetProjects();

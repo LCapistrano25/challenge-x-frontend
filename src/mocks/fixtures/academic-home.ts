@@ -184,6 +184,22 @@ export const publicProjects: PublicProject[] = [
   ]),
 ];
 
+/** Aluno sem equipe: só o aviso da coordenação (Figma 551:11777). */
+export function buildEditionNotifications(): Notification[] {
+  return [
+    {
+      id: 'c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e60',
+      type: 'SYSTEM',
+      title: 'Inscrições da edição abertas',
+      message:
+        'Confira o regulamento e organize sua participação antes do fim da formação de equipes.',
+      link: null,
+      read_at: null,
+      created_at: minutesAgo(90),
+    },
+  ];
+}
+
 export function buildNotifications(): Notification[] {
   return [
     {

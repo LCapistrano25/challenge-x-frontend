@@ -464,11 +464,29 @@
     align-items: stretch;
   }
 
+  /* O nome ocupa a linha inteira; etiqueta e ação descem, alinhadas ao texto (avatar 40 + 12). */
   .member {
     flex-wrap: wrap;
+    row-gap: var(--spacing-2);
+  }
+
+  .person {
+    flex-basis: 100%;
+  }
+
+  .member > :nth-child(2) {
+    margin-left: 3.25rem;
   }
 
   .memberRole {
     width: auto;
+  }
+
+  .memberRole:empty {
+    display: none;
+  }
+
+  .member > .action {
+    margin-left: auto;
   }
 }

@@ -71,3 +71,26 @@ A tela tem três visões, decididas por `StudentDashboard.is_leader` e pela pres
 ### Logins simulados (MSW)
 
 `academico@exemplo.com` (líder), `participante@exemplo.com` (participante) e `sem-lider@exemplo.com` (equipe sem líder), todos com a senha `123456`.
+
+## Home do acadêmico sem equipe
+
+Tela: Figma › 03 - Acadêmico › "Home — sem equipe" (551:11696), rota `/academico` quando
+`StudentDashboard.team` é `null`.
+
+| Seção                                   | Chamada                                         | Situação no openapi |
+| --------------------------------------- | ----------------------------------------------- | ------------------- |
+| Prazo de formação                       | `GET /api/me/dashboard`                         | proposta (P-23)     |
+| Convites recebidos (contagem e cartões) | `GET /api/me/invitations?status=PENDING`        | confirmada (RF23)   |
+| Aceitar / recusar convite               | `POST /api/invitations/{invitation_id}/respond` | confirmada (RF23)   |
+| Solicitação enviada                     | `GET /api/me/join-requests?status=PENDING`      | confirmada (RF24)   |
+| Cancelar solicitação                    | `POST /api/join-requests/{id}/cancel`           | **proposta**        |
+| Notificações                            | `GET /api/notifications`                        | confirmada          |
+
+### Propostas
+
+1. **Resumo da equipe no convite** — o cartão do Figma mostra quem convidou, os cursos da equipe e as vagas
+   ("Marina Rocha · Convidou você · Agronomia e tecnologia", "2 vagas"). Hoje `Invitation` só traz o `TeamRef`.
+   Sugestão: incluir `invited_by` (`{ name, course }`), `team_courses` e `available_slots` na resposta de
+   `GET /api/me/invitations`. Sem esses campos, o cartão mostra só o nome da equipe.
+2. **`Invitation.expires_at`** — validade do convite ("Expira em 15/03"). Enquanto não existir, o front usa o fim da
+   etapa `FORMATION` (convites pendentes são cancelados ao fim da formação).

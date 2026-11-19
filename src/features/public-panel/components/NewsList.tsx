@@ -11,6 +11,30 @@ export interface NewsListProps {
   className?: string;
 }
 
+const isExternal = (href: string) => /^(https?:|\/\/)/.test(href) || /\.pdf($|\?)/i.test(href);
+
+/** "Leia mais": rota interna com Link; PDF ou URL externa em nova aba. Sem destino, não aparece. */
+function ReadMore({ href, title }: { href: string; title: string }) {
+  const label = (
+    <>
+      Leia mais<span className="sr-only"> sobre {title}</span>
+    </>
+  );
+  return isExternal(href) ? (
+    <a href={href} target="_blank" rel="noreferrer" className={styles.readMore}>
+      {label}
+    </a>
+  ) : (
+    <Link to={href} className={styles.readMore}>
+      {label}
+    </Link>
+  );
+}
+
+function ReadMoreIfAny({ href, title }: { href?: string; title: string }) {
+  return href ? <ReadMore href={href} title={title} /> : null;
+}
+
 export function NewsList({ items, allNewsHref, className }: NewsListProps) {
   return (
     <section className={cn(styles.news, className)} aria-labelledby="news-title">
@@ -33,9 +57,7 @@ export function NewsList({ items, allNewsHref, className }: NewsListProps) {
               </Badge>
               <h3 className={styles.cardTitle}>{item.title}</h3>
               <p className={styles.cardText}>{item.summary}</p>
-              <Link to={item.href ?? allNewsHref ?? '/'} className={styles.readMore}>
-                Leia mais<span className="sr-only"> sobre {item.title}</span>
-              </Link>
+              <ReadMoreIfAny href={item.href ?? allNewsHref} title={item.title} />
             </article>
           </li>
         ))}

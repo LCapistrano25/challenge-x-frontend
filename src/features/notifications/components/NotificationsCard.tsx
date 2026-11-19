@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/shared/lib/cn';
 import { Avatar, toneAt } from '@/shared/ui';
@@ -8,10 +9,12 @@ import styles from './NotificationsCard.module.css';
 export interface NotificationsCardProps {
   notifications: Notification[];
   className?: string;
+  /** Ação ao fim do cartão (ex.: "Ver regulamento" na Home sem equipe). */
+  action?: ReactNode;
 }
 
 /** Lista curta das notificações mais recentes (GET /api/notifications). */
-export function NotificationsCard({ notifications, className }: NotificationsCardProps) {
+export function NotificationsCard({ notifications, className, action }: NotificationsCardProps) {
   return (
     <section className={cn(styles.card, className)} aria-labelledby="notifications-title">
       <h2 id="notifications-title" className={styles.title}>
@@ -46,6 +49,7 @@ export function NotificationsCard({ notifications, className }: NotificationsCar
           ))}
         </ul>
       )}
+      {action && <div className={styles.action}>{action}</div>}
     </section>
   );
 }

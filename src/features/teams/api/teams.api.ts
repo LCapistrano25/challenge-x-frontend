@@ -3,6 +3,9 @@ import type { Paginated } from '@/shared/types/api';
 import { sameTeamCode } from '../lib/team-formation';
 import type {
   AvailableTeamsParams,
+  Invitation,
+  InvitationResponse,
+  InvitationStatus,
   JoinRequest,
   RequestStatus,
   Team,
@@ -38,6 +41,27 @@ export async function fetchMyJoinRequests(status?: RequestStatus): Promise<JoinR
   const { data } = await http.get<JoinRequest[]>('/api/me/join-requests', {
     params: status ? { status } : undefined,
   });
+  return data;
+}
+
+/** GET /api/me/invitations — teamsListMyInvitations (RF23): convites recebidos pelo aluno. */
+export async function fetchMyInvitations(status?: InvitationStatus): Promise<Invitation[]> {
+  const { data } = await http.get<Invitation[]>('/api/me/invitations', {
+    params: status ? { status } : undefined,
+  });
+  return data;
+}
+
+/**
+ * POST /api/invitations/{invitation_id}/respond — teamsRespondInvitation (RF23).
+ * Ao aceitar, o aluno entra como MEMBER (se houver vaga e não estiver em outra equipe).
+ */
+export async function respondInvitation(
+  invitationId: number,
+  status: InvitationResponse['status'],
+): Promise<Invitation> {
+  const body: InvitationResponse = { status };
+  const { data } = await http.post<Invitation>(`/api/invitations/${invitationId}/respond`, body);
   return data;
 }
 

@@ -43,3 +43,36 @@ export interface MemberEvaluationDraft {
 
 /** Situação exibida na lista (Figma: Não iniciada · Em preenchimento · Enviada). */
 export type MemberEvaluationStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'SENT';
+
+/* --- Notas da equipe (RF32) — GET /api/projects/{project_id}/scores --- */
+
+/** ScoreStatus — situação da nota consolidada da etapa (enum score_status). */
+export type ScoreStatus = 'PENDING' | 'PARTIAL' | 'FINALIZED';
+
+/** StageScoreDetail — nota, médias por critério e feedbacks de uma etapa pontuada. */
+export interface StageScoreDetail {
+  stage: { id: number; name: string; position: number };
+  /** Pontos que a etapa vale ("3.00"). */
+  points_value: string;
+  status: ScoreStatus;
+  /** Média das avaliações finalizadas; exibida quando FINALIZED. Zero sem entrega no prazo. */
+  value: string | null;
+  evaluation_count: number;
+  min_evaluators: number;
+  deliverable_status: 'NOT_SUBMITTED' | 'SUBMITTED' | 'NOT_DELIVERED';
+  criteria: {
+    criterion: { id: number; name: string };
+    max_score: string;
+    average: string | null;
+  }[];
+  feedback: {
+    comment: string | null;
+    items: { criterion_name: string; points: string; comment: string | null }[];
+  }[];
+}
+
+/** ProjectScores */
+export interface ProjectScores {
+  project: { id: number; title: string };
+  stages: StageScoreDetail[];
+}

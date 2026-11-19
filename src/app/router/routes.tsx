@@ -89,6 +89,7 @@ const roleRoutes: RouteObject[] = [
             path: '/academico/avaliacao-membro',
             lazy: lazyPage(evaluations, 'MemberEvaluationPage'),
           },
+          { path: '/academico/notas', lazy: lazyPage(evaluations, 'StudentScoresPage') },
           { path: '/academico/duvidas', lazy: lazyPage(support, 'HelpCenterPage') },
         ],
       },

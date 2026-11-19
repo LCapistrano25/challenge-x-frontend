@@ -46,3 +46,17 @@ Assim o professor lê a avaliação em `GET /api/teams/{team_id}/member-notes` (
 ### Erros tratados (schema `Error`)
 
 `403` (não é o líder), `404` (integrante fora da equipe) e `400` (validação). Mensagens em `describeMemberNoteError`.
+
+## Notas (`/academico/notas`)
+
+Ainda não há tela no Figma; o layout segue os cartões de "Projeto da equipe".
+
+| Seção                                  | Chamada                            | Situação no openapi |
+| -------------------------------------- | ---------------------------------- | ------------------- |
+| Equipe                                 | `GET /api/me/dashboard`            | proposta (P-23)     |
+| Projeto da equipe                      | `GET /api/teams/{team_id}/project` | confirmada          |
+| Notas, médias por critério e pareceres | `GET /api/projects/{id}/scores`    | confirmada (RF32)   |
+
+Regras aplicadas no front (RF32): a nota só aparece quando `status = FINALIZED`; `PENDING` e `PARTIAL` aparecem como
+"Pendente" e sem valor (P-33); `deliverable_status = NOT_DELIVERED` mostra o aviso de nota zero. O resumo soma as
+notas definitivas sobre o total de pontos das etapas pontuadas (a fórmula da nota final ainda está em aberto, P-30).

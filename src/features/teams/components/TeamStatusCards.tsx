@@ -4,14 +4,14 @@ import { describeFormationDeadline } from '../lib/formation-deadline';
 import { IconChatOutline, IconEventBusy, IconUserCircleFilled } from './icons';
 import styles from './TeamHome.module.css';
 
-interface StatCardProps {
+export interface StatCardProps {
   icon: ReactNode;
   title: string;
   value: ReactNode;
   description: string;
 }
 
-function StatCard({ icon, title, value, description }: StatCardProps) {
+export function StatCard({ icon, title, value, description }: StatCardProps) {
   return (
     <li className={cn(styles.card, styles.stat)}>
       <div className={styles.statHeader}>

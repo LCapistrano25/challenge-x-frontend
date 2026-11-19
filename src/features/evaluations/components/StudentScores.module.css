@@ -1,0 +1,220 @@
+/* Notas da equipe: mesmos cartões de "Projeto da equipe" (sem tela própria no Figma). */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  padding-top: var(--spacing-5);
+  line-height: 1.4;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.text,
+.caption {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.text {
+  font-size: var(--font-size-small);
+}
+
+.caption {
+  font-size: var(--font-size-caption);
+}
+
+.tag {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  width: fit-content;
+  padding: var(--spacing-1) 0.625rem;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  white-space: nowrap;
+}
+
+.tagNeutral {
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+}
+
+.tagPrimary {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.tagPositive {
+  background: var(--color-positive-soft);
+  color: var(--color-positive-text);
+}
+
+/* Resumo: dois indicadores lado a lado */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--spacing-6);
+  padding-top: var(--spacing-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.metric p {
+  margin: 0;
+}
+
+.metricValue {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* Etapas */
+.stages {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: var(--spacing-5) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.stage:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.stageHeader {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3) var(--spacing-6);
+  align-items: center;
+}
+
+.stageName {
+  display: flex;
+  flex: 1 1 16rem;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.stageName p {
+  margin: 0;
+}
+
+.score {
+  margin: 0 0 0 auto;
+  white-space: nowrap;
+}
+
+.scoreValue {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+}
+
+.criteria {
+  width: 100%;
+  max-width: 32rem;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+
+.criteria th,
+.criteria td {
+  padding: var(--spacing-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.criteria thead th {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+}
+
+.criteria tbody th {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-regular);
+}
+
+.criteria td {
+  color: var(--color-text-secondary);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.feedback {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-primary);
+}
+
+.feedbackTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  justify-content: space-between;
+  padding: var(--spacing-2) 0 var(--spacing-6);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: inherit;
+}
+
+@media (max-width: 40rem) {
+  .card {
+    padding: var(--spacing-4);
+  }
+
+  .score {
+    margin-left: 0;
+  }
+}
