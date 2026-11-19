@@ -23,7 +23,12 @@ import {
   buildMyTeamInvitations,
   buildMyTeamJoinRequests,
 } from './fixtures/my-team';
-import { buildTeacherDashboard } from './fixtures/teacher-dashboard';
+import {
+  buildDeliveryEvaluation,
+  buildTeacherDashboard,
+  publishDeliveryEvaluation,
+  resetTeacherMock,
+} from './fixtures/teacher-dashboard';
 import { TAKEN_PROJECT_TITLES, buildProject, buildProjectOptions } from './fixtures/project';
 import {
   PROJECT_LEADER_MEMBER_ID,
@@ -42,7 +47,7 @@ import type {
   ProjectWrite,
   StageDeliverable,
 } from '@/features/projects';
-import type { DeliverableSubmissionItem } from '@/features/deliveries';
+import type { DeliverableSubmissionItem, PublishEvaluationInput } from '@/features/deliveries';
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import type { MemberNoteCreate } from '@/features/evaluations';
 import type { SupportTicket, SupportTicketCreate } from '@/features/support';
@@ -413,6 +418,32 @@ export const handlers = [
       return apiError(403, 'forbidden', 'Somente professores.');
     }
     return HttpResponse.json(buildTeacherDashboard());
+  }),
+  http.get('*/api/teacher/deliveries/:id', ({ params }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    const detail = buildDeliveryEvaluation(String(params.id));
+    return detail
+      ? HttpResponse.json(detail)
+      : apiError(404, 'not_found', 'Entrega não encontrada.');
+  }),
+  http.put('*/api/teacher/deliveries/:id/evaluation', async ({ params, request }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    const result = publishDeliveryEvaluation(
+      String(params.id),
+      (await request.json()) as PublishEvaluationInput,
+    );
+    if (!result.ok) {
+      return apiError(
+        result.status,
+        result.status === 404 ? 'not_found' : 'invalid',
+        result.message,
+      );
+    }
+    return HttpResponse.json(result.detail);
   }),
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();
@@ -1090,6 +1121,7 @@ export const handlers = [
 /** Usado nos testes para isolar a sessão simulada entre os casos. */
 export function resetMockSession() {
   session = null;
+  resetTeacherMock();
   for (const email of Object.keys(users)) delete users[email];
   Object.assign(users, structuredClone(initialUsers));
   readNotifications.clear();

@@ -15,7 +15,7 @@ interface DeliveriesTableProps {
 export function DeliveriesTable({ deliveries, total }: DeliveriesTableProps) {
   return (
     <div>
-      <Table caption="Entregas dos projetos dos seus cursos">
+      <Table caption="Entregas dos projetos dos seus cursos" className={styles.tableWrap}>
         <TableHead>
           <TableRow>
             <TableHeader>Projeto / equipe</TableHeader>

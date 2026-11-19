@@ -66,9 +66,18 @@ export const NAV_ITEMS: Record<NavigationProfile, NavItem[]> = {
     { to: '/acervo', label: 'Acervo', icon: <NavIconArchive /> },
     { to: '/academico/duvidas', label: 'Dúvidas', icon: <NavIconHelp /> },
   ],
+  // Figma: "Sidebar - Professor". Projetos, detalhes e Acervo são as páginas públicas, que
+  // continuam dentro do layout do professor (ver PublicLayout).
   TEACHER: [
-    { to: '/professor', label: 'Início', icon: <IconHome />, end: true },
-    { to: '/professor/integrantes', label: 'Integrantes', icon: <IconUsers /> },
+    { to: '/professor', label: 'Início', icon: <NavIconHome />, end: true, mobileBar: true },
+    { to: '/projetos', label: 'Projetos', icon: <NavIconProjects /> },
+    {
+      to: '/professor/integrantes',
+      label: 'Integrantes',
+      icon: <NavIconTeam />,
+      mobileBar: true,
+    },
+    { to: '/acervo', label: 'Acervo', icon: <NavIconArchive /> },
   ],
   EXTERNAL_EVALUATOR: [
     { to: '/avaliador', label: 'Projetos finalistas', icon: <IconClipboard />, end: true },

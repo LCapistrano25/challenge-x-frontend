@@ -1,0 +1,66 @@
+.box {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+
+.table th {
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+  background: #f8fafc;
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+}
+
+.table td {
+  padding: 12px;
+  border-top: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.table tbody tr:first-child td {
+  border-top: 0;
+}
+
+.max,
+.score {
+  width: 6rem;
+}
+
+.score {
+  width: 8rem;
+}
+
+.name {
+  display: block;
+  color: var(--color-text-primary);
+}
+
+.description {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.input {
+  text-align: left;
+}
+
+.input[readonly] {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+}
+
+.error {
+  margin: 4px 0 0;
+  color: var(--color-danger-text);
+  font-size: var(--font-size-caption);
+}

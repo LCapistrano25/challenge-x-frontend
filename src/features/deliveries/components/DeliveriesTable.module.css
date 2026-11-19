@@ -2,6 +2,10 @@
   background: #f7f7f7;
 }
 
+.tableWrap {
+  overflow-x: visible;
+}
+
 .primary {
   display: block;
   color: var(--color-text-primary);
@@ -30,4 +34,66 @@
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-size: var(--font-size-caption);
+}
+
+@media (max-width: 40rem) {
+  .tableWrap :global(table) {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .tableWrap :global(th),
+  .tableWrap :global(td) {
+    padding: 0.625rem 0.5rem;
+  }
+
+  .tableWrap :global(thead) {
+    display: none;
+  }
+
+  .tableWrap :global(tbody) {
+    display: grid;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+  }
+
+  .tableWrap :global(tr) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+  }
+
+  .tableWrap :global(td) {
+    display: block;
+    width: auto;
+  }
+
+  .tableWrap :global(th:nth-child(2)),
+  .tableWrap :global(td:nth-child(2)) {
+    display: none;
+  }
+
+  .tableWrap :global(td:nth-child(1)) {
+    grid-column: 1 / -1;
+  }
+
+  .tableWrap :global(td:nth-child(3)),
+  .tableWrap :global(td:nth-child(4)) {
+    grid-column: 1;
+  }
+
+  .tableWrap :global(td:nth-child(5)) {
+    grid-column: 2;
+    grid-row: 3;
+    align-self: end;
+  }
+
+  .action {
+    display: inline-block;
+    max-width: 5.5rem;
+    text-align: right;
+  }
 }

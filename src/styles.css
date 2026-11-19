@@ -453,6 +453,10 @@
     display: none;
   }
 
+  .app-content {
+    padding: var(--spacing-4);
+  }
+
   /* Perfis com navegação híbrida (acadêmico): sem trilho lateral fixo. */
   .app-shell.app-shell--hybrid {
     grid-template-columns: minmax(0, 1fr);
