@@ -74,7 +74,11 @@ export function CreateTeamCard({
   const limit = maxMembers ?? DEFAULT_MAX_MEMBERS;
 
   return (
-    <section className={styles.card} aria-labelledby={titleId}>
+    <section
+      id="criar-equipe"
+      className={`${styles.card} ${styles.anchor}`}
+      aria-labelledby={titleId}
+    >
       <h2 id={titleId} className={styles.cardTitle}>
         Criar uma equipe
       </h2>

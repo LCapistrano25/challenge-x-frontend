@@ -8,4 +8,7 @@ export type {
   MemberNoteCreate,
   MemberNoteCreated,
   MemberNoteSummary,
+  ProjectScores,
+  ScoreStatus,
+  StageScoreDetail,
 } from './types';

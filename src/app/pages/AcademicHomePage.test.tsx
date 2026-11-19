@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { MemoryRouter } from 'react-router-dom';
 import { server } from '@/mocks/server';
 import { buildStudentDashboard } from '@/mocks/fixtures/academic-home';
+import { buildReceivedInvitations } from '@/mocks/fixtures/teams';
 import { PageHeaderProvider } from '../layouts/PageHeaderProvider';
 import { usePageHeaderContent } from '../layouts/page-header-context';
 import { AcademicHomePage } from './AcademicHomePage';
@@ -72,19 +73,71 @@ describe('AcademicHomePage', () => {
     expect(within(carousel).getAllByRole('listitem')).toHaveLength(4);
   });
 
-  it('orienta quem ainda não tem equipe', async () => {
+  it('sem equipe: indicadores, primeiros passos, convites e caminho (Figma 551:11696)', async () => {
     server.use(
       http.get('*/api/me/dashboard', () =>
         HttpResponse.json({ ...buildStudentDashboard(), team: null, pending_actions: [] }),
       ),
+      http.get('*/api/me/invitations', () => HttpResponse.json(buildReceivedInvitations())),
     );
     renderPage();
 
-    expect(await screen.findByText('Você ainda não participa de uma equipe.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Encontrar equipe' })).toHaveAttribute(
+    const cards = await screen.findByRole('list', {
+      name: 'Sua situação na formação de equipes',
+    });
+    expect(within(cards).getByText('Sem equipe')).toBeInTheDocument();
+    expect(within(cards).getByText('5 dias')).toBeInTheDocument();
+    expect(await within(cards).findByText('2')).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('heading', { name: 'Seu desafio começa com uma equipe' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Criar minha equipe' })).toHaveAttribute(
       'href',
-      '/academico/equipe/buscar',
+      '/academico/equipe/buscar#criar-equipe',
     );
+    expect(screen.getByRole('link', { name: 'Encontrar equipes' })).toHaveAttribute(
+      'href',
+      '/academico/equipe/buscar#equipes-com-vagas',
+    );
+
+    expect(await screen.findByText('Raízes do Futuro')).toBeInTheDocument();
+    expect(
+      screen.getByText('Convidou você · Agronomia e Engenharia de Software'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Aceitar convite da equipe Cidade em Rede' }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText('Sua solicitação para a equipe EcoLab está aguardando aprovação.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Seu caminho no Desafio X' })).toBeInTheDocument();
+
+    // Sem equipe, a home não repete as seções de quem já participa de uma equipe.
+    expect(screen.queryByRole('heading', { name: 'Projetos' })).not.toBeInTheDocument();
+  });
+
+  it('sem equipe: recusar um convite tira o cartão da lista', async () => {
+    let invitations = buildReceivedInvitations();
+    server.use(
+      http.get('*/api/me/dashboard', () =>
+        HttpResponse.json({ ...buildStudentDashboard(), team: null, pending_actions: [] }),
+      ),
+      http.get('*/api/me/invitations', () => HttpResponse.json(invitations)),
+      http.post('*/api/invitations/:id/respond', ({ params }) => {
+        const answered = invitations.find((i) => i.id === Number(params.id));
+        invitations = invitations.filter((i) => i.id !== Number(params.id));
+        return HttpResponse.json({ ...answered, status: 'DECLINED' });
+      }),
+    );
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole('button', { name: 'Recusar convite da equipe Cidade em Rede' }),
+    );
+    await waitFor(() => expect(screen.queryByText('Cidade em Rede')).not.toBeInTheDocument());
+    expect(screen.getByText('Raízes do Futuro')).toBeInTheDocument();
   });
 
   it('avisa requisitos pendentes da formação (RF51)', async () => {

@@ -190,6 +190,21 @@ export interface Invitation {
   status: InvitationStatus;
   created_at: string;
   responded_at: string | null;
+  /**
+   * PROPOSTA (GET /api/me/invitations): quem convidou e um resumo da equipe, para o aluno
+   * decidir na Home ("Marina Rocha · Convidou você · Agronomia e tecnologia", "2 vagas").
+   * Hoje o Invitation só traz o TeamRef.
+   */
+  invited_by?: { name: string; course?: CourseSummary | null } | null;
+  team_courses?: CourseSummary[];
+  available_slots?: number | null;
+  /** PROPOSTA: fim da validade do convite (convites PENDING expiram com a formação). */
+  expires_at?: string | null;
+}
+
+/** InvitationResponse — POST /api/invitations/{id}/respond */
+export interface InvitationResponse {
+  status: 'ACCEPTED' | 'DECLINED';
 }
 
 /** JoinRequestDecision — POST /api/join-requests/{id}/respond */

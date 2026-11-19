@@ -31,6 +31,14 @@
   align-self: stretch;
 }
 
+/* Sem equipe: "Seu desafio começa com uma equipe" + Notificações (448px). */
+.startRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 28rem;
+  gap: var(--spacing-5);
+  align-items: stretch;
+}
+
 .projects {
   display: flex;
   flex-direction: column;
@@ -97,6 +105,7 @@
 
 @media (max-width: 64rem) {
   .teamRow,
+  .startRow,
   .infoRow {
     grid-template-columns: minmax(0, 1fr);
   }

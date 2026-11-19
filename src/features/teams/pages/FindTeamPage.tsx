@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
 import { usePageHeader } from '@/shared/lib/page-header';
 import { Alert, ButtonLink } from '@/shared/ui';
@@ -78,8 +78,24 @@ export function FindTeamPage() {
     'Crie um novo grupo ou participe de uma equipe com vagas disponíveis.',
   );
   const navigate = useNavigate();
+  const { hash } = useLocation();
   const { user } = useAuth();
   const dashboard = useStudentDashboard();
+  const ready = dashboard.data !== undefined;
+
+  // Atalhos da Home ("Criar minha equipe" / "Encontrar equipes") rolam até o bloco certo.
+  // Os blocos podem aparecer só depois das próprias consultas: tenta por até ~2 s.
+  useEffect(() => {
+    if (!ready || !hash) return;
+    let attempts = 0;
+    const timer = window.setInterval(() => {
+      const target = document.getElementById(hash.slice(1));
+      attempts += 1;
+      if (target) target.scrollIntoView({ block: 'start' });
+      if (target || attempts >= 20) window.clearInterval(timer);
+    }, 100);
+    return () => window.clearInterval(timer);
+  }, [ready, hash]);
   const team = dashboard.data?.team ?? null;
   const pending = useMyPendingJoinRequests({ enabled: !team });
 

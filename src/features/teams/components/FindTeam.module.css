@@ -328,3 +328,8 @@
     flex-basis: auto;
   }
 }
+
+/* Atalhos da Home (#criar-equipe, #equipes-com-vagas): param abaixo do cabeçalho fixo. */
+.anchor {
+  scroll-margin-top: 7rem;
+}

@@ -39,7 +39,11 @@ export function AvailableTeamsPanel({ pendingByTeam, blocked = false }: Availabl
   const filtered = Boolean(debouncedSearch || area);
 
   return (
-    <section className={cn(styles.card, styles.teamsCard)} aria-labelledby={titleId}>
+    <section
+      id="equipes-com-vagas"
+      className={cn(styles.card, styles.teamsCard, styles.anchor)}
+      aria-labelledby={titleId}
+    >
       <h2 id={titleId} className={styles.cardTitle}>
         Equipes com vagas
       </h2>

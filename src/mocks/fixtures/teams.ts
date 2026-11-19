@@ -3,7 +3,7 @@
  * Campos marcados como PROPOSTA nos tipos (description, interest_area, leader) também aparecem
  * aqui para a tela ficar igual ao Figma; não são contrato aprovado.
  */
-import type { JoinRequest, TeamListing } from '@/features/teams';
+import type { Invitation, JoinRequest, TeamListing } from '@/features/teams';
 import type { CourseSummary } from '@/shared/types/api';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -105,4 +105,30 @@ export function buildMockJoinRequests(): JoinRequest[] {
       responded_at: null,
     },
   ];
+}
+
+const hoursAgo = (hours: number) => new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
+
+/**
+ * Convites recebidos pelo aluno sem equipe (Figma 551:11786: Raízes do Futuro e Cidade em Rede).
+ * `invited_by`, `team_courses`, `available_slots` e `expires_at` são PROPOSTA.
+ */
+export function buildReceivedInvitations(): Invitation[] {
+  const teams = buildMockTeams();
+  return [21, 22].map((teamId, index) => {
+    const team = teams.find((t) => t.id === teamId)!;
+    return {
+      id: 401 + index,
+      team: { id: team.id, name: team.name, code: team.code },
+      student: { user_id: STUDENT_WITHOUT_TEAM.user_id, name: STUDENT_WITHOUT_TEAM.name },
+      invited_email: null,
+      status: 'PENDING',
+      created_at: index === 0 ? hoursAgo(2) : daysAgo(1),
+      responded_at: null,
+      invited_by: team.leader ?? null,
+      team_courses: team.courses,
+      available_slots: Math.max(0, MOCK_MAX_MEMBERS - team.member_count),
+      expires_at: null,
+    };
+  });
 }
