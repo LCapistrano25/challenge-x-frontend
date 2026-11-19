@@ -27,13 +27,9 @@ describe('Painel de acompanhamento do professor', () => {
   it('mostra o título no cabeçalho, o resumo, o progresso, o prazo e a prioridade', async () => {
     await renderTeacher();
 
+    expect(await screen.findByRole('heading', { name: 'Olá, Paulo!' })).toBeInTheDocument();
     expect(
-      await screen.findByRole('heading', { name: 'Painel de Acompanhamento do Curso' }),
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText(
-        'Projetos dos seus cursos vinculados • Etapa 2 — Proposta e planejamento',
-      ),
+      await screen.findByText('Bem-vindo ao seu painel de acompanhamento.'),
     ).toBeInTheDocument();
 
     expect(screen.getByText('Projetos nos cursos vinculados').closest('div')).toHaveTextContent(
@@ -90,7 +86,7 @@ describe('Painel de acompanhamento do professor', () => {
     fireEvent.change(screen.getByLabelText('Curso vinculado'), {
       target: { value: 'Sistemas de Informação' },
     });
-    expect(rows()).toHaveLength(1);
+    expect(rows()).toHaveLength(2);
 
     fireEvent.change(screen.getByLabelText('Curso vinculado'), { target: { value: '' } });
     fireEvent.change(screen.getByLabelText('Buscar projeto ou equipe'), {
@@ -122,7 +118,7 @@ describe('Painel de acompanhamento do professor', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/professor/entregas/d1'));
     expect(
-      await screen.findByRole('heading', { name: 'Avaliação da entrega' }),
+      await screen.findByRole('heading', { name: 'Avaliação da Entrega' }),
     ).toBeInTheDocument();
   });
 

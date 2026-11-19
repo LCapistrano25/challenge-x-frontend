@@ -5,9 +5,17 @@ import styles from './Table.module.css';
 
 // Peças visuais da tabela. A lógica (ordenar, filtrar, paginar) fica com o TanStack Table
 // ou com os parâmetros que a API aceitar.
-export function Table({ children, caption }: { children: ReactNode; caption?: string }) {
+export function Table({
+  children,
+  caption,
+  className,
+}: {
+  children: ReactNode;
+  caption?: string;
+  className?: string;
+}) {
   return (
-    <div className={styles.wrap}>
+    <div className={cn(styles.wrap, className)}>
       <table className={styles.table}>
         {caption && <caption className="sr-only">{caption}</caption>}
         {children}

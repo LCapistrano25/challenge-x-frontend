@@ -10,6 +10,7 @@ import { NAV_ITEMS, ROLE_AREA } from '@/app/config/navigation';
 import { Spinner } from '@/shared/ui';
 import { PagePlaceholder } from '@/shared/ui/dev/PagePlaceholder';
 import { AcademicHomePage } from '../pages/AcademicHomePage';
+import { TeacherHomePage } from '../pages/TeacherHomePage';
 import { ErrorPage } from '../pages/ErrorPage';
 import { ForbiddenPage } from '../pages/ForbiddenPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
@@ -99,7 +100,7 @@ const roleRoutes: RouteObject[] = [
       {
         element: <AppLayout area={ROLE_AREA.TEACHER} nav={NAV_ITEMS.TEACHER} />,
         children: [
-          { path: '/professor', lazy: lazyPage(deliveries, 'DeliveryTrackingPage') },
+          { path: '/professor', element: <TeacherHomePage /> },
           { path: '/professor/integrantes', lazy: lazyPage(teams, 'MemberObservationsPage') },
           {
             path: '/professor/entregas/:deliveryId',

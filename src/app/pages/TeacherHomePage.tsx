@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useAuth } from '@/features/auth';
 import { usePageHeader } from '@/shared/lib/page-header';
 import {
   Alert,
@@ -11,28 +12,30 @@ import {
   Spinner,
   TextField,
 } from '@/shared/ui';
-import { DeliveriesTable } from '../components/DeliveriesTable';
-import { useTeacherDashboard } from '../hooks/useTeacherDashboard';
 import {
+  DeliveriesTable,
   STATUS_LABEL,
   deliveryPath,
   filterDeliveries,
   formatDeadline,
   summarize,
+  useTeacherDashboard,
   type DeliveryFilters,
-} from '../lib/delivery-view';
-import styles from './DeliveryTrackingPage.module.css';
+} from '@/features/deliveries';
+import styles from './TeacherHomePage.module.css';
 
 const NO_FILTERS: DeliveryFilters = { course: '', status: '', query: '' };
 
 /** Painel inicial do professor: acompanhamento das entregas dos cursos vinculados. */
-export function DeliveryTrackingPage() {
+export function TeacherHomePage() {
+  const { user } = useAuth();
   const { data, isLoading, isError, refetch } = useTeacherDashboard();
   const [filters, setFilters] = useState<DeliveryFilters>(NO_FILTERS);
 
+  const firstName = user?.name.trim().split(/\s+/)[0];
   usePageHeader(
-    'Painel de Acompanhamento do Curso',
-    data ? `Projetos dos seus cursos vinculados • ${data.stage_label}` : undefined,
+    firstName ? `Olá, ${firstName}!` : 'Olá!',
+    'Bem-vindo ao seu painel de acompanhamento.',
   );
 
   const summary = useMemo(() => summarize(data?.deliveries ?? []), [data]);
@@ -60,7 +63,7 @@ export function DeliveryTrackingPage() {
     setFilters((current) => ({ ...current, [key]: value }));
 
   return (
-    <section className={styles.page} aria-label="Acompanhamento das entregas">
+    <section className={`page-flush ${styles.page}`} aria-label="Acompanhamento das entregas">
       <dl className={styles.summary}>
         <div className={`${styles.card} ${styles.total}`}>
           <dt>Projetos nos cursos vinculados</dt>

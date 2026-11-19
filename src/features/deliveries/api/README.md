@@ -63,3 +63,20 @@ Cada entrega traz `id`, `project_name`, `team_name`, `course`, `stage`, `submitt
 `status` (`PENDING_EVALUATION` | `SUBMITTED` | `EVALUATED`). A lista deve vir **já ordenada por
 prioridade de avaliação**: o botão "Avaliar próximo projeto" leva à primeira pendente.
 Totais, progresso e filtros são calculados no front a partir dessa lista.
+
+### Avaliação de uma entrega (professor)
+
+Propostas (x-status: proposed). O openapi já prevê `/api/projects/{project_id}/stages/{stage_id}/evaluation`
+e `/api/teacher/projects`: se for esse o caminho definitivo, só mudam as URLs em
+`api/delivery-evaluation.api.ts` e `api/teacher-dashboard.api.ts`; os tipos e as telas não mudam.
+
+- `GET /api/teacher/deliveries/{id}`: só `TEACHER` (`403` nos demais, `404` se a entrega não for dos
+  cursos do professor). Devolve `DeliveryEvaluationDetail`: contexto (projeto, equipe, etapa, prazo,
+  `max_score`), `files[]` (com `download_url`), `team_message`, `criteria[]` (cada um com
+  `max_score` e `score`, que é `null` até a publicação), `feedback` e `total_score`.
+- `PUT /api/teacher/deliveries/{id}/evaluation`: corpo `{ scores: [{ criterion_id, score }], feedback }`.
+  Devolve o detalhe já como `EVALUATED`. `422` para nota fora de `0..max_score` ou critério faltando,
+  `409` se a entrega já foi avaliada. A publicação não tem rascunho salvo: o Figma só mostra o selo
+  "Rascunho" enquanto o professor preenche.
+
+O front calcula o total digitado só para exibir; o valor oficial é o `total_score` devolvido.
