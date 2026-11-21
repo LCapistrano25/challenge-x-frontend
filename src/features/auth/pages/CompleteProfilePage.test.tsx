@@ -44,7 +44,7 @@ describe('primeiro acesso do aluno', () => {
   it('valida os campos antes de enviar', async () => {
     const onSubmit = vi.fn();
     server.use(
-      http.post('*/auth/complete-profile', () => {
+      http.post('*/api/auth/students', () => {
         onSubmit();
         return HttpResponse.json({});
       }),
@@ -72,20 +72,14 @@ describe('primeiro acesso do aluno', () => {
   it('envia os dados e leva para a home do aluno', async () => {
     let body: unknown;
     server.use(
-      http.post('*/auth/complete-profile', async ({ request }) => {
+      http.post('*/api/auth/students', async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({
-          id: '5',
-          name: 'Nina Nova',
-          email: 'novo.aluno@exemplo.com',
-          role: 'STUDENT',
-          profileComplete: true,
-        });
+        return HttpResponse.json({ student: { user_id: 8 } }, { status: 201 });
       }),
     );
     const router = await renderAs('novo.aluno@exemplo.com');
 
-    fireEvent.change(await screen.findByLabelText('Curso'), { target: { value: 'c1' } });
+    fireEvent.change(await screen.findByLabelText('Curso'), { target: { value: '1' } });
     fireEvent.change(screen.getByLabelText('Matrícula'), { target: { value: '2026001234' } });
     fireEvent.change(screen.getByLabelText('Período'), { target: { value: '4' } });
     fireEvent.click(termsCheckbox());
@@ -93,23 +87,30 @@ describe('primeiro acesso do aluno', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/academico'));
     expect(body).toEqual({
-      role: 'STUDENT',
-      courseId: 'c1',
-      registration: '2026001234',
-      period: 4,
-      acceptedTerms: true,
+      registration_number: '2026001234',
+      course_id: 1,
+      term: 4,
     });
   });
 
   it('mostra a mensagem da API quando o envio falha', async () => {
     server.use(
-      http.post('*/auth/complete-profile', () =>
-        HttpResponse.json({ message: 'Matrícula já cadastrada.' }, { status: 422 }),
+      http.post('*/api/auth/students', () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: 'registration_number_taken',
+              message: 'Matrícula já cadastrada.',
+              details: null,
+            },
+          },
+          { status: 409 },
+        ),
       ),
     );
     const router = await renderAs('novo.aluno@exemplo.com');
 
-    fireEvent.change(await screen.findByLabelText('Curso'), { target: { value: 'c2' } });
+    fireEvent.change(await screen.findByLabelText('Curso'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Matrícula'), { target: { value: '2026001234' } });
     fireEvent.change(screen.getByLabelText('Período'), { target: { value: '1' } });
     fireEvent.click(termsCheckbox());
@@ -140,18 +141,12 @@ describe('primeiro acesso do professor', () => {
     expect(await screen.findByText('Selecione ao menos um curso.')).toBeInTheDocument();
   });
 
-  it('envia os cursos escolhidos e leva para a home do professor', async () => {
+  it('pede confirmação, envia os cursos escolhidos e leva para a home do professor', async () => {
     let body: unknown;
     server.use(
-      http.post('*/auth/complete-profile', async ({ request }) => {
+      http.post('*/api/auth/teachers', async ({ request }) => {
         body = await request.json();
-        return HttpResponse.json({
-          id: '6',
-          name: 'Nando Novo',
-          email: 'novo.professor@exemplo.com',
-          role: 'TEACHER',
-          profileComplete: true,
-        });
+        return HttpResponse.json({ teacher: { user_id: 9 } }, { status: 201 });
       }),
     );
     const router = await renderAs('novo.professor@exemplo.com');
@@ -162,8 +157,41 @@ describe('primeiro acesso do professor', () => {
     fireEvent.click(termsCheckbox());
     fireEvent.click(screen.getByRole('button', { name: 'Finalizar cadastro' }));
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/professor'));
-    expect(body).toEqual({ role: 'TEACHER', courseIds: ['c1', 'c4'], acceptedTerms: true });
+    expect(await screen.findByRole('dialog')).toHaveTextContent('não poderá alterar');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar cadastro' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/professor'), {
+      timeout: 5000,
+    });
+    expect(body).toEqual({ course_ids: [1, 4] });
+  });
+
+  it('redireciona para a home do professor em 409 teacher_profile_exists', async () => {
+    server.use(
+      http.post('*/api/auth/teachers', () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: 'teacher_profile_exists',
+              message: 'Perfil de professor já cadastrado.',
+              details: null,
+            },
+          },
+          { status: 409 },
+        ),
+      ),
+    );
+    const router = await renderAs('novo.professor@exemplo.com');
+
+    fireEvent.click(await screen.findByRole('button', { name: /Cursos/ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Engenharia de Software' }));
+    fireEvent.click(termsCheckbox());
+    fireEvent.click(screen.getByRole('button', { name: 'Finalizar cadastro' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Confirmar cadastro' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/professor'), {
+      timeout: 5000,
+    });
   });
 });
 

@@ -10,6 +10,7 @@ import {
   simulateMicrosoftLogin,
 } from '../api/auth.api';
 import { MicrosoftMockPicker } from '../components/MicrosoftMockPicker';
+import { isMicrosoftOAuthConfigured } from '../lib/microsoft-oauth';
 import { homePathFor, needsProfile } from '../roles';
 import { useAuth } from '../useAuth';
 import styles from './LoginPage.module.css';
@@ -23,9 +24,10 @@ type LoginPageProps = {
 /** Regra de negócio violada no login (ex.: aluno tentando entrar por senha). */
 class LoginRuleError extends Error {}
 
-/** Códigos que o back-end pode devolver em /login?error= após o retorno da Microsoft. */
+/** Códigos que o back-end ou o Entra ID podem devolver em ?error= após o retorno da Microsoft. */
 const MICROSOFT_ERRORS: Record<string, string> = {
   microsoft_denied: 'O login com a Microsoft foi cancelado.',
+  access_denied: 'O login com a Microsoft foi cancelado.',
   account_not_allowed: 'Esta conta Microsoft não tem acesso à plataforma.',
 };
 
@@ -70,6 +72,10 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
     setError(null);
     if (USE_MICROSOFT_MOCK) {
       setShowMockPicker((visible) => !visible);
+      return;
+    }
+    if (!isMicrosoftOAuthConfigured()) {
+      setError('Login com a Microsoft não configurado nesta instalação.');
       return;
     }
     redirectTo(getMicrosoftLoginUrl(from));

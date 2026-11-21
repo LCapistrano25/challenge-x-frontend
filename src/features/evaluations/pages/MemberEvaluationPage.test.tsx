@@ -148,7 +148,10 @@ describe('MemberEvaluationPage — líder', () => {
 
 describe('MemberEvaluationPage — participante', () => {
   it('não mostra o formulário para quem não é líder', async () => {
-    await http.post('/auth/login', { email: 'participante@exemplo.com', password: '123456' });
+    await http.post('/api/auth/sessions/password', {
+      email: 'participante@exemplo.com',
+      password: '123456',
+    });
     renderPage();
 
     expect(

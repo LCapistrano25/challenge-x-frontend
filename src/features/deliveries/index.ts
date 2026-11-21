@@ -1,6 +1,7 @@
 export { SubmitDeliveryPage } from './pages/SubmitDeliveryPage';
 export { DeliveryConfirmationPage } from './pages/DeliveryConfirmationPage';
-export type { DeliverableSubmissionItem } from './types';
+export { downloadDeliverableFile } from './api/deliveries.api';
+export type { DeliverableSubmissionItem, DeliverableSubmissionJson } from './types';
 export { DeliveryEvaluationPage } from './pages/DeliveryEvaluationPage';
 export { DeliveriesTable } from './components/DeliveriesTable';
 export {

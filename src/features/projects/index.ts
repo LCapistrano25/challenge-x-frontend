@@ -31,6 +31,7 @@ export {
   submitDeliveryPath,
 } from './lib/team-project';
 export type {
+  CanvasContent,
   CategoryRef,
   DeliverableField,
   DeliverableFieldType,
@@ -40,11 +41,15 @@ export type {
   DeliverableVersion,
   ReceiptSummary,
   StageDeliverable,
+  SwotContent,
   ChallengeSummary,
   EligibleChallenge,
   Project,
   ProjectCategory,
+  ProjectCategoryInput,
+  ProjectChallengeInput,
   ProjectDetails,
+  ProjectDetailsInput,
   ProjectDraft,
   ProjectOptions,
   ProjectStatus,

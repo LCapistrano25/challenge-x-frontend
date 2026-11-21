@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/features/auth';
+import { getApiError } from '@/shared/lib/api-error';
 import { usePageHeader } from '@/shared/lib/page-header';
 import { Alert, Button, ButtonLink, ConfirmDialog, EmptyState, Spinner, notify } from '@/shared/ui';
 import { EditTeamDialog } from '../components/EditTeamDialog';
@@ -32,8 +33,10 @@ import {
   findLeader,
   findSelf,
   getTeamViewMode,
+  hasActiveExtension,
   isFormationLocked,
   pendingLeadershipRequest,
+  describeExtendedUntil,
   type TeamViewMode,
 } from '../lib/my-team';
 import {
@@ -52,6 +55,8 @@ const SUBTITLE: Record<TeamViewMode, string> = {
 };
 
 const LOCKED_HINT = 'A composição da equipe só pode mudar durante a formação.';
+const EXTENDED_LEAVE_HINT =
+  'Saídas ficam bloqueadas durante o prazo extra de reposição de integrantes.';
 
 function Footer() {
   return (
@@ -167,6 +172,7 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
   const [editOpen, setEditOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [leaveBelowMinMsg, setLeaveBelowMinMsg] = useState<string | null>(null);
   const [mustTransferOpen, setMustTransferOpen] = useState(false);
   const [leadershipOpen, setLeadershipOpen] = useState(false);
   const [removing, setRemoving] = useState<TeamMember | null>(null);
@@ -182,6 +188,9 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
   const others = team.members.filter((member) => member.role !== 'LEADER');
   const count = team.members.length;
   const locked = isFormationLocked(formation);
+  const extendedActive = hasActiveExtension(team.formation_extended_until);
+  const inviteLocked = locked && !extendedActive;
+  const leaveLocked = locked || extendedActive;
   const full = availableSlots(count, maxMembers) === 0;
   const pendingLeadership = pendingLeadershipRequest(leadershipRequests.data);
 
@@ -200,7 +209,10 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
             : describePendingSummary(pendingInvitations.length, pendingRequests.length),
         }
       : { label: 'Liderança', value: currentLeader?.student.name ?? 'Sem líder' },
-    { label: 'Formação da equipe', value: describeFormation(formation) },
+    {
+      label: 'Formação da equipe',
+      value: describeFormation(formation, team.formation_extended_until),
+    },
   ];
 
   function handleLeaveClick() {
@@ -209,15 +221,26 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
     else setLeaveOpen(true);
   }
 
-  function confirmLeave() {
-    leaveTeam.mutate(undefined, {
+  function confirmLeave(confirm = false) {
+    leaveTeam.mutate(confirm, {
       onSuccess: () => {
         notify.success(`Você saiu da equipe ${team.name}.`);
         setLeaveOpen(false);
+        setLeaveBelowMinMsg(null);
         navigate('/academico/equipe/buscar');
       },
       onError: (error) => {
+        const apiError = getApiError(error);
+        if (!confirm && apiError?.code === 'leave_below_minimum') {
+          setLeaveOpen(false);
+          setLeaveBelowMinMsg(
+            apiError.message ||
+              'Sua saída deixará a equipe abaixo do mínimo de integrantes. Confirme para sair.',
+          );
+          return;
+        }
         setLeaveOpen(false);
+        setLeaveBelowMinMsg(null);
         notify.error(describeMyTeamError(error, 'Não foi possível sair da equipe.'));
       },
     });
@@ -258,6 +281,13 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
         onEdit={leader ? () => setEditOpen(true) : undefined}
       />
 
+      {extendedActive && team.formation_extended_until && (
+        <Alert tone="warning" title={describeExtendedUntil(team.formation_extended_until)}>
+          A equipe recebeu 48 horas extras para repor vagas. Convites e aprovações permanecem
+          liberados até o novo limite, mas saídas ficam bloqueadas.
+        </Alert>
+      )}
+
       {leaderless && (
         <LeaderlessNotice
           previousLeaderName={team.previous_leader?.name}
@@ -274,7 +304,7 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
             maxMembers={maxMembers}
             selfMemberId={self?.id}
             manage={leader}
-            removeDisabled={locked || removeMember.isPending}
+            removeDisabled={leaveLocked || removeMember.isPending}
             onRemove={setRemoving}
           />
           {leader && (
@@ -282,7 +312,7 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
               onTransfer={() => setTransferOpen(true)}
               onLeave={handleLeaveClick}
               transferDisabled={others.length === 0}
-              leaveDisabled={locked}
+              leaveDisabled={leaveLocked}
             />
           )}
         </div>
@@ -293,14 +323,14 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
               <InviteStudentCard
                 teamId={team.id}
                 code={team.code}
-                disabled={locked || full}
-                disabledReason={locked ? LOCKED_HINT : 'A equipe já está completa.'}
+                disabled={inviteLocked || full}
+                disabledReason={inviteLocked ? LOCKED_HINT : 'A equipe já está completa.'}
               />
               <TeamPendingCard
                 teamId={team.id}
                 joinRequests={pendingRequests}
                 invitations={pendingInvitations}
-                approveDisabled={locked || full}
+                approveDisabled={inviteLocked || full}
                 loading={pendingLoading}
               />
             </>
@@ -309,16 +339,20 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
               <ParticipationCard
                 leaderName={currentLeader?.student.name ?? null}
                 onLeave={handleLeaveClick}
-                leaveDisabled={locked}
-                leaveHint={locked ? LOCKED_HINT : undefined}
+                leaveDisabled={leaveLocked}
+                leaveHint={extendedActive ? EXTENDED_LEAVE_HINT : locked ? LOCKED_HINT : undefined}
               />
               {mode === 'MEMBER' && (
                 <section className={styles.card} aria-labelledby="team-formation">
                   <h2 id="team-formation" className={styles.cardTitle}>
-                    {locked ? 'Formação encerrada' : 'Equipe em formação'}
+                    {inviteLocked
+                      ? 'Formação encerrada'
+                      : extendedActive
+                        ? 'Prazo extra para reposição'
+                        : 'Equipe em formação'}
                   </h2>
                   <p className={styles.text}>
-                    {locked
+                    {inviteLocked
                       ? 'A composição da equipe não pode mais ser alterada.'
                       : full
                         ? 'A equipe está completa.'
@@ -390,7 +424,18 @@ function MyTeamContent({ team, mode, formation, maxMembers }: MyTeamContentProps
         confirmLabel="Sair da equipe"
         tone="danger"
         loading={leaveTeam.isPending}
-        onConfirm={confirmLeave}
+        onConfirm={() => confirmLeave(false)}
+      />
+
+      <ConfirmDialog
+        open={leaveBelowMinMsg !== null}
+        onOpenChange={(open) => !open && setLeaveBelowMinMsg(null)}
+        title="Equipe abaixo do mínimo"
+        description={leaveBelowMinMsg ?? ''}
+        confirmLabel="Confirmar saída"
+        tone="danger"
+        loading={leaveTeam.isPending}
+        onConfirm={() => confirmLeave(true)}
       />
     </div>
   );

@@ -129,7 +129,7 @@ export function useTransferLeadership(teamId: number) {
 export function useLeaveTeam(teamId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => leaveTeam(teamId),
+    mutationFn: (confirm: boolean) => leaveTeam(teamId, confirm),
     onSuccess: () => {
       queryClient.removeQueries({ queryKey: ['teams', teamId] });
       void queryClient.invalidateQueries({ queryKey: studentDashboardKey });

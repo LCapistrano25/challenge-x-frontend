@@ -6,7 +6,7 @@ import type { CourseSummary, EditionSummary, SdgSummary, StageSchedule } from '@
  */
 
 export type MemberRole = 'LEADER' | 'MEMBER';
-export type TeamStatus = 'ACTIVE' | 'DISQUALIFIED';
+export type TeamStatus = 'ACTIVE' | 'DISQUALIFIED' | 'DISBANDED';
 export type TeamQualification = 'QUALIFIED' | 'NOT_QUALIFIED';
 
 /** TeamMember (somente vínculos ativos). */
@@ -30,6 +30,7 @@ export interface Team {
   status: TeamStatus;
   qualification: TeamQualification | null;
   disqualification_reason: string | null;
+  formation_extended_until?: string | null;
   members: TeamMember[];
   created_at: string;
   updated_at: string;
@@ -78,7 +79,7 @@ export interface DashboardProject {
   title: string;
   summary: string;
   status: string;
-  challenge: { id: number; title: string; course: CourseSummary; sdg: SdgSummary };
+  challenge: { id: number; description: string; course: CourseSummary; sdg: SdgSummary } | null;
 }
 
 /** StudentDashboard — GET /api/me/dashboard */
@@ -118,6 +119,8 @@ export interface TeamRef {
 export interface TeamCreate {
   /** Contrato: maxLength 150. O Figma limita a 60 caracteres na tela. */
   name: string;
+  /** Convites iniciais exigidos na criação da equipe (entre min_members - 1 e max_members - 1). */
+  invitations: InvitationCreate[];
   /** PROPOSTA: área de interesse da equipe. */
   interest_area?: InterestArea;
   /** PROPOSTA: apresentação da equipe (até 300 caracteres). */
@@ -184,8 +187,7 @@ export type InvitationCreate = { student_id: string } | { email: string };
 export interface Invitation {
   id: number;
   team: TeamRef;
-  /** null quando o convite foi feito por e-mail a quem ainda não tem cadastro (P-13). */
-  student: UserSummary | null;
+  student: UserSummary;
   invited_email: string | null;
   status: InvitationStatus;
   created_at: string;

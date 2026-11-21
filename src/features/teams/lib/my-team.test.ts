@@ -15,7 +15,7 @@ import {
 
 const member = (id: number, name: string, role: TeamMember['role'] = 'MEMBER'): TeamMember => ({
   id,
-  student: { user_id: `u-${id}`, name, course: { id: 1, name: 'ES', slug: 'ES' } },
+  student: { user_id: `u-${id}`, name, course: { id: 1, name: 'ES' } },
   role,
   joined_at: `2026-10-2${id % 10}T10:00:00Z`,
 });

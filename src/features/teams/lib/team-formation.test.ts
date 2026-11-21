@@ -10,16 +10,31 @@ import {
   validateTeamCode,
 } from './team-formation';
 
-const valid = { name: 'Raízes do Futuro', interestArea: 'TECHNOLOGY', description: 'Agricultura.' };
+const valid = {
+  name: 'Raízes do Futuro',
+  interestArea: 'TECHNOLOGY',
+  description: 'Agricultura.',
+  inviteEmails: 'ana@universidade.edu.br',
+};
 
 describe('validateCreateTeam', () => {
   it('aceita um formulário completo', () => {
     expect(validateCreateTeam(valid)).toEqual({});
   });
 
-  it('exige os três campos', () => {
-    const errors = validateCreateTeam({ name: ' ', interestArea: '', description: '' });
-    expect(Object.keys(errors).sort()).toEqual(['description', 'interestArea', 'name']);
+  it('exige os quatro campos', () => {
+    const errors = validateCreateTeam({
+      name: ' ',
+      interestArea: '',
+      description: '',
+      inviteEmails: '',
+    });
+    expect(Object.keys(errors).sort()).toEqual([
+      'description',
+      'interestArea',
+      'inviteEmails',
+      'name',
+    ]);
   });
 
   it('limita o nome entre 3 e 60 caracteres (sem contar espaços nas pontas)', () => {
@@ -44,10 +59,18 @@ describe('validateCreateTeam', () => {
 });
 
 it('toTeamCreate monta o corpo de POST /api/teams', () => {
-  expect(toTeamCreate({ ...valid, name: '  EcoLab ', description: ' Texto ' })).toEqual({
+  expect(
+    toTeamCreate({
+      ...valid,
+      name: '  EcoLab ',
+      description: ' Texto ',
+      inviteEmails: ' ana@univ.edu.br, beto@univ.edu.br ',
+    }),
+  ).toEqual({
     name: 'EcoLab',
     interest_area: 'TECHNOLOGY',
     description: 'Texto',
+    invitations: [{ email: 'ana@univ.edu.br' }, { email: 'beto@univ.edu.br' }],
   });
 });
 
@@ -79,8 +102,8 @@ it('descreve vagas e liderança como no Figma', () => {
   expect(
     describeLeadership({
       courses: [
-        { id: 2, name: 'Agronomia', slug: 'AGRO' },
-        { id: 1, name: 'Engenharia de Software', slug: 'ES' },
+        { id: 2, name: 'Agronomia' },
+        { id: 1, name: 'Engenharia de Software' },
       ],
     }),
   ).toBe('Liderança · Agronomia · Engenharia de Software');

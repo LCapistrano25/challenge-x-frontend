@@ -18,7 +18,7 @@ import {
 import type { Team } from '../types';
 import styles from './FindTeam.module.css';
 
-const EMPTY: CreateTeamValues = { name: '', interestArea: '', description: '' };
+const EMPTY: CreateTeamValues = { name: '', interestArea: '', description: '', inviteEmails: '' };
 
 export interface CreateTeamCardProps {
   /** Nome do aluno logado (vira líder da equipe). */
@@ -41,6 +41,7 @@ export function CreateTeamCard({
   const createTeam = useCreateTeam();
   const titleId = useId();
   const nameId = useId();
+  const limit = maxMembers ?? DEFAULT_MAX_MEMBERS;
 
   function update<K extends keyof CreateTeamValues>(key: K, value: CreateTeamValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -51,7 +52,7 @@ export function CreateTeamCard({
     event.preventDefault();
     if (disabled || createTeam.isPending) return;
 
-    const found = validateCreateTeam(values);
+    const found = validateCreateTeam(values, limit);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
 
@@ -62,16 +63,19 @@ export function CreateTeamCard({
         onCreated?.(team);
       },
       onError: (error) => {
-        if (getApiError(error)?.code === 'team_name_taken') {
+        const code = getApiError(error)?.code;
+        if (code === 'team_name_taken') {
           setErrors({ name: describeTeamError(error, '') });
+          return;
+        }
+        if (code === 'team_invitations_required') {
+          setErrors({ inviteEmails: describeTeamError(error, '') });
           return;
         }
         notify.error(describeTeamError(error, 'Não foi possível criar a equipe. Tente de novo.'));
       },
     });
   }
-
-  const limit = maxMembers ?? DEFAULT_MAX_MEMBERS;
 
   return (
     <section
@@ -136,6 +140,19 @@ export function CreateTeamCard({
           value={values.description}
           onChange={(event) => update('description', event.target.value)}
           error={errors.description}
+          aria-required="true"
+          disabled={disabled}
+        />
+
+        <Textarea
+          className={styles.field}
+          label="Convites iniciais (e-mails institucionais) *"
+          placeholder="colega1@universidade.edu.br, colega2@universidade.edu.br"
+          hint={`Informe ao menos 1 e até ${Math.max(1, limit - 1)} e-mails separados por vírgula ou quebra de linha.`}
+          rows={2}
+          value={values.inviteEmails}
+          onChange={(event) => update('inviteEmails', event.target.value)}
+          error={errors.inviteEmails}
           aria-required="true"
           disabled={disabled}
         />

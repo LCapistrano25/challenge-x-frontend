@@ -11,7 +11,6 @@ export interface PublicSdg extends SdgSummary {
 /** PublicChallenge */
 export interface PublicChallenge {
   id: number;
-  title: string;
   description: string;
   course: CourseSummary;
   sdg: SdgSummary;
