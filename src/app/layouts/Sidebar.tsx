@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import type { NavItem } from '@/app/config/navigation';
+import { Link, NavLink, useLocation } from 'react-router-dom';
+import { isNavItemActive, type NavItem } from '@/app/config/navigation';
 import { BrandLogo, NavIconUser } from '@/app/config/nav-icons';
 import { Tooltip } from '@/shared/ui';
 
@@ -64,6 +64,7 @@ function WithTooltip({
  * clicar na logo abre com os rótulos (202px). No celular vira uma barra inferior.
  */
 export function Sidebar({ area, nav, footer, drawer }: SidebarProps) {
+  const { pathname } = useLocation();
   const [expandedState, setExpanded] = useState(readExpanded);
   const drawerOpen = drawer?.open === true;
   const expanded = expandedState || drawerOpen;
@@ -135,7 +136,10 @@ export function Sidebar({ area, nav, footer, drawer }: SidebarProps) {
               <NavLink
                 to={item.to}
                 end={item.end}
-                className="sidebar__link"
+                // String, não função: o Tooltip (Radix Slot) mescla o className do link.
+                className={
+                  isNavItemActive(item, pathname) ? 'sidebar__link active' : 'sidebar__link'
+                }
                 data-bar={item.mobileBar ? '' : undefined}
                 onClick={closeOnMobile}
               >

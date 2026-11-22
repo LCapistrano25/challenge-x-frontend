@@ -119,10 +119,10 @@ const roleRoutes: RouteObject[] = [
           <AppLayout area={ROLE_AREA.EXTERNAL_EVALUATOR} nav={NAV_ITEMS.EXTERNAL_EVALUATOR} />
         ),
         children: [
-          { path: '/avaliador', lazy: lazyPage(projects, 'FinalistProjectsPage') },
+          { path: '/avaliador', lazy: lazyPage(evaluations, 'FinalistProjectsPage') },
           {
             path: '/avaliador/projetos/:projectId',
-            lazy: lazyPage(projects, 'FinalistProjectDetailPage'),
+            lazy: lazyPage(evaluations, 'FinalistProjectDetailPage'),
           },
           {
             path: '/avaliador/projetos/:projectId/avaliar',

@@ -52,6 +52,12 @@ import type {
 import type { DeliverableSubmissionItem, PublishEvaluationInput } from '@/features/deliveries';
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import { buildProjectScores } from './fixtures/scores';
+import {
+  EVALUATOR_WITHOUT_PANEL,
+  buildFinalistProject,
+  buildFinalists,
+  resetEvaluatorMock,
+} from './fixtures/evaluator';
 import type { MemberNoteCreate } from '@/features/evaluations';
 import type { SupportTicket, SupportTicketCreate } from '@/features/support';
 import type {
@@ -110,6 +116,13 @@ const initialUsers: Record<string, MockUser> = {
     id: '3',
     name: 'Eva Avaliadora',
     email: 'avaliador@exemplo.com',
+    role: 'EXTERNAL_EVALUATOR',
+  },
+  // Avaliador externo sem projetos atribuídos (task #17: estado "Sem projetos atribuídos").
+  [EVALUATOR_WITHOUT_PANEL]: {
+    id: '4',
+    name: 'Helena Martins',
+    email: EVALUATOR_WITHOUT_PANEL,
     role: 'EXTERNAL_EVALUATOR',
   },
   // Acadêmico sem equipe: abre "Encontre sua equipe" (task #10).
@@ -452,6 +465,26 @@ export const handlers = [
       );
     }
     return HttpResponse.json(result.detail);
+  }),
+  // Avaliador externo (tasks #17 a #19): banca de projetos finalistas.
+  http.get('*/api/evaluator/finalists', ({ request }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const url = new URL(request.url);
+    const courseId = url.searchParams.get('course_id');
+    return HttpResponse.json(
+      paginate(buildFinalists(session.email, courseId ? Number(courseId) : undefined), url),
+    );
+  }),
+  http.get('*/api/evaluator/finalists/:projectId', ({ params }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const detail = buildFinalistProject(session.email, Number(params.projectId));
+    return detail
+      ? HttpResponse.json(detail)
+      : apiError(404, 'not_found', 'Projeto não encontrado na sua banca.');
   }),
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();
@@ -1206,6 +1239,7 @@ export const handlers = [
 export function resetMockSession() {
   session = null;
   resetTeacherMock();
+  resetEvaluatorMock();
   for (const email of Object.keys(users)) delete users[email];
   Object.assign(users, structuredClone(initialUsers));
   readNotifications.clear();

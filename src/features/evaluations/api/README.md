@@ -60,3 +60,37 @@ Ainda não há tela no Figma; o layout segue os cartões de "Projeto da equipe".
 Regras aplicadas no front (RF32): a nota só aparece quando `status = FINALIZED`; `PENDING` e `PARTIAL` aparecem como
 "Pendente" e sem valor (P-33); `deliverable_status = NOT_DELIVERED` mostra o aviso de nota zero. O resumo soma as
 notas definitivas sobre o total de pontos das etapas pontuadas (a fórmula da nota final ainda está em aberto, P-30).
+
+## Avaliador externo — Projetos finalistas e detalhe (task #17 [FRONTEND])
+
+Telas: `/avaliador` (`FinalistProjectsPage`) e `/avaliador/projetos/:projectId`
+(`FinalistProjectDetailPage`). O avaliador só vê os projetos atribuídos a ele: o filtro é do
+back-end (abrangência do `edition_evaluator`, P-32).
+
+| Tela                                  | Chamada                                     | Situação no openapi       |
+| ------------------------------------- | ------------------------------------------- | ------------------------- |
+| Lista, contadores e filtros           | `GET /api/evaluator/finalists` (RF42)       | proposta (P-29, P-32)     |
+| Detalhe: sobre, integrantes, arquivos | `GET /api/evaluator/finalists/{project_id}` | **proposta — não existe** |
+| Edição no título ("EDIÇÃO 2026.2")    | `GET /api/public/editions/current`          | confirmada                |
+
+- A tela pede `page_size=100` (máximo da API) e faz busca, filtro de curso e de status na página:
+  a banca é pequena e assim os contadores (atribuídos, pendentes, enviadas) refletem a banca toda.
+- "Pendentes" = `PENDING` + `IN_PROGRESS`. Ordem: em preenchimento, pendentes (pelo prazo) e enviadas.
+- Ação por status: `PENDING` → "Ver projeto", `IN_PROGRESS` → "Continuar" (formulário),
+  `FINALIZED` → "Ver avaliação". Datas sempre no horário de Brasília.
+- `409 final_form_not_published` mostra o aviso de formulário ainda não publicado.
+
+### Propostas para o back-end (pendentes de aprovação)
+
+1. **Campos extras em `FinalistRow`** (todos opcionais/anuláveis): `evaluation_deadline` (prazo da
+   banca, coluna "Prazo / nota"), `my_total_score` e `max_total_score` (nota "86 / 100" quando
+   `FINALIZED`) e `finalized_at` (data do envio, usada em "Minhas avaliações").
+2. **`GET /api/evaluator/finalists/{project_id}`** → `FinalistProjectDetail`: o `FinalistRow` mais
+   `code`, `description`, `objective`, `advisor`, `technologies[]`,
+   `team_members[{ name, course, role, responsibility }]`,
+   `materials[{ id, name, kind: FILE|LINK, url, format, size_bytes }]` e `submitted_at`. O
+   `PublicProject` atual só tem título e resumo. As URLs dos arquivos seguem a P-43 (assinadas e
+   com validade), e os links abrem em nova aba.
+
+Mocks: `avaliador@exemplo.com` (6 projetos do Figma) e `avaliador.sem-banca@exemplo.com`
+(estado "Sem projetos atribuídos"), senha `123456`.
