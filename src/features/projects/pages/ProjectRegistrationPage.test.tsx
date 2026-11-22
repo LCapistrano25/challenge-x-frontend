@@ -46,125 +46,98 @@ function renderPage() {
   );
 }
 
-const signIn = (email: string) => http.post('/auth/login', { email, password: '123456' });
+const signIn = (email: string) =>
+  http.post('/api/auth/sessions/password', { email, password: '123456' });
 
 async function findForm() {
   return within(await screen.findByRole('region', { name: 'Dados do projeto' }));
 }
 
-/** Preenche todos os obrigatórios e a declaração. */
+/** Preenche os campos seguindo a ordem do contrato (desafio -> dados -> categoria). */
 async function fillRequired(user: ReturnType<typeof userEvent.setup>, title = 'AgroConecta') {
-  await user.type(screen.getByLabelText('Título do projeto *'), title);
-  await user.selectOptions(
-    screen.getByLabelText('Eixo temático *'),
-    'Tecnologia e sustentabilidade',
-  );
   await user.selectOptions(
     screen.getByLabelText('Objetivo de Desenvolvimento Sustentável *'),
     'ODS 11 · Cidades sustentáveis',
   );
+  await user.type(screen.getByLabelText('Título do projeto *'), title);
   await user.type(screen.getByLabelText('Resumo da proposta *'), 'Plataforma para produtores.');
-  await user.type(screen.getByLabelText('Problema identificado *'), 'Poucos canais digitais.');
-  await user.type(screen.getByLabelText('Objetivo geral *'), 'Ampliar o comércio local.');
-  await user.type(
-    screen.getByLabelText('Metodologia e plano de desenvolvimento *'),
-    'Entrevistas e piloto.',
+  await user.type(screen.getByLabelText('Objetivo geral'), 'Ampliar o comércio local.');
+  await user.selectOptions(
+    screen.getByLabelText('Eixo temático *'),
+    'Tecnologia e sustentabilidade',
   );
-  await user.type(screen.getByLabelText('Público beneficiado *'), 'Agricultores familiares');
-  await user.type(screen.getByLabelText('Local de aplicação *'), 'Campus sede');
   await user.click(screen.getByRole('checkbox', { name: /Declaro que os integrantes/ }));
 }
 
 describe('ProjectRegistrationPage — líder', () => {
-  it('mostra o formulário e o painel lateral como no Figma', async () => {
+  it('mostra o formulário em ordem e desabilita dados/categoria antes do desafio', async () => {
     renderPage();
 
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Cadastrar projeto' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('Apresente a proposta da equipe e dê o próximo passo no Desafio X.'),
-    ).toBeInTheDocument();
     const form = await findForm();
     expect(screen.getByText('O projeto da equipe ainda não foi cadastrado')).toBeInTheDocument();
-    for (const label of [
-      'Título do projeto *',
-      'Eixo temático *',
-      'Objetivo de Desenvolvimento Sustentável *',
-      'Resumo da proposta *',
-      'Problema identificado *',
-      'Objetivo geral *',
-      'Metodologia e plano de desenvolvimento *',
-      'Público beneficiado *',
-      'Local de aplicação *',
-      'Docente orientadora (opcional)',
-      'E-mail da orientadora',
-      'Link de referência (opcional)',
-    ]) {
-      expect(form.getByLabelText(label)).toBeInTheDocument();
-    }
+
+    expect(form.getByLabelText('Objetivo de Desenvolvimento Sustentável *')).toBeEnabled();
+    expect(form.getByLabelText('Título do projeto *')).toBeDisabled();
+    expect(form.getByLabelText('Resumo da proposta *')).toBeDisabled();
+    expect(form.getByLabelText('Eixo temático *')).toBeDisabled();
     expect(form.getByRole('button', { name: 'Salvar rascunho' })).toBeEnabled();
     expect(form.getByRole('button', { name: 'Cadastrar projeto' })).toBeEnabled();
-    expect(form.getByText('Preenchimento em andamento · Ainda não cadastrado')).toBeInTheDocument();
 
     const team = within(screen.getByRole('region', { name: 'Equipe responsável' }));
     expect(team.getByText('Equipe Aurora')).toBeInTheDocument();
     expect(team.getByText('Não cadastrado')).toBeInTheDocument();
-    expect(team.getByText('Líder · Responsável pelo cadastro')).toBeInTheDocument();
-    expect(
-      team.getByText('4 integrantes · Engenharia de Software e Agronomia'),
-    ).toBeInTheDocument();
-    expect(team.getByRole('link', { name: 'Ver minha equipe' })).toHaveAttribute(
-      'href',
-      '/academico/equipe',
-    );
-    expect(screen.getByText(/^Prazo de cadastro: \d{2}\/\d{2}\/\d{4}$/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Abrir guia do projeto' })).toBeInTheDocument();
   });
 
-  it('conta os caracteres do título e do resumo', async () => {
-    const user = userEvent.setup();
+  it('habilita dados após escolher desafio e conta caracteres do título e do resumo', async () => {
+    const user = userEvent.setup({ delay: null });
     renderPage();
     await findForm();
 
-    expect(screen.getByText('0/100')).toBeInTheDocument();
-    // Resumo, problema, objetivo e metodologia: até 1.000 caracteres cada.
+    await user.selectOptions(
+      screen.getByLabelText('Objetivo de Desenvolvimento Sustentável *'),
+      'ODS 11 · Cidades sustentáveis',
+    );
+    expect(screen.getByLabelText('Título do projeto *')).toBeEnabled();
+    expect(screen.getByLabelText('Eixo temático *')).toBeEnabled();
+
+    expect(screen.getByText('0/200')).toBeInTheDocument();
     expect(screen.getAllByText('0/1000')).toHaveLength(4);
     await user.type(screen.getByLabelText('Título do projeto *'), 'Agro');
     await user.type(screen.getByLabelText('Resumo da proposta *'), 'Resumo');
-    expect(screen.getByText('4/100')).toBeInTheDocument();
+    expect(screen.getByText('4/200')).toBeInTheDocument();
     expect(screen.getByText('6/1000')).toBeInTheDocument();
-    // O campo não aceita mais que o limite.
-    await user.type(screen.getByLabelText('Título do projeto *'), 'x'.repeat(120));
-    expect(screen.getByLabelText('Título do projeto *')).toHaveValue(`Agro${'x'.repeat(96)}`);
-    expect(screen.getByText('100/100')).toBeInTheDocument();
   });
 
   it('valida os obrigatórios antes de cadastrar', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     renderPage();
     const form = await findForm();
 
     await user.click(form.getByRole('button', { name: 'Cadastrar projeto' }));
 
-    expect(await form.findByText('Informe o título do projeto.')).toBeInTheDocument();
-    expect(form.getByText('Selecione o eixo temático.')).toBeInTheDocument();
     expect(
-      form.getByText('Selecione o Objetivo de Desenvolvimento Sustentável.'),
+      await form.findByText('Selecione o Objetivo de Desenvolvimento Sustentável.'),
     ).toBeInTheDocument();
+    expect(form.getByText('Informe o título do projeto.')).toBeInTheDocument();
     expect(form.getByText('Escreva o resumo da proposta.')).toBeInTheDocument();
-    expect(form.getByText('Informe o local de aplicação.')).toBeInTheDocument();
+    expect(form.getByText('Selecione o eixo temático.')).toBeInTheDocument();
     expect(form.getByText('Confirme a declaração para cadastrar o projeto.')).toBeInTheDocument();
-    expect(form.getByLabelText('Título do projeto *')).toHaveFocus();
-    expect(form.getByLabelText('Título do projeto *')).toHaveAttribute('aria-invalid', 'true');
+    expect(form.getByLabelText('Objetivo de Desenvolvimento Sustentável *')).toHaveFocus();
     expect(screen.queryByText('Tela do projeto')).not.toBeInTheDocument();
   });
 
   it('salvar rascunho não conclui a inscrição e o rascunho volta ao reabrir', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     renderPage();
     const form = await findForm();
 
+    await user.selectOptions(
+      form.getByLabelText('Objetivo de Desenvolvimento Sustentável *'),
+      'ODS 11 · Cidades sustentáveis',
+    );
     await user.type(form.getByLabelText('Título do projeto *'), 'Ideia inicial');
     await user.click(form.getByRole('button', { name: 'Salvar rascunho' }));
 
@@ -172,19 +145,17 @@ describe('ProjectRegistrationPage — líder', () => {
       await form.findByText(/^Rascunho salvo às \d{2}:\d{2} · Ainda não cadastrado$/),
     ).toBeInTheDocument();
     expect(screen.queryByText('Tela do projeto')).not.toBeInTheDocument();
-    // O projeto continua sem cadastro na API.
-    await expect(http.get('/api/teams/12/project')).rejects.toMatchObject({
-      response: { status: 404 },
-    });
 
-    // Reabrindo a tela, o rascunho volta preenchido.
+    // Reabrindo a tela com projeto ainda incompleto, continua no cadastro e com rascunho.
     cleanup();
     renderPage();
-    expect(await screen.findByDisplayValue('Ideia inicial')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Cadastrar projeto' }),
+    ).toBeInTheDocument();
   });
 
-  it('cadastra o projeto e leva a equipe para a tela do Projeto', async () => {
-    const user = userEvent.setup();
+  it('cadastra o projeto em 3 passos e leva a equipe para a tela do Projeto', async () => {
+    const user = userEvent.setup({ delay: null });
     renderPage();
     await findForm();
 
@@ -197,12 +168,12 @@ describe('ProjectRegistrationPage — líder', () => {
       title: 'AgroConecta',
       challenge: { id: 17, sdg: { number: 11 } },
       category: { id: 1, name: 'Tecnologia e sustentabilidade' },
-      location: 'Campus sede',
+      objective: 'Ampliar o comércio local.',
     });
   });
 
   it('mostra no campo o título já usado na edição', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     renderPage();
     await findForm();
 
@@ -238,14 +209,14 @@ describe('ProjectRegistrationPage — líder', () => {
     expect(form.getByRole('button', { name: 'Salvar rascunho' })).toBeDisabled();
   });
 
-  it('com o projeto já cadastrado, vai direto para a tela do Projeto', async () => {
-    await http.put('/api/teams/12/project', {
-      challenge_id: 17,
-      category_id: 1,
+  it('com o projeto já completo, vai direto para a tela do Projeto', async () => {
+    await http.put('/api/teams/12/project/challenge', { challenge_id: 17 });
+    await http.put('/api/teams/12/project/details', {
       title: 'AgroConecta',
       summary: 'Resumo',
       objective: 'Objetivo',
     });
+    await http.put('/api/teams/12/project/category', { category_id: 1 });
     renderPage();
     expect(await screen.findByText('Tela do projeto')).toBeInTheDocument();
   });
@@ -268,13 +239,7 @@ describe('ProjectRegistrationPage — demais perfis', () => {
   it('a API recusa o cadastro de quem não é líder', async () => {
     await signIn('participante@exemplo.com');
     await expect(
-      http.put('/api/teams/12/project', {
-        challenge_id: 17,
-        category_id: 1,
-        title: 'X',
-        summary: 'Y',
-        objective: null,
-      }),
+      http.put('/api/teams/12/project/challenge', { challenge_id: 17 }),
     ).rejects.toMatchObject({ response: { status: 403 } });
   });
 

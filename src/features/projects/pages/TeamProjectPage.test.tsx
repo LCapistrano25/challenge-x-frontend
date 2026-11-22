@@ -25,7 +25,7 @@ function HeaderProbe({ children }: { children: ReactNode }) {
 }
 
 async function signIn(email: string) {
-  await http.post('/auth/login', { email, password: '123456' });
+  await http.post('/api/auth/sessions/password', { email, password: '123456' });
 }
 
 function renderPage() {

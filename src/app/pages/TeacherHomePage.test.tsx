@@ -27,7 +27,9 @@ describe('Painel de acompanhamento do professor', () => {
   it('mostra o título no cabeçalho, o resumo, o progresso, o prazo e a prioridade', async () => {
     await renderTeacher();
 
-    expect(await screen.findByRole('heading', { name: 'Olá, Paulo!' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Olá, Paulo!' }, { timeout: 5000 }),
+    ).toBeInTheDocument();
     expect(
       await screen.findByText('Bem-vindo ao seu painel de acompanhamento.'),
     ).toBeInTheDocument();

@@ -5,6 +5,8 @@ export type AuthContextValue = {
   user: User | null;
   isLoading: boolean;
   login: (input: LoginInput) => Promise<User>;
+  /** Conclui o login Microsoft trocando o `code` OAuth pelo cookie de sessão. */
+  loginWithMicrosoft: (code: string) => Promise<User>;
   logout: () => Promise<void>;
   /** Busca de novo o usuário da sessão (ex.: depois do login simulado da Microsoft). */
   refresh: () => Promise<void>;

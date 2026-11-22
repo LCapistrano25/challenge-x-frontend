@@ -2,16 +2,21 @@ import type { CourseSummary, SdgSummary, StageSchedule } from '@/shared/types/ap
 
 /**
  * Tipos do domínio de projetos, espelhando docs/api/openapi.yaml (snake_case).
- * Campos marcados como PROPOSTA ainda não estão no contrato: o Figma pede e o front já envia.
  */
 
 export type ProjectStatus =
-  'IN_PROGRESS' | 'SUBMITTED' | 'UNDER_EVALUATION' | 'APPROVED' | 'REJECTED';
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'DISQUALIFIED'
+  | 'SUBMITTED'
+  | 'UNDER_EVALUATION'
+  | 'APPROVED'
+  | 'REJECTED';
 
 /** ChallengeSummary — o desafio traz o curso e a ODS do projeto (RF05, RF29). */
 export interface ChallengeSummary {
   id: number;
-  title: string;
+  description: string;
   course: CourseSummary;
   sdg: SdgSummary;
 }
@@ -23,23 +28,15 @@ export interface CategoryRef {
 }
 
 /**
- * Dados descritivos do projeto que o Figma pede e o contrato ainda não tem.
- * PROPOSTA (ainda não está no openapi): ver features/projects/api/README.md.
+ * Dados descritivos opcionais de exibição no frontend.
  */
 export interface ProjectDetails {
-  /** "Problema identificado *" */
   problem?: string | null;
-  /** "Metodologia e plano de desenvolvimento *" */
   methodology?: string | null;
-  /** "Público beneficiado *" */
   target_audience?: string | null;
-  /** "Local de aplicação *" */
   location?: string | null;
-  /** "Docente orientadora (opcional)" */
   advisor_name?: string | null;
-  /** "E-mail da orientadora" */
   advisor_email?: string | null;
-  /** "Link de referência (opcional)" */
   reference_url?: string | null;
 }
 
@@ -48,54 +45,55 @@ export interface Project extends ProjectDetails {
   id: number;
   team_id: number;
   edition_id: number;
-  challenge: ChallengeSummary;
+  challenge: ChallengeSummary | null;
   category: CategoryRef | null;
   title: string;
   summary: string;
-  objective: string | null;
+  objective: string;
   status: ProjectStatus;
   courses: CourseSummary[];
   created_at: string;
   updated_at: string;
-  /**
-   * PROPOSTA (ainda não está no openapi): quem fez a última edição dos dados cadastrais. O Figma
-   * mostra "Última edição por Ana Maria em 16/04/2027, às 15:10".
-   */
   updated_by?: { user_id: string; name: string } | null;
 }
 
-/** ProjectWrite — PUT /api/teams/{team_id}/project (x-status: proposed, P-25). */
-export interface ProjectWrite extends ProjectDetails {
+/** Passo 1: PUT /api/teams/{team_id}/project/challenge (RF29). */
+export interface ProjectChallengeInput {
   challenge_id: number;
-  /** "Eixo temático *" no Figma = categoria da edição (Art. 2). */
-  category_id: number;
-  /** Contrato: maxLength 200. O Figma limita a 100 caracteres. */
-  title: string;
-  /** O Figma limita a 1.000 caracteres. */
-  summary: string;
-  /** "Objetivo geral *" */
-  objective: string | null;
 }
 
-/**
- * PROPOSTA (ainda não está no openapi): rascunho do cadastro. Salvar o rascunho não conclui a
- * inscrição (critério de aceitação); todos os campos são opcionais e não passam pelas regras de
- * ProjectWrite. PUT/GET /api/teams/{team_id}/project/draft.
- */
+/** Passo 2: PUT /api/teams/{team_id}/project/details (RF30). */
+export interface ProjectDetailsInput {
+  title: string;
+  summary: string;
+  objective?: string;
+}
+
+/** Passo 3: PUT /api/teams/{team_id}/project/category (RF30, RF49). */
+export interface ProjectCategoryInput {
+  category_id: number;
+}
+
+/** Dados combinados do formulário para salvar os passos em ordem. */
+export interface ProjectWrite {
+  challenge_id: number;
+  category_id: number;
+  title: string;
+  summary: string;
+  objective: string;
+}
+
 export interface ProjectDraft extends ProjectDetails {
   challenge_id?: number | null;
   category_id?: number | null;
   title?: string | null;
   summary?: string | null;
   objective?: string | null;
-  /** Preenchido pela API ao salvar. */
   saved_at?: string;
 }
 
 /** Item de ProjectOptions.challenges (PublicChallenge). */
-export interface EligibleChallenge extends ChallengeSummary {
-  description: string;
-}
+export type EligibleChallenge = ChallengeSummary;
 
 /** Item de ProjectOptions.categories. */
 export interface ProjectCategory {
@@ -110,13 +108,34 @@ export interface ProjectOptions {
   categories: ProjectCategory[];
 }
 
-/* --- Entregas por etapa (task #13): GET /api/projects/{project_id}/deliverables --- */
+/* --- Entregas por etapa (task #13 + Canvas/SWOT): GET /api/projects/{project_id}/deliverables --- */
 
 /** FieldType */
-export type DeliverableFieldType = 'LINK' | 'FILE';
+export type DeliverableFieldType = 'LINK' | 'FILE' | 'CANVAS' | 'SWOT';
 
 /** DeliverableStatus — derivado (RF31, P-27): Não enviada, Enviada, Não entregue. */
 export type DeliverableStatus = 'NOT_SUBMITTED' | 'SUBMITTED' | 'NOT_DELIVERED';
+
+/** CanvasContent — 9 blocos obrigatórios do Business Model Canvas. */
+export interface CanvasContent {
+  customer_segments: string;
+  value_propositions: string;
+  channels: string;
+  customer_relationships: string;
+  revenue_streams: string;
+  key_resources: string;
+  key_activities: string;
+  key_partnerships: string;
+  cost_structure: string;
+}
+
+/** SwotContent — 4 quadrantes com 1 a 20 textos cada. */
+export interface SwotContent {
+  strengths: string[];
+  weaknesses: string[];
+  opportunities: string[];
+  threats: string[];
+}
 
 /** DeliverableField — campo exigido na entrega da etapa. */
 export interface DeliverableField {
@@ -132,12 +151,13 @@ export interface DeliverableField {
 /** DeliverableItem — conteúdo de um campo numa versão enviada. */
 export interface DeliverableItem {
   id: number;
-  field_id: number;
+  field_id: number | null;
   type: DeliverableFieldType;
   link: string | null;
   file_url: string | null;
   file_name: string | null;
   size_bytes: number | null;
+  content?: CanvasContent | SwotContent | null;
 }
 
 /** ReceiptSummary — comprovante gerado a cada envio. */
@@ -158,16 +178,10 @@ export interface DeliverableVersion {
   receipt: ReceiptSummary | null;
 }
 
-/**
- * PROPOSTA (ainda não está no openapi): parecer da orientação sobre a versão enviada. O Figma
- * mostra as situações "Aprovada" e "Ajustes solicitados", o parecer e o prazo de reenvio.
- */
 export interface DeliverableReview {
   status: 'APPROVED' | 'CHANGES_REQUESTED';
-  /** Versão avaliada: um envio posterior volta a ficar "Aguardando avaliação". */
   version_id: number;
   comment: string | null;
-  /** Até quando a equipe pode reenviar (só em CHANGES_REQUESTED). */
   resubmission_deadline: string | null;
   reviewed_at: string;
 }
@@ -178,12 +192,8 @@ export interface StageDeliverable {
   fields: DeliverableField[];
   status: DeliverableStatus;
   official_version_id: number | null;
-  /** Histórico completo, da mais recente para a mais antiga. */
   versions: DeliverableVersion[];
-  /** PROPOSTA: resumo da etapa ("Relatório do problema, público e evidências iniciais."). */
   description?: string | null;
-  /** PROPOSTA: orientação "O que entregar nesta etapa". */
   guidance?: string | null;
-  /** PROPOSTA: parecer da orientação sobre a última versão avaliada. */
   review?: DeliverableReview | null;
 }

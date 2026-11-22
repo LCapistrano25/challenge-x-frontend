@@ -4,15 +4,40 @@ import {
   fetchProjectDraft,
   fetchProjectOptions,
   fetchTeamProject,
+  saveProjectDetails,
   saveProjectDraft,
-  saveTeamProject,
+  selectProjectCategory,
+  selectProjectChallenge,
 } from '../api/project.api';
-import type { ProjectDraft, ProjectWrite } from '../types';
+import type { Project, ProjectDraft, ProjectWrite } from '../types';
 
 export const teamProjectKey = (teamId: number) => ['teams', teamId, 'project'] as const;
 export const projectOptionsKey = (teamId: number) =>
   ['teams', teamId, 'project', 'options'] as const;
 export const projectDraftKey = (teamId: number) => ['teams', teamId, 'project', 'draft'] as const;
+
+function syncProjectCache(
+  queryClient: ReturnType<typeof useQueryClient>,
+  teamId: number,
+  project: Project,
+) {
+  queryClient.setQueryData(teamProjectKey(teamId), project);
+  queryClient.setQueryData<StudentDashboard>(studentDashboardKey, (dashboard) =>
+    dashboard
+      ? {
+          ...dashboard,
+          project: {
+            id: project.id,
+            title: project.title,
+            summary: project.summary,
+            status: project.status,
+            challenge: project.challenge,
+          },
+        }
+      : dashboard,
+  );
+  void queryClient.invalidateQueries({ queryKey: studentDashboardKey });
+}
 
 /** Projeto cadastrado da equipe (null enquanto não houver). */
 export function useTeamProject(teamId: number | undefined, { enabled = true } = {}) {
@@ -49,34 +74,38 @@ export function useSaveProjectDraft(teamId: number) {
   });
 }
 
+/** Passo 1: seleciona o desafio (e cria o projeto caso ainda não exista). */
+export function useSelectProjectChallenge(teamId: number) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (challengeId: number) =>
+      selectProjectChallenge(teamId, { challenge_id: challengeId }),
+    onSuccess: (project) => syncProjectCache(queryClient, teamId, project),
+  });
+}
+
 /**
- * Conclui o cadastro. Atualiza o projeto em cache e recarrega o painel do aluno, que passa a
- * mostrar o projeto e libera a tela do Projeto (critério de aceitação).
+ * Conclui ou atualiza o projeto seguindo a ordem exigida pelo contrato:
+ * 1. desafio (se ainda não salvo ou alterado) -> 2. dados -> 3. categoria.
  */
 export function useRegisterProject(teamId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: ProjectWrite) => saveTeamProject(teamId, input),
+    mutationFn: async (input: ProjectWrite) => {
+      const current = queryClient.getQueryData<Project | null>(teamProjectKey(teamId));
+      if (!current || current.challenge?.id !== input.challenge_id) {
+        await selectProjectChallenge(teamId, { challenge_id: input.challenge_id });
+      }
+      await saveProjectDetails(teamId, {
+        title: input.title,
+        summary: input.summary,
+        objective: input.objective,
+      });
+      return selectProjectCategory(teamId, { category_id: input.category_id });
+    },
     onSuccess: (project) => {
-      queryClient.setQueryData(teamProjectKey(teamId), project);
       queryClient.removeQueries({ queryKey: projectDraftKey(teamId) });
-      // O painel em cache passa a ter o projeto já agora: sem isso, "Meu Projeto" ainda veria a
-      // equipe sem projeto e devolveria o líder ao cadastro até o painel recarregar.
-      queryClient.setQueryData<StudentDashboard>(studentDashboardKey, (dashboard) =>
-        dashboard
-          ? {
-              ...dashboard,
-              project: {
-                id: project.id,
-                title: project.title,
-                summary: project.summary,
-                status: project.status,
-                challenge: project.challenge,
-              },
-            }
-          : dashboard,
-      );
-      void queryClient.invalidateQueries({ queryKey: studentDashboardKey });
+      syncProjectCache(queryClient, teamId, project);
     },
   });
 }

@@ -1,8 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, type SyntheticEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Button, Checkbox, MultiSelect, Select, Spinner, TextField } from '@/shared/ui';
-import { fetchCourses, getProfileErrorMessage } from '../api/profile.api';
+import {
+  Alert,
+  Button,
+  Checkbox,
+  ConfirmDialog,
+  MultiSelect,
+  Select,
+  Spinner,
+  TextField,
+} from '@/shared/ui';
+import {
+  fetchCourses,
+  getProfileErrorMessage,
+  isTeacherProfileExistsError,
+} from '../api/profile.api';
 import {
   PERIODS,
   toStudentPayload,
@@ -181,60 +194,90 @@ function StudentForm({ courseOptions }: FormProps) {
 }
 
 function TeacherForm({ courseOptions }: FormProps) {
-  const { completeProfile } = useAuth();
+  const { completeProfile, refresh } = useAuth();
   const navigate = useNavigate();
   const [values, setValues] = useState<TeacherFormValues>({ courseIds: [], acceptedTerms: false });
   const [errors, setErrors] = useState<FormErrors<TeacherFormValues>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   function update<K extends keyof TeacherFormValues>(key: K, value: TeacherFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => ({ ...current, [key]: undefined }));
   }
 
-  async function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
+  function handleSubmit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitError(null);
     const found = validateTeacher(values);
     setErrors(found);
     if (Object.keys(found).length > 0) return;
+    setConfirmOpen(true);
+  }
 
+  async function handleConfirmSubmit() {
     setSubmitting(true);
     try {
       await completeProfile(toTeacherPayload(values));
+      setConfirmOpen(false);
       navigate(ROLE_HOME.TEACHER, { replace: true });
     } catch (error) {
+      setConfirmOpen(false);
+      if (isTeacherProfileExistsError(error)) {
+        await refresh();
+        navigate(ROLE_HOME.TEACHER, { replace: true });
+        return;
+      }
       setSubmitError(getProfileErrorMessage(error));
       setSubmitting(false);
     }
   }
 
+  const selectedCourseNames = courseOptions
+    .filter((option) => values.courseIds.includes(option.value))
+    .map((option) => option.label)
+    .join(', ');
+
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      <MultiSelect
-        label="Cursos"
-        placeholder="Selecione seus cursos"
-        options={courseOptions}
-        value={values.courseIds}
-        error={errors.courseIds}
-        onChange={(courseIds) => update('courseIds', courseIds)}
+    <>
+      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <MultiSelect
+          label="Cursos"
+          placeholder="Selecione seus cursos"
+          options={courseOptions}
+          value={values.courseIds}
+          error={errors.courseIds}
+          onChange={(courseIds) => update('courseIds', courseIds)}
+        />
+        <Checkbox
+          className={styles.terms}
+          label={<TermsLabel />}
+          checked={values.acceptedTerms}
+          error={errors.acceptedTerms}
+          onChange={(event) => update('acceptedTerms', event.target.checked)}
+        />
+        {submitError && (
+          <p role="alert" className={styles.submitError}>
+            {submitError}
+          </p>
+        )}
+        <Button type="submit" size="large" fullWidth loading={submitting}>
+          {submitting ? 'Salvando…' : 'Finalizar cadastro'}
+        </Button>
+      </form>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={(open) => {
+          if (!submitting) setConfirmOpen(open);
+        }}
+        title="Confirmar cursos selecionados"
+        description={`Cursos selecionados: ${selectedCourseNames}. Você não poderá alterar essa escolha depois — apenas o administrador poderá fazer alterações.`}
+        confirmLabel="Confirmar cadastro"
+        loading={submitting}
+        onConfirm={() => void handleConfirmSubmit()}
       />
-      <Checkbox
-        className={styles.terms}
-        label={<TermsLabel />}
-        checked={values.acceptedTerms}
-        error={errors.acceptedTerms}
-        onChange={(event) => update('acceptedTerms', event.target.checked)}
-      />
-      {submitError && (
-        <p role="alert" className={styles.submitError}>
-          {submitError}
-        </p>
-      )}
-      <Button type="submit" size="large" fullWidth loading={submitting}>
-        {submitting ? 'Salvando…' : 'Finalizar cadastro'}
-      </Button>
-    </form>
+    </>
   );
 }

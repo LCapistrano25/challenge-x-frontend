@@ -1,6 +1,13 @@
 import { isAxiosError } from 'axios';
 import { http } from '@/shared/lib/http';
-import type { Project, ProjectDraft, ProjectOptions, ProjectWrite } from '../types';
+import type {
+  Project,
+  ProjectCategoryInput,
+  ProjectChallengeInput,
+  ProjectDetailsInput,
+  ProjectDraft,
+  ProjectOptions,
+} from '../types';
 
 /** 404 significa "ainda não existe": a tela trata como ausência, não como erro. */
 async function orNullOn404<T>(request: Promise<{ data: T }>): Promise<T | null> {
@@ -27,12 +34,30 @@ export async function fetchProjectOptions(teamId: number): Promise<ProjectOption
   return data;
 }
 
-/**
- * PUT /api/teams/{team_id}/project — projectsSaveTeamProject (RF29, RF30, RF50;
- * x-status: proposed, P-25). Somente o LEADER, durante a formação. Conclui o cadastro.
- */
-export async function saveTeamProject(teamId: number, input: ProjectWrite): Promise<Project> {
-  const { data } = await http.put<Project>(`/api/teams/${teamId}/project`, input);
+/** Passo 1: PUT /api/teams/{team_id}/project/challenge (RF29) — cria o projeto se não existir. */
+export async function selectProjectChallenge(
+  teamId: number,
+  input: ProjectChallengeInput,
+): Promise<Project> {
+  const { data } = await http.put<Project>(`/api/teams/${teamId}/project/challenge`, input);
+  return data;
+}
+
+/** Passo 2: PUT /api/teams/{team_id}/project/details (RF30). */
+export async function saveProjectDetails(
+  teamId: number,
+  input: ProjectDetailsInput,
+): Promise<Project> {
+  const { data } = await http.put<Project>(`/api/teams/${teamId}/project/details`, input);
+  return data;
+}
+
+/** Passo 3: PUT /api/teams/{team_id}/project/category (RF30, RF49). */
+export async function selectProjectCategory(
+  teamId: number,
+  input: ProjectCategoryInput,
+): Promise<Project> {
+  const { data } = await http.put<Project>(`/api/teams/${teamId}/project/category`, input);
   return data;
 }
 
@@ -46,7 +71,6 @@ export function fetchProjectDraft(teamId: number): Promise<ProjectDraft | null> 
 
 /**
  * PROPOSTA (ainda não está no openapi): PUT /api/teams/{team_id}/project/draft.
- * Guarda o preenchimento sem validar obrigatórios e sem concluir a inscrição.
  */
 export async function saveProjectDraft(teamId: number, draft: ProjectDraft): Promise<ProjectDraft> {
   const { data } = await http.put<ProjectDraft>(`/api/teams/${teamId}/project/draft`, draft);

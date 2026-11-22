@@ -16,6 +16,7 @@ import { StageDeliveryList } from '../components/StageDeliveryList';
 import { useProjectDeliverables } from '../hooks/useProjectDeliverables';
 import { useTeamProject } from '../hooks/useProjectRegistration';
 import { getProjectMetrics } from '../lib/deliverables';
+import { isProjectIncomplete } from '../lib/project-registration';
 import {
   EDIT_PROJECT_PATH,
   describeProjectContext,
@@ -113,7 +114,7 @@ export function TeamProjectPage() {
     );
   }
 
-  if (!project.data) {
+  if (!project.data || isProjectIncomplete(project.data)) {
     // O líder segue para o cadastro (task #12); os demais aguardam a liderança.
     if (isLeader) return <Navigate to="/academico/projeto/novo" replace />;
     return (

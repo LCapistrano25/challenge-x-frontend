@@ -3,7 +3,10 @@ import {
   acceptAttribute,
   describeDeliveryError,
   describeSelectedFile,
+  emptyCanvas,
+  emptySwot,
   isValidHttpsUrl,
+  toSubmissionBody,
   toSubmissionFormData,
   validateDelivery,
   validateFile,
@@ -84,6 +87,81 @@ describe('submission — corpo multipart', () => {
     ]);
     expect((body.getAll('files')[0] as File).name).toBe('prototipo.pdf');
     expect(body.get('notes')).toBe('Inclui o link do protótipo.');
+  });
+
+  it('valida campos CANVAS e SWOT obrigatorios e monta corpo JSON sem arquivos', () => {
+    const canvasField: DeliverableField = {
+      id: 3,
+      type: 'CANVAS',
+      label: 'Business Model Canvas',
+      required: true,
+      formats: null,
+      max_size_mb: null,
+    };
+    const swotField: DeliverableField = {
+      id: 4,
+      type: 'SWOT',
+      label: 'Matriz SWOT',
+      required: true,
+      formats: null,
+      max_size_mb: null,
+    };
+
+    const missing = validateDelivery([canvasField, swotField], {
+      files: {},
+      links: {},
+      canvas: { 3: emptyCanvas() },
+      swot: { 4: emptySwot() },
+      notes: '',
+    });
+    expect(missing[3]).toBeDefined();
+    expect(missing[4]).toBeDefined();
+
+    const canvas = emptyCanvas();
+    for (const key of Object.keys(canvas) as (keyof typeof canvas)[]) {
+      canvas[key] = `Texto ${key}`;
+    }
+    const swot = {
+      strengths: ['Equipe multidisciplinar', ''],
+      weaknesses: ['Tempo curto'],
+      opportunities: ['Parcerias locais'],
+      threats: ['Custos logísticos'],
+    };
+
+    expect(
+      validateDelivery([canvasField, swotField, linkField], {
+        files: {},
+        links: { 2: 'https://agroconecta.netlify.app' },
+        canvas: { 3: canvas },
+        swot: { 4: swot },
+        notes: ' Entrega JSON ',
+      }),
+    ).toEqual({});
+
+    const body = toSubmissionBody([linkField, canvasField, swotField], {
+      files: {},
+      links: { 2: 'https://agroconecta.netlify.app' },
+      canvas: { 3: canvas },
+      swot: { 4: swot },
+      notes: ' Entrega JSON ',
+    });
+    expect(body).not.toBeInstanceOf(FormData);
+    expect(body).toEqual({
+      items: [
+        { field_id: 2, link: 'https://agroconecta.netlify.app' },
+        { field_id: 3, content: canvas },
+        {
+          field_id: 4,
+          content: {
+            strengths: ['Equipe multidisciplinar'],
+            weaknesses: ['Tempo curto'],
+            opportunities: ['Parcerias locais'],
+            threats: ['Custos logísticos'],
+          },
+        },
+      ],
+      notes: 'Entrega JSON',
+    });
   });
 
   it('usa mensagem genérica para erros fora do contrato', () => {

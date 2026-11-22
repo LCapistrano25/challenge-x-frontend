@@ -103,8 +103,8 @@ export async function transferLeadership(teamId: number, memberId: number): Prom
 }
 
 /** POST /api/teams/{team_id}/leave — teamsLeave (RF26, x-status: proposed, P-25). */
-export async function leaveTeam(teamId: number): Promise<void> {
-  await http.post(`/api/teams/${teamId}/leave`);
+export async function leaveTeam(teamId: number, confirm = false): Promise<void> {
+  await http.post(`/api/teams/${teamId}/leave`, { confirm });
 }
 
 /** GET /api/teams/{team_id}/leadership-requests — teamsListLeadershipRequests (RF28). */

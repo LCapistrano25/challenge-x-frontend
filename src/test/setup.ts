@@ -23,17 +23,65 @@ const bytesOf = (blob: Blob) => {
   return impl?._bytes ?? impl?._buffer ?? new Uint8Array();
 };
 // FormData e File do Node (os globais foram trocados pelos do jsdom).
+const nodeBufferModule = 'node:buffer';
+const { File: NodeFile } = (await import(/* @vite-ignore */ nodeBufferModule)) as {
+  File: typeof File;
+};
 const NodeFormData = (await new Response(new URLSearchParams()).formData())
   .constructor as typeof FormData;
-const NodeFile = (
-  await new Response(
-    '--b\r\nContent-Disposition: form-data; name="f"; filename="f"\r\n\r\n\r\n--b--',
-    {
-      headers: { 'Content-Type': 'multipart/form-data; boundary=b' },
-    },
-  ).formData()
-).get('f')!.constructor as typeof File;
+const JsdomFormData = globalThis.FormData;
+const JsdomFile = globalThis.File;
 const VitestRequest = globalThis.Request;
+
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+function indexOfBytes(haystack: Uint8Array, needle: Uint8Array, from = 0): number {
+  outer: for (let i = from; i <= haystack.length - needle.length; i++) {
+    for (let j = 0; j < needle.length; j++) {
+      if (haystack[i + j] !== needle[j]) continue outer;
+    }
+    return i;
+  }
+  return -1;
+}
+
+const CRLF2 = encoder.encode('\r\n\r\n');
+
+function parseMultipart(buffer: ArrayBuffer, boundary: string): FormData {
+  const form = new JsdomFormData();
+  const raw = new Uint8Array(buffer);
+  const sep = encoder.encode(`--${boundary}`);
+  let pos = indexOfBytes(raw, sep);
+  while (pos !== -1) {
+    pos += sep.length;
+    if (raw[pos] === 45 && raw[pos + 1] === 45) break;
+    if (raw[pos] === 13 && raw[pos + 1] === 10) pos += 2;
+    const next = indexOfBytes(raw, sep, pos);
+    if (next === -1) break;
+    const part = raw.subarray(pos, Math.max(pos, next - 2));
+    const headerEnd = indexOfBytes(part, CRLF2);
+    if (headerEnd !== -1) {
+      const headers = decoder.decode(part.subarray(0, headerEnd));
+      const body = part.slice(headerEnd + 4);
+      const name = /name="([^"]+)"/.exec(headers)?.[1];
+      const filename = /filename="([^"]*)"/.exec(headers)?.[1];
+      const type = /content-type:\s*([^\r\n]+)/i.exec(headers)?.[1]?.trim();
+      if (name) {
+        if (filename !== undefined) {
+          form.append(
+            name,
+            new JsdomFile([body], filename, { type: type || 'application/octet-stream' }),
+          );
+        } else {
+          form.append(name, decoder.decode(body));
+        }
+      }
+    }
+    pos = next;
+  }
+  return form;
+}
 
 globalThis.Request = class extends VitestRequest {
   constructor(input: RequestInfo | URL, init?: RequestInit) {
@@ -50,6 +98,14 @@ globalThis.Request = class extends VitestRequest {
     } else {
       super(input, init);
     }
+  }
+
+  override async formData(): Promise<FormData> {
+    const contentType = this.headers.get('content-type') ?? '';
+    const match = /boundary=([^;\s"]+|"[^"]+")/i.exec(contentType);
+    const boundary = match?.[1]?.replace(/^"|"$/g, '');
+    if (!boundary) return super.formData();
+    return parseMultipart(await this.arrayBuffer(), boundary);
   }
 };
 

@@ -1,7 +1,11 @@
 import { useId, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import { Button, Checkbox, Input, Select, notify } from '@/shared/ui';
 import { cn } from '@/shared/lib/cn';
-import { useRegisterProject, useSaveProjectDraft } from '../hooks/useProjectRegistration';
+import {
+  useRegisterProject,
+  useSaveProjectDraft,
+  useSelectProjectChallenge,
+} from '../hooks/useProjectRegistration';
 import {
   PROJECT_SUMMARY_MAX,
   PROJECT_TEXT_MAX,
@@ -29,6 +33,8 @@ export interface ProjectFormProps {
   options: ProjectOptions;
   /** Valores iniciais (rascunho salvo ou formulário vazio). */
   initialValues: ProjectFormValues;
+  /** Indica se o projeto já existe no backend (passo 1 concluído). */
+  hasProject?: boolean;
   /** Quando o último rascunho foi salvo. */
   savedAt?: string | null;
   /** Bloqueia o preenchimento (ex.: prazo de cadastro encerrado). */
@@ -184,6 +190,7 @@ export function ProjectForm({
   teamId,
   options,
   initialValues,
+  hasProject = false,
   savedAt,
   disabled = false,
   onRegistered,
@@ -193,7 +200,9 @@ export function ProjectForm({
   const editing = mode === 'edit';
   const [values, setValues] = useState<ProjectFormValues>(initialValues);
   const [errors, setErrors] = useState<ProjectFormErrors>({});
+  const [projectCreated, setProjectCreated] = useState(hasProject);
   const saveDraft = useSaveProjectDraft(teamId);
+  const selectChallenge = useSelectProjectChallenge(teamId);
   const register = useRegisterProject(teamId);
   const titleId = useId();
   const baseId = useId();
@@ -203,10 +212,22 @@ export function ProjectForm({
   const sdgOptions = useMemo(() => toSdgOptions(options.challenges), [options]);
   const busy = saveDraft.isPending || register.isPending;
   const locked = disabled || busy;
+  const hasChallenge = Boolean(values.challengeId);
+  const detailsDisabled = disabled || !hasChallenge;
+  const categoryDisabled = disabled || (!projectCreated && !hasChallenge);
 
   function update<K extends keyof ProjectFormValues>(key: K, value: ProjectFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
     if (errors[key]) setErrors((current) => ({ ...current, [key]: undefined }));
+  }
+
+  function handleChallengeChange(challengeId: string) {
+    update('challengeId', challengeId);
+    if (!challengeId || disabled) return;
+    selectChallenge.mutate(Number(challengeId), {
+      onSuccess: () => setProjectCreated(true),
+      onError: (error) => handleApiError(error, 'Não foi possível selecionar o desafio.'),
+    });
   }
 
   function showErrors(found: ProjectFormErrors) {
@@ -280,18 +301,18 @@ export function ProjectForm({
 
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         <fieldset className={styles.form} disabled={disabled}>
-          <TextField
-            id={fieldId('title')}
-            label="Título do projeto *"
-            value={values.title}
-            onChange={(value) => update('title', value)}
-            error={errors.title}
-            hint="Use um título claro e objetivo. Até 100 caracteres."
-            maxLength={PROJECT_TITLE_MAX}
-            required
-          />
-
           <div className={styles.row}>
+            <Select
+              id={fieldId('challengeId')}
+              className={styles.field}
+              label="Objetivo de Desenvolvimento Sustentável *"
+              placeholder="Selecione a ODS"
+              options={sdgOptions}
+              value={values.challengeId}
+              onChange={(event) => handleChallengeChange(event.target.value)}
+              error={errors.challengeId}
+              aria-required="true"
+            />
             <Select
               id={fieldId('categoryId')}
               className={styles.field}
@@ -301,20 +322,22 @@ export function ProjectForm({
               value={values.categoryId}
               onChange={(event) => update('categoryId', event.target.value)}
               error={errors.categoryId}
-              aria-required="true"
-            />
-            <Select
-              id={fieldId('challengeId')}
-              className={styles.field}
-              label="Objetivo de Desenvolvimento Sustentável *"
-              placeholder="Selecione a ODS"
-              options={sdgOptions}
-              value={values.challengeId}
-              onChange={(event) => update('challengeId', event.target.value)}
-              error={errors.challengeId}
+              disabled={categoryDisabled}
               aria-required="true"
             />
           </div>
+
+          <TextField
+            id={fieldId('title')}
+            label="Título do projeto *"
+            value={values.title}
+            onChange={(value) => update('title', value)}
+            error={errors.title}
+            hint="Use um título claro e objetivo. Até 200 caracteres."
+            maxLength={PROJECT_TITLE_MAX}
+            disabled={detailsDisabled}
+            required
+          />
 
           <TextAreaField
             id={fieldId('summary')}
@@ -324,57 +347,58 @@ export function ProjectForm({
             value={values.summary}
             onChange={(value) => update('summary', value)}
             error={errors.summary}
+            disabled={detailsDisabled}
             required
           />
 
           <div className={styles.row}>
             <TextAreaField
               id={fieldId('problem')}
-              label="Problema identificado *"
+              label="Problema identificado"
               maxLength={PROJECT_TEXT_MAX}
               value={values.problem}
               onChange={(value) => update('problem', value)}
               error={errors.problem}
-              required
+              disabled={detailsDisabled}
             />
             <TextAreaField
               id={fieldId('objective')}
-              label="Objetivo geral *"
+              label="Objetivo geral"
               maxLength={PROJECT_TEXT_MAX}
               value={values.objective}
               onChange={(value) => update('objective', value)}
               error={errors.objective}
-              required
+              disabled={detailsDisabled}
             />
           </div>
 
           <TextAreaField
             id={fieldId('methodology')}
-            label="Metodologia e plano de desenvolvimento *"
+            label="Metodologia e plano de desenvolvimento"
             hint="Descreva como a equipe pretende pesquisar, desenvolver e validar a solução."
             maxLength={PROJECT_TEXT_MAX}
             value={values.methodology}
             onChange={(value) => update('methodology', value)}
             error={errors.methodology}
-            required
+            disabled={detailsDisabled}
           />
 
           <div className={styles.row}>
             <TextField
               id={fieldId('targetAudience')}
-              label="Público beneficiado *"
+              label="Público beneficiado"
               value={values.targetAudience}
               onChange={(value) => update('targetAudience', value)}
               error={errors.targetAudience}
-              required
+              disabled={detailsDisabled}
             />
             <TextField
               id={fieldId('location')}
-              label="Local de aplicação *"
+              label="Local de aplicação"
               value={values.location}
               onChange={(value) => update('location', value)}
               error={errors.location}
-              required
+              disabled={detailsDisabled}
             />
           </div>
 
@@ -385,6 +409,7 @@ export function ProjectForm({
               value={values.advisorName}
               onChange={(value) => update('advisorName', value)}
               error={errors.advisorName}
+              disabled={detailsDisabled}
             />
             <TextField
               id={fieldId('advisorEmail')}
@@ -393,6 +418,7 @@ export function ProjectForm({
               value={values.advisorEmail}
               onChange={(value) => update('advisorEmail', value)}
               error={errors.advisorEmail}
+              disabled={detailsDisabled}
             />
           </div>
 
@@ -405,6 +431,7 @@ export function ProjectForm({
             onChange={(value) => update('referenceUrl', value)}
             error={errors.referenceUrl}
             hint="Repositório, pesquisa inicial ou material complementar da proposta."
+            disabled={detailsDisabled}
           />
 
           <div className={styles.divider} />

@@ -1,3 +1,5 @@
+import { http, HttpResponse } from 'msw';
+import { server } from '@/mocks/server';
 import { getApiError } from '@/shared/lib/api-error';
 import {
   cancelJoinRequest,
@@ -51,14 +53,57 @@ describe('teams.api (API simulada)', () => {
   });
 
   it('cria a equipe e recusa nome repetido', async () => {
-    const taken = await createTeam({ name: 'EcoLab' }).catch((error: unknown) => error);
+    const taken = await createTeam({
+      name: 'EcoLab',
+      invitations: [{ email: 'ana@universidade.edu.br' }],
+    }).catch((error: unknown) => error);
     expect(getApiError(taken)?.code).toBe('team_name_taken');
 
     const team = await createTeam({
       name: 'Nova Equipe',
       interest_area: 'EDUCATION',
       description: 'Apresentação.',
+      invitations: [{ email: 'ana@universidade.edu.br' }],
     });
     expect(team.members).toEqual([expect.objectContaining({ role: 'LEADER' })]);
+  });
+
+  it('normaliza resposta em array puro do backend (TeamAvailabilitySerializer)', async () => {
+    server.use(
+      http.get('*/api/teams', () =>
+        HttpResponse.json([
+          {
+            id: 99,
+            edition_id: 1,
+            name: 'Equipe Solar',
+            code: 'DX27-SOL1',
+            members_count: 2,
+            available_vacancies: 4,
+          },
+        ]),
+      ),
+    );
+
+    const page = await fetchAvailableTeams({ search: 'solar', page: 1, page_size: 10 });
+    expect(page).toEqual({
+      count: 1,
+      next: null,
+      previous: null,
+      results: [
+        {
+          id: 99,
+          name: 'Equipe Solar',
+          code: 'DX27-SOL1',
+          member_count: 2,
+          available_slots: 4,
+          courses: [],
+          description: null,
+          interest_area: null,
+          leader: null,
+        },
+      ],
+    });
+
+    expect(await findTeamByCode('dx27sol1')).toMatchObject({ id: 99, code: 'DX27-SOL1' });
   });
 });

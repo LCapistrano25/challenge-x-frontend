@@ -12,10 +12,10 @@ const DAY = 24 * 60 * 60 * 1000;
 const daysFromNow = (days: number) => new Date(Date.now() + days * DAY).toISOString();
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * 60 * 1000).toISOString();
 
-const ES: CourseSummary = { id: 1, name: 'Engenharia de Software', slug: 'ES' };
-const AGRO: CourseSummary = { id: 2, name: 'Agronomia', slug: 'AGRO' };
-const PSI: CourseSummary = { id: 3, name: 'Psicologia', slug: 'PSI' };
-const DIR: CourseSummary = { id: 4, name: 'Direito', slug: 'DIR' };
+const ES: CourseSummary = { id: 1, name: 'Engenharia de Software' };
+const AGRO: CourseSummary = { id: 2, name: 'Agronomia' };
+const PSI: CourseSummary = { id: 3, name: 'Psicologia' };
+const DIR: CourseSummary = { id: 4, name: 'Direito' };
 
 const edition: EditionSummary = {
   id: 3,

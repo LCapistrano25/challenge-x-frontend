@@ -22,7 +22,7 @@ import {
   useProjectOptions,
   useTeamProject,
 } from '../hooks/useProjectRegistration';
-import { fromProjectDraft, projectToDraft } from '../lib/project-registration';
+import { fromProjectDraft, isProjectIncomplete, projectToDraft } from '../lib/project-registration';
 import type { Project } from '../types';
 import styles from '../components/ProjectRegistration.module.css';
 
@@ -148,8 +148,10 @@ export function ProjectRegistrationPage() {
     );
   }
 
-  // Projeto já cadastrado: a equipe acompanha pela tela do Projeto; a liderança edita por lá.
-  if (project.data && !editing) return <Navigate to={TEAM_PROJECT_PATH} replace />;
+  // Projeto já completo: a equipe acompanha pela tela do Projeto; a liderança edita por lá.
+  if (project.data && !isProjectIncomplete(project.data) && !editing) {
+    return <Navigate to={TEAM_PROJECT_PATH} replace />;
+  }
 
   const formation = getFormationWindow(dashboard.data.stages.map((item) => item.stage));
   return <RegistrationContent team={team} formation={formation} project={project.data} />;
@@ -238,8 +240,9 @@ function RegistrationContent({ team, formation, project }: RegistrationContentPr
                 project ? projectToDraft(project) : draft.data,
                 options.data,
               )}
-              savedAt={project ? null : draft.data?.saved_at}
-              mode={project ? 'edit' : 'register'}
+              hasProject={Boolean(project)}
+              savedAt={project && !isProjectIncomplete(project) ? null : draft.data?.saved_at}
+              mode={project && !isProjectIncomplete(project) ? 'edit' : 'register'}
               disabled={closed || upcoming}
               onRegistered={() => navigate(TEAM_PROJECT_PATH)}
               onFormationClosed={() => setClosedByApi(true)}

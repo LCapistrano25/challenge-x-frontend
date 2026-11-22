@@ -78,8 +78,29 @@ export function describePendingSummary(invitations: number, joinRequests: number
   return parts.join(' · ');
 }
 
+/** Há prazo extra de 48h ativo para reposição de integrantes? */
+export function hasActiveExtension(extendedUntil?: string | null, now = new Date()) {
+  if (!extendedUntil) return false;
+  const timestamp = Date.parse(extendedUntil);
+  return !Number.isNaN(timestamp) && timestamp > now.getTime();
+}
+
+/** "Prazo extra até 23/11 às 01:43" */
+export function describeExtendedUntil(extendedUntil: string) {
+  const formatted = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(extendedUntil));
+  return `Prazo extra até ${formatted}`;
+}
+
 /** "Até 15/03/2027 · 5 dias" (coluna "Formação da equipe"). */
-export function describeFormation(formation: FormationWindow) {
+export function describeFormation(formation: FormationWindow, extendedUntil?: string | null) {
+  if (hasActiveExtension(extendedUntil) && extendedUntil) {
+    return describeExtendedUntil(extendedUntil);
+  }
   if (!formation.endsAt) return 'Prazo não definido';
   const end = formatDate(formation.endsAt);
   if (formation.status === 'CLOSED') return `Encerrada em ${end}`;
@@ -106,9 +127,8 @@ export const describeJoinRequestMeta = (course: string, createdAt: string, now?:
 export const describeInvitationMeta = (createdAt: string, now?: Date) =>
   `Enviado ${lowerFirst(formatRelativeTime(createdAt, now))} · Aguardando resposta`;
 
-/** Nome do convidado ou, no convite por e-mail sem cadastro, o próprio e-mail. */
-export const invitationLabel = (invitation: Invitation) =>
-  invitation.student?.name ?? invitation.invited_email ?? 'Convidado';
+/** Nome do estudante convidado. */
+export const invitationLabel = (invitation: Invitation) => invitation.student.name;
 
 /** Solicitação de liderança ainda aguardando o professor. */
 export const pendingLeadershipRequest = (requests: LeadershipRequest[] | undefined) =>
@@ -152,6 +172,8 @@ const MY_TEAM_ERROR: Record<string, string> = {
   join_request_not_pending: 'Esta solicitação não está mais pendente.',
   student_already_in_team: 'Este estudante já participa de uma equipe nesta edição.',
   leader_must_transfer: 'Transfira a liderança antes de sair da equipe.',
+  leave_below_minimum:
+    'Sua saída deixa a equipe abaixo do mínimo de integrantes. Confirme para sair.',
   team_has_leader: 'A equipe já possui líder ativo.',
   leadership_request_pending_exists: 'Já existe uma solicitação de liderança pendente.',
   edition_closed: 'A edição está encerrada e não pode ser alterada.',

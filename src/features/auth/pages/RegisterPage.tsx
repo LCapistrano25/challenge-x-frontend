@@ -8,7 +8,6 @@ type FieldErrors = Record<string, string>;
 type Course = {
   id: number;
   name: string;
-  slug: string;
 };
 
 export function RegisterPage() {

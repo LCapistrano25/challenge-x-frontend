@@ -255,6 +255,8 @@ export const describePendingActions = (count: number) =>
 
 export const PROJECT_STATUS_LABEL: Record<Project['status'], string> = {
   IN_PROGRESS: 'Cadastrado',
+  COMPLETED: 'Concluído',
+  DISQUALIFIED: 'Desclassificado',
   SUBMITTED: 'Enviado',
   UNDER_EVALUATION: 'Em avaliação',
   APPROVED: 'Aprovado',
@@ -265,7 +267,7 @@ export const PROJECT_STATUS_LABEL: Record<Project['status'], string> = {
 export const describeProjectCourses = (project: Pick<Project, 'courses' | 'challenge'>) =>
   project.courses.length > 1
     ? 'Interdisciplinar'
-    : (project.courses[0]?.name ?? project.challenge.course.name);
+    : (project.courses[0]?.name ?? project.challenge?.course.name ?? '');
 
 /** "Cadastro em 12/03/2027 · Última edição por Ana Maria em 16/04/2027, às 15:10" */
 export function describeProjectHistory(project: Project) {

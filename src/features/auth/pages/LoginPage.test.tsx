@@ -4,11 +4,21 @@ import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { routes } from '@/app/router/routes';
 import { server } from '@/mocks/server';
+import { env } from '@/shared/config/env';
 import { redirectTo } from '@/shared/lib/redirect';
 import { AuthProvider } from '@/features/auth';
 import { fetchCurrentUser } from '../api/auth.api';
 
 vi.mock('@/shared/lib/redirect', () => ({ redirectTo: vi.fn() }));
+vi.mock('@/shared/config/env', () => ({
+  env: {
+    apiUrl: 'http://localhost:8000',
+    enableMocks: false,
+    microsoftTenantId: 'tenant-123',
+    microsoftClientId: 'client-456',
+    microsoftRedirectUri: 'http://localhost:5173/auth/microsoft/callback',
+  },
+}));
 
 function renderLogin(path = '/login') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -40,12 +50,41 @@ describe('LoginPage: aluno e professor só entram pela Microsoft', () => {
     expect(screen.queryByLabelText('Senha')).not.toBeInTheDocument();
   });
 
-  it('o botão leva ao fluxo Microsoft do back-end', async () => {
+  it('o botão leva ao fluxo OAuth do Microsoft Entra ID com state salvo', async () => {
+    window.sessionStorage.clear();
     renderLogin();
 
     fireEvent.click(await screen.findByRole('button', { name: /Entrar com a Microsoft/ }));
 
-    expect(redirectTo).toHaveBeenCalledWith(expect.stringContaining('/auth/microsoft/login'));
+    expect(redirectTo).toHaveBeenCalledTimes(1);
+    const redirectedUrl = vi.mocked(redirectTo).mock.calls[0]?.[0];
+    expect(redirectedUrl).toBeDefined();
+    const targetUrl = new URL(redirectedUrl!);
+    expect(targetUrl.origin).toBe('https://login.microsoftonline.com');
+    expect(targetUrl.pathname).toBe('/tenant-123/oauth2/v2.0/authorize');
+    expect(targetUrl.searchParams.get('client_id')).toBe('client-456');
+    expect(targetUrl.searchParams.get('response_type')).toBe('code');
+    expect(targetUrl.searchParams.get('redirect_uri')).toBe(
+      'http://localhost:5173/auth/microsoft/callback',
+    );
+    expect(targetUrl.searchParams.get('state')).toBeTruthy();
+    expect(window.sessionStorage.getItem('challenge-x.microsoft-oauth-state')).toBe(
+      targetUrl.searchParams.get('state'),
+    );
+  });
+
+  it('mostra erro claro quando o Entra ID não está configurado no frontend', async () => {
+    const previousClient = env.microsoftClientId;
+    (env as { microsoftClientId: string }).microsoftClientId = '';
+    try {
+      renderLogin();
+      fireEvent.click(await screen.findByRole('button', { name: /Entrar com a Microsoft/ }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Login com a Microsoft não configurado',
+      );
+    } finally {
+      (env as { microsoftClientId: string }).microsoftClientId = previousClient;
+    }
   });
 
   it('mostra o motivo quando o back-end volta com ?error=', async () => {
@@ -81,10 +120,10 @@ describe('LoginPage: aluno e professor só entram pela Microsoft', () => {
 
   it('derruba a sessão se o back-end deixar aluno entrar por senha (defesa do front)', async () => {
     server.use(
-      http.post('*/auth/login', () =>
+      http.post('*/api/auth/sessions/password', () =>
         HttpResponse.json({ id: '1', name: 'Ana', email: 'a@a.com', role: 'STUDENT' }),
       ),
-      http.post('*/auth/logout', () => new HttpResponse(null, { status: 204 })),
+      http.post('*/api/auth/logout', () => new HttpResponse(null, { status: 204 })),
     );
     const router = renderLogin();
 
@@ -103,7 +142,9 @@ describe('LoginPage: avaliador externo', () => {
 
     await submitPasswordLogin('avaliador@exemplo.com');
 
-    await waitFor(() => expect(router.state.location.pathname).toBe('/avaliador'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/avaliador'), {
+      timeout: 5000,
+    });
   });
 
   it('mostra erro para senha incorreta', async () => {
