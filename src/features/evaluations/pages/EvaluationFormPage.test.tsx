@@ -39,7 +39,10 @@ async function goToReview() {
 
 describe('EvaluationFormPage', () => {
   beforeEach(async () => {
-    await http.post('/auth/login', { email: 'avaliador@exemplo.com', password: '123456' });
+    await http.post('/api/auth/sessions/password', {
+      email: 'avaliador@exemplo.com',
+      password: '123456',
+    });
   });
 
   it('mostra o total, a soma das notas e a configuração da etapa', async () => {
