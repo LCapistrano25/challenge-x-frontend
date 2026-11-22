@@ -1,11 +1,12 @@
-import { Modal } from '@/shared/ui';
+import { Button, Modal, notify } from '@/shared/ui';
+import { downloadAuthenticatedFile } from '@/shared/lib/download';
 import {
   describeRequirements,
   formatDateAtTime,
   formatDeadline,
   formatFileSize,
 } from '../lib/deliverables';
-import type { StageDeliverable } from '../types';
+import type { CanvasContent, StageDeliverable, SwotContent } from '../types';
 import styles from './TeamProject.module.css';
 
 export interface StageDetailsDialogProps {
@@ -13,11 +14,38 @@ export interface StageDetailsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const CANVAS_LABELS: [keyof CanvasContent, string][] = [
+  ['customer_segments', 'Segmentos de clientes'],
+  ['value_propositions', 'Proposta de valor'],
+  ['channels', 'Canais'],
+  ['customer_relationships', 'Relacionamento'],
+  ['revenue_streams', 'Fontes de receita'],
+  ['key_resources', 'Recursos-chave'],
+  ['key_activities', 'Atividades-chave'],
+  ['key_partnerships', 'Parcerias-chave'],
+  ['cost_structure', 'Estrutura de custos'],
+];
+
+const SWOT_LABELS: [keyof SwotContent, string][] = [
+  ['strengths', 'Forças'],
+  ['weaknesses', 'Fraquezas'],
+  ['opportunities', 'Oportunidades'],
+  ['threats', 'Ameaças'],
+];
+
 /**
  * Orientações da etapa e histórico de versões ("Ver detalhes", "Consultar envio" e
  * "Ver orientações"). Cada envio é uma versão imutável, com o comprovante (RF31).
  */
 export function StageDetailsDialog({ item, onOpenChange }: StageDetailsDialogProps) {
+  async function handleDownload(fileUrl: string, fileName?: string | null) {
+    try {
+      await downloadAuthenticatedFile(fileUrl, fileName);
+    } catch {
+      notify.error('Não foi possível baixar o arquivo. Verifique sua sessão e tente novamente.');
+    }
+  }
+
   return (
     <Modal
       open={item !== null}
@@ -59,14 +87,36 @@ export function StageDetailsDialog({ item, onOpenChange }: StageDetailsDialogPro
                       entry.type === 'FILE' ? (
                         <p key={entry.id} className={styles.text}>
                           {entry.file_url ? (
-                            <a href={entry.file_url} target="_blank" rel="noreferrer">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="small"
+                              onClick={() => void handleDownload(entry.file_url!, entry.file_name)}
+                            >
                               {entry.file_name ?? 'Arquivo enviado'}
-                            </a>
+                            </Button>
                           ) : (
                             (entry.file_name ?? 'Arquivo enviado')
                           )}
                           {entry.size_bytes != null && ` · ${formatFileSize(entry.size_bytes)}`}
                         </p>
+                      ) : entry.type === 'CANVAS' && entry.content ? (
+                        <div key={entry.id} className={styles.text}>
+                          {CANVAS_LABELS.map(([key, label]) => (
+                            <p key={key}>
+                              <strong>{label}:</strong> {(entry.content as CanvasContent)[key]}
+                            </p>
+                          ))}
+                        </div>
+                      ) : entry.type === 'SWOT' && entry.content ? (
+                        <div key={entry.id} className={styles.text}>
+                          {SWOT_LABELS.map(([key, label]) => (
+                            <p key={key}>
+                              <strong>{label}:</strong>{' '}
+                              {((entry.content as SwotContent)[key] ?? []).join('; ')}
+                            </p>
+                          ))}
+                        </div>
                       ) : (
                         entry.link && (
                           <p key={entry.id} className={styles.text}>

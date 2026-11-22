@@ -9,9 +9,9 @@ import type { CourseSummary } from '@/shared/types/api';
 const MINUTE = 60 * 1000;
 const minutesAgo = (minutes: number) => new Date(Date.now() - minutes * MINUTE).toISOString();
 
-const ES: CourseSummary = { id: 1, name: 'Engenharia de Software', slug: 'ES' };
-const AGRO: CourseSummary = { id: 2, name: 'Agronomia', slug: 'AGRO' };
-const AMB: CourseSummary = { id: 7, name: 'Engenharia Ambiental', slug: 'AMB' };
+const ES: CourseSummary = { id: 1, name: 'Engenharia de Software' };
+const AGRO: CourseSummary = { id: 2, name: 'Agronomia' };
+const AMB: CourseSummary = { id: 7, name: 'Engenharia Ambiental' };
 
 const student = (id: number, name: string, course: CourseSummary) => ({
   user_id: `00000000-0000-4000-8000-00000000${id}`,

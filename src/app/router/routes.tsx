@@ -1,6 +1,11 @@
 import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router-dom';
-import { CompleteProfilePage, ForgotPasswordPage, LoginPage } from '@/features/auth';
+import {
+  CompleteProfilePage,
+  ForgotPasswordPage,
+  LoginPage,
+  MicrosoftCallbackPage,
+} from '@/features/auth';
 import { RequireProfilePending } from '../guards/RequireProfilePending';
 import { RequireRole } from '../guards/RequireRole';
 import { AppLayout } from '../layouts/AppLayout';
@@ -34,6 +39,7 @@ const authRoutes: RouteObject = {
   children: [
     { path: '/login', element: <LoginPage /> },
     { path: '/admin/login', element: <LoginPage adminOnly /> },
+    { path: '/auth/microsoft/callback', element: <MicrosoftCallbackPage /> },
     { path: '/recuperar-senha', element: <ForgotPasswordPage /> },
   ],
 };

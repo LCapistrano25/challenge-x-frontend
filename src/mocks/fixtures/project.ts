@@ -7,13 +7,12 @@ import type { EligibleChallenge, Project, ProjectOptions, ProjectWrite } from '@
 import type { Team } from '@/features/teams';
 import type { CourseSummary } from '@/shared/types/api';
 
-const ES: CourseSummary = { id: 1, name: 'Engenharia de Software', slug: 'ES' };
-const AGRO: CourseSummary = { id: 2, name: 'Agronomia', slug: 'AGRO' };
+const ES: CourseSummary = { id: 1, name: 'Engenharia de Software' };
+const AGRO: CourseSummary = { id: 2, name: 'Agronomia' };
 
 const challenges: EligibleChallenge[] = [
   {
     id: 15,
-    title: 'Uso eficiente de recursos hídricos no campus',
     description:
       'Propor uma solução para reduzir o desperdício de água nas instalações da universidade.',
     course: ES,
@@ -21,21 +20,18 @@ const challenges: EligibleChallenge[] = [
   },
   {
     id: 16,
-    title: 'Infraestrutura digital para a comunidade acadêmica',
     description: 'Criar serviços digitais que aproximem a universidade da comunidade do entorno.',
     course: ES,
     sdg: { id: 9, number: 9, title: 'Indústria, inovação e infraestrutura' },
   },
   {
     id: 17,
-    title: 'Comércio local e agricultura familiar',
     description: 'Ampliar o acesso dos pequenos produtores aos consumidores da região.',
     course: AGRO,
     sdg: { id: 11, number: 11, title: 'Cidades sustentáveis' },
   },
   {
     id: 18,
-    title: 'Produção agrícola sustentável',
     description: 'Apoiar práticas de cultivo que aumentem a produtividade com menor impacto.',
     course: AGRO,
     sdg: { id: 2, number: 2, title: 'Fome zero e agricultura sustentável' },
@@ -57,27 +53,24 @@ export function buildProjectOptions(): ProjectOptions {
 /** Títulos já usados por outras equipes da edição (409 project_title_taken). */
 export const TAKEN_PROJECT_TITLES = ['Monitoramento inteligente do consumo de água'];
 
-/** Projeto que a API devolveria ao cadastrar (PUT /api/teams/{id}/project). */
+/** Projeto que a API devolveria ao cadastrar pelos 3 passos. */
 export function buildProject(team: Team, input: ProjectWrite, id: number): Project {
   const options = buildProjectOptions();
-  const challenge = options.challenges.find((item) => item.id === input.challenge_id)!;
-  const category = options.categories.find((item) => item.id === input.category_id)!;
+  const challenge = options.challenges.find((item) => item.id === input.challenge_id) ?? null;
+  const category = options.categories.find((item) => item.id === input.category_id) ?? null;
   const courses = [
     ...new Map(team.members.map((m) => [m.student.course.id, m.student.course])).values(),
   ];
   const now = new Date().toISOString();
   return {
-    ...input,
     id,
     team_id: team.id,
     edition_id: team.edition_id,
-    challenge: {
-      id: challenge.id,
-      title: challenge.title,
-      course: challenge.course,
-      sdg: challenge.sdg,
-    },
-    category: { id: category.id, name: category.name },
+    challenge,
+    category: category ? { id: category.id, name: category.name } : null,
+    title: input.title,
+    summary: input.summary,
+    objective: input.objective ?? '',
     status: 'IN_PROGRESS',
     courses,
     created_at: now,

@@ -18,19 +18,19 @@ export function ProjectSummaryCard({
   editHref,
   className,
 }: ProjectSummaryCardProps) {
-  const sdg = project.challenge.sdg;
+  const sdg = project.challenge?.sdg ?? null;
   return (
     <article
       className={className ? `${styles.projectCard} ${className}` : styles.projectCard}
       aria-label={`Projeto ${project.title}`}
     >
       <div className={styles.projectCardBand}>
-        <span className={styles.odsTag}>ODS {sdg.number}</span>
+        <span className={styles.odsTag}>{sdg ? `ODS ${sdg.number}` : 'Sem desafio'}</span>
       </div>
       <div className={styles.projectCardBody}>
-        <h2 className={styles.projectCardTitle}>{project.title}</h2>
+        <h2 className={styles.projectCardTitle}>{project.title || 'Projeto sem título'}</h2>
         <p className={styles.infoRow}>
-          <span>{sdg.title}</span>
+          <span>{sdg ? sdg.title : 'Desafio não selecionado'}</span>
           <span className={styles.dot} aria-hidden="true" />
           <span>{describeProjectCourses(project)}</span>
         </p>

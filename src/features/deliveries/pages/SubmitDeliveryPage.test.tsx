@@ -1,14 +1,19 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http as mswHttp, HttpResponse } from 'msw';
 import { useState, type ReactNode } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { server } from '@/mocks/server';
+import { buildDeliverables } from '@/mocks/fixtures/deliverables';
 import { http } from '@/shared/lib/http';
 import {
   PageHeaderContentContext,
   PageHeaderSetterContext,
   type PageHeaderContent,
 } from '@/shared/lib/page-header';
+import type { CanvasContent, DeliverableVersion, SwotContent } from '@/features/projects';
+import { CANVAS_BLOCKS, SWOT_QUADRANTS } from '../lib/submission';
 import { DeliveryConfirmationPage } from './DeliveryConfirmationPage';
 import { SubmitDeliveryPage } from './SubmitDeliveryPage';
 
@@ -60,7 +65,10 @@ const realFileOf = (name: string, size: number) =>
 
 describe('SubmitDeliveryPage', () => {
   beforeEach(() =>
-    http.post('/auth/login', { email: 'lider.projeto@exemplo.com', password: '123456' }),
+    http.post('/api/auth/sessions/password', {
+      email: 'lider.projeto@exemplo.com',
+      password: '123456',
+    }),
   );
 
   it('mostra a etapa, as orientações e valida os campos obrigatórios', async () => {
@@ -158,10 +166,127 @@ describe('SubmitDeliveryPage', () => {
   });
 
   it('participante também envia (só a liderança edita o projeto)', async () => {
-    await http.post('/auth/login', { email: 'integrante.projeto@exemplo.com', password: '123456' });
+    await http.post('/api/auth/sessions/password', {
+      email: 'integrante.projeto@exemplo.com',
+      password: '123456',
+    });
     renderAt('/academico/projeto/entrega?etapa=23');
 
     expect(await screen.findByRole('button', { name: 'Enviar entrega' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Editar projeto' })).not.toBeInTheDocument();
+  });
+
+  it('envia campos CANVAS e SWOT como JSON quando nao ha arquivos', async () => {
+    const user = userEvent.setup({ delay: null });
+    let stages = buildDeliverables({ seeded: true }).map((entry) =>
+      entry.stage.id === 23
+        ? {
+            ...entry,
+            fields: [
+              {
+                id: 901,
+                type: 'CANVAS' as const,
+                label: 'Business Model Canvas',
+                required: true,
+                formats: null,
+                max_size_mb: null,
+              },
+              {
+                id: 902,
+                type: 'SWOT' as const,
+                label: 'Matriz SWOT',
+                required: true,
+                formats: null,
+                max_size_mb: null,
+              },
+            ],
+          }
+        : entry,
+    );
+
+    let capturedContentType = '';
+    let capturedBody: unknown = null;
+
+    server.use(
+      mswHttp.get('*/api/projects/:projectId/deliverables', () => HttpResponse.json(stages)),
+      mswHttp.post('*/api/projects/:projectId/stages/:stageId/versions', async ({ request }) => {
+        capturedContentType = request.headers.get('content-type') ?? '';
+        const payload = (await request.json()) as {
+          items: Array<{ field_id: number; content?: CanvasContent | SwotContent }>;
+        };
+        capturedBody = payload;
+        const created: DeliverableVersion = {
+          id: 999,
+          version_number: 1,
+          submitted_at: new Date().toISOString(),
+          submitted_by: { user_id: '1', name: 'Ana Maria' },
+          notes: null,
+          items: [
+            {
+              id: 1,
+              field_id: 901,
+              type: 'CANVAS',
+              link: null,
+              file_url: null,
+              file_name: null,
+              size_bytes: null,
+              content: (payload.items[0]?.content ?? null) as CanvasContent | null,
+            },
+            {
+              id: 2,
+              field_id: 902,
+              type: 'SWOT',
+              link: null,
+              file_url: null,
+              file_name: null,
+              size_bytes: null,
+              content: (payload.items[1]?.content ?? null) as SwotContent | null,
+            },
+          ],
+          receipt: null,
+        };
+        stages = stages.map((entry) =>
+          entry.stage.id === 23
+            ? { ...entry, status: 'SUBMITTED' as const, versions: [created, ...entry.versions] }
+            : entry,
+        );
+        return HttpResponse.json(created, { status: 201 });
+      }),
+    );
+
+    renderAt('/academico/projeto/entrega?etapa=23');
+
+    await screen.findByText('Business Model Canvas');
+    for (const block of CANVAS_BLOCKS) {
+      await user.type(screen.getByLabelText(block.label), `Valor ${block.key}`);
+    }
+    for (const quadrant of SWOT_QUADRANTS) {
+      await user.type(screen.getByLabelText(`${quadrant.label} — item 1`), `Item ${quadrant.key}`);
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Enviar entrega' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Entrega da etapa realizada!' }),
+    ).toBeInTheDocument();
+    expect(capturedContentType).toContain('application/json');
+    expect(capturedBody).toMatchObject({
+      items: [
+        {
+          field_id: 901,
+          content: {
+            customer_segments: 'Valor customer_segments',
+            cost_structure: 'Valor cost_structure',
+          },
+        },
+        {
+          field_id: 902,
+          content: {
+            strengths: ['Item strengths'],
+            threats: ['Item threats'],
+          },
+        },
+      ],
+    });
   });
 });

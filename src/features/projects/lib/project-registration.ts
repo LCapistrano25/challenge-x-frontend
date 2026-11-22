@@ -8,16 +8,11 @@ import type {
   ProjectWrite,
 } from '../types';
 
-/* --- Limites (Figma: "Até 100 caracteres" e "Até 1.000 caracteres") --- */
+/* --- Limites --- */
 
-export const PROJECT_TITLE_MAX = 100;
+export const PROJECT_TITLE_MAX = 200;
 export const PROJECT_SUMMARY_MAX = 1000;
-/**
- * Problema, objetivo geral e metodologia. O Figma só limita o resumo; os demais textos longos
- * seguem o mesmo limite (proposta ao back-end, ver api/README.md).
- */
 export const PROJECT_TEXT_MAX = 1000;
-/** Tamanho das colunas de link do modelo (varchar(1000)). */
 export const PROJECT_URL_MAX = 1000;
 
 /* --- Formulário --- */
@@ -58,17 +53,12 @@ export const EMPTY_PROJECT_FORM: ProjectFormValues = {
   accepted: false,
 };
 
-/** Campos obrigatórios para cadastrar, com a mensagem de cada um (ordem da tela). */
+/** Campos obrigatórios para cadastrar segundo o contrato (desafio -> dados -> categoria). */
 const REQUIRED: [ProjectFormField, string][] = [
-  ['title', 'Informe o título do projeto.'],
-  ['categoryId', 'Selecione o eixo temático.'],
   ['challengeId', 'Selecione o Objetivo de Desenvolvimento Sustentável.'],
+  ['title', 'Informe o título do projeto.'],
   ['summary', 'Escreva o resumo da proposta.'],
-  ['problem', 'Descreva o problema identificado.'],
-  ['objective', 'Informe o objetivo geral.'],
-  ['methodology', 'Descreva a metodologia e o plano de desenvolvimento.'],
-  ['targetAudience', 'Informe o público beneficiado.'],
-  ['location', 'Informe o local de aplicação.'],
+  ['categoryId', 'Selecione o eixo temático.'],
 ];
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -106,7 +96,6 @@ function validateFormat(values: ProjectFormValues): ProjectFormErrors {
 /** Validação de "Cadastrar projeto": obrigatórios, formatos e declaração de aceite. */
 export function validateProjectForm(values: ProjectFormValues): ProjectFormErrors {
   const errors = validateFormat(values);
-  // Campo vazio mostra a mensagem de obrigatório, não a de formato.
   for (const [field, message] of REQUIRED) {
     if (!values[field].trim()) errors[field] = message;
   }
@@ -126,14 +115,14 @@ export function hasDraftContent(values: ProjectFormValues) {
   );
 }
 
-/** Ordem dos campos na tela, para focar o primeiro erro. */
+/** Ordem dos campos na tela (desafio -> dados -> categoria), para focar o primeiro erro. */
 export const FIELD_ORDER: (keyof ProjectFormValues)[] = [
-  'title',
-  'categoryId',
   'challengeId',
+  'title',
   'summary',
-  'problem',
   'objective',
+  'categoryId',
+  'problem',
   'methodology',
   'targetAudience',
   'location',
@@ -152,7 +141,7 @@ const text = (value: string) => value.trim();
 const optional = (value: string) => value.trim() || null;
 const toId = (value: string) => (value ? Number(value) : null);
 
-/** Corpo de PUT /api/teams/{id}/project a partir do formulário já validado. */
+/** Corpo dos 3 passos da API a partir do formulário já validado. */
 export function toProjectWrite(values: ProjectFormValues): ProjectWrite {
   return {
     challenge_id: Number(values.challengeId),
@@ -160,13 +149,6 @@ export function toProjectWrite(values: ProjectFormValues): ProjectWrite {
     title: text(values.title),
     summary: text(values.summary),
     objective: text(values.objective),
-    problem: text(values.problem),
-    methodology: text(values.methodology),
-    target_audience: text(values.targetAudience),
-    location: text(values.location),
-    advisor_name: optional(values.advisorName),
-    advisor_email: optional(values.advisorEmail),
-    reference_url: optional(values.referenceUrl),
   };
 }
 
@@ -188,10 +170,21 @@ export function toProjectDraft(values: ProjectFormValues): ProjectDraft {
   };
 }
 
+/** Projeto incompleto segundo o contrato (sem desafio, título, resumo ou categoria). */
+export function isProjectIncomplete(project: Project | null | undefined): boolean {
+  if (!project) return true;
+  return (
+    project.challenge === null ||
+    project.title === '' ||
+    project.summary === '' ||
+    project.category === null
+  );
+}
+
 /** Dados do projeto cadastrado no formato do rascunho, para preencher a edição. */
 export function projectToDraft(project: Project): ProjectDraft {
   return {
-    challenge_id: project.challenge.id,
+    challenge_id: project.challenge?.id ?? null,
     category_id: project.category?.id ?? null,
     title: project.title,
     summary: project.summary,
@@ -208,7 +201,7 @@ export function projectToDraft(project: Project): ProjectDraft {
 
 /**
  * Preenche o formulário com o rascunho salvo. Desafio e categoria que deixaram de ser elegíveis
- * (ex.: o curso perdeu representante, RF26) voltam vazios para a liderança escolher de novo.
+ * voltam vazios para a liderança escolher de novo.
  */
 export function fromProjectDraft(
   draft: ProjectDraft | null | undefined,
@@ -240,10 +233,15 @@ export function fromProjectDraft(
 export const toCategoryOptions = (categories: ProjectCategory[]): SelectOption[] =>
   categories.map((category) => ({ value: String(category.id), label: category.name }));
 
+function truncateDescription(description: string, max = 60): string {
+  const trimmed = description.trim();
+  if (trimmed.length <= max) return trimmed;
+  return `${trimmed.slice(0, max - 1).trimEnd()}…`;
+}
+
 /**
- * O projeto tem uma única ODS, que vem do desafio escolhido (RF29). O campo "Objetivo de
- * Desenvolvimento Sustentável" lista os desafios elegíveis pela ODS ("ODS 11 · Cidades…"); quando
- * dois desafios têm a mesma ODS, o título do desafio diferencia as opções.
+ * O projeto tem uma única ODS, que vem do desafio escolhido (RF29). Quando dois desafios têm
+ * a mesma ODS, a descrição do desafio diferencia as opções.
  */
 export function toSdgOptions(challenges: EligibleChallenge[]): SelectOption[] {
   const perSdg = new Map<number, number>();
@@ -251,11 +249,17 @@ export function toSdgOptions(challenges: EligibleChallenge[]): SelectOption[] {
     perSdg.set(challenge.sdg.id, (perSdg.get(challenge.sdg.id) ?? 0) + 1);
 
   return [...challenges]
-    .sort((a, b) => a.sdg.number - b.sdg.number || a.title.localeCompare(b.title, 'pt-BR'))
+    .sort(
+      (a, b) => a.sdg.number - b.sdg.number || a.description.localeCompare(b.description, 'pt-BR'),
+    )
     .map((challenge) => {
       const sdg = `ODS ${challenge.sdg.number} · ${challenge.sdg.title}`;
       const shared = (perSdg.get(challenge.sdg.id) ?? 0) > 1;
-      return { value: String(challenge.id), label: shared ? `${sdg} — ${challenge.title}` : sdg };
+      const summary = truncateDescription(challenge.description);
+      return {
+        value: String(challenge.id),
+        label: shared && summary ? `${sdg} — ${summary}` : sdg,
+      };
     });
 }
 
@@ -263,13 +267,11 @@ export function toSdgOptions(challenges: EligibleChallenge[]): SelectOption[] {
 
 const timeFormat = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
-/** Linha de situação ao lado dos botões (Figma: "Preenchimento em andamento · …"). */
 export function describeFillStatus(savedAt: string | null | undefined) {
   if (!savedAt) return 'Preenchimento em andamento · Ainda não cadastrado';
   return `Rascunho salvo às ${timeFormat.format(new Date(savedAt))} · Ainda não cadastrado`;
 }
 
-/** "4 integrantes · Engenharia de Software e Agronomia" */
 export function describeTeamComposition(courses: string[], memberCount: number) {
   const unique = [...new Set(courses)];
   const names =
@@ -286,7 +288,10 @@ const ERROR_MESSAGE: Record<string, string> = {
   formation_closed: 'O prazo de cadastro do projeto está encerrado.',
   project_title_taken: 'Já existe um projeto com este título nesta edição.',
   challenge_not_eligible: 'Esta ODS não está disponível para os cursos da equipe.',
+  challenge_not_selected: 'Selecione o desafio antes de preencher os dados do projeto.',
+  project_not_found: 'Selecione o desafio antes de escolher o eixo temático.',
   category_not_available: 'Este eixo temático não está disponível na edição.',
+  not_team_leader: 'Somente a liderança da equipe pode cadastrar o projeto.',
   forbidden: 'Somente a liderança da equipe pode cadastrar o projeto.',
 };
 
@@ -294,6 +299,7 @@ const ERROR_MESSAGE: Record<string, string> = {
 const FIELD_ERROR: Record<string, keyof ProjectFormValues> = {
   project_title_taken: 'title',
   challenge_not_eligible: 'challengeId',
+  challenge_not_selected: 'challengeId',
   category_not_available: 'categoryId',
 };
 

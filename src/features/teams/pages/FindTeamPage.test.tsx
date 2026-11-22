@@ -93,6 +93,9 @@ describe('FindTeamPage', () => {
     expect(await screen.findByText('Informe o nome da equipe.')).toBeInTheDocument();
     expect(screen.getByText('Selecione a área de interesse.')).toBeInTheDocument();
     expect(screen.getByText('Escreva a apresentação da equipe.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Informe ao menos um e-mail institucional para convidar.'),
+    ).toBeInTheDocument();
 
     await user.type(screen.getByLabelText('Nome da equipe *'), 'AB');
     await user.click(screen.getByRole('button', { name: 'Criar equipe' }));
@@ -106,6 +109,10 @@ describe('FindTeamPage', () => {
     await user.type(await screen.findByLabelText('Nome da equipe *'), 'Nova Equipe');
     await user.selectOptions(screen.getByLabelText('Área de interesse *'), 'EDUCATION');
     await user.type(screen.getByLabelText('Apresentação da equipe *'), 'Queremos ensinar.');
+    await user.type(
+      screen.getByLabelText('Convites iniciais (e-mails institucionais) *'),
+      'ana@universidade.edu.br',
+    );
     await user.click(screen.getByRole('button', { name: 'Criar equipe' }));
 
     expect(await screen.findByText('Página da minha equipe')).toBeInTheDocument();
@@ -118,6 +125,10 @@ describe('FindTeamPage', () => {
     await user.type(await screen.findByLabelText('Nome da equipe *'), 'EcoLab');
     await user.selectOptions(screen.getByLabelText('Área de interesse *'), 'ENVIRONMENT');
     await user.type(screen.getByLabelText('Apresentação da equipe *'), 'Texto.');
+    await user.type(
+      screen.getByLabelText('Convites iniciais (e-mails institucionais) *'),
+      'ana@universidade.edu.br',
+    );
     await user.click(screen.getByRole('button', { name: 'Criar equipe' }));
 
     expect(

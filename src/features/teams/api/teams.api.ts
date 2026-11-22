@@ -13,12 +13,74 @@ import type {
   TeamListing,
 } from '../types';
 
+type RawTeamListing = Partial<TeamListing> & {
+  id: number;
+  name: string;
+  code: string;
+  members_count?: number;
+  available_vacancies?: number;
+};
+
+function normalizeTeamListing(item: RawTeamListing): TeamListing {
+  return {
+    id: item.id,
+    name: item.name,
+    code: item.code,
+    member_count: item.member_count ?? item.members_count ?? 0,
+    available_slots: item.available_slots ?? item.available_vacancies ?? 0,
+    courses: Array.isArray(item.courses) ? item.courses : [],
+    description: item.description ?? null,
+    interest_area: item.interest_area ?? null,
+    leader: item.leader ?? null,
+  };
+}
+
+function normalizeText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase();
+}
+
 /** GET /api/teams — teamsListAvailable (RF24): equipes ativas da edição vigente com vagas. */
 export async function fetchAvailableTeams(
   params: AvailableTeamsParams = {},
 ): Promise<Paginated<TeamListing>> {
-  const { data } = await http.get<Paginated<TeamListing>>('/api/teams', { params });
-  return data;
+  const { data } = await http.get<Paginated<RawTeamListing> | RawTeamListing[]>('/api/teams', {
+    params,
+  });
+
+  if (Array.isArray(data)) {
+    const query = params.search?.trim() ?? '';
+    const filtered = data.map(normalizeTeamListing).filter((team) => {
+      if (params.interest_area && team.interest_area !== params.interest_area) return false;
+      if (!query) return true;
+      const needle = normalizeText(query);
+      return (
+        normalizeText(team.name).includes(needle) ||
+        sameTeamCode(team.code, query) ||
+        normalizeText(team.code).includes(needle)
+      );
+    });
+
+    const pageSize = Math.max(1, params.page_size ?? 10);
+    const page = Math.max(1, params.page ?? 1);
+    const start = (page - 1) * pageSize;
+    const results = filtered.slice(start, start + pageSize);
+    return {
+      count: filtered.length,
+      next: start + pageSize < filtered.length ? String(page + 1) : null,
+      previous: page > 1 ? String(page - 1) : null,
+      results,
+    };
+  }
+
+  return {
+    count: typeof data.count === 'number' ? data.count : 0,
+    next: data.next ?? null,
+    previous: data.previous ?? null,
+    results: Array.isArray(data.results) ? data.results.map(normalizeTeamListing) : [],
+  };
 }
 
 /**

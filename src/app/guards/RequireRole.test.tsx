@@ -27,7 +27,7 @@ function renderGuard() {
 
 const sessionAs = (role: string) =>
   server.use(
-    http.get('*/auth/me', () =>
+    http.get('*/api/auth/me', () =>
       HttpResponse.json({ id: '9', name: 'Teste', email: 't@t.com', role }),
     ),
   );
