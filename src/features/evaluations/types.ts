@@ -1,3 +1,5 @@
+import type { CourseSummary, EditionSummary, SdgSummary } from '@/shared/types/api';
+
 /**
  * Tipos da avaliação de membro pelo líder (task #14), espelhando docs/api/openapi.yaml
  * (snake_case). O envio usa o contrato confirmado de observações sobre integrantes (RF33);
@@ -75,4 +77,170 @@ export interface StageScoreDetail {
 export interface ProjectScores {
   project: { id: number; title: string };
   stages: StageScoreDetail[];
+}
+
+/* -------------------------------------------------------------------------------------------
+ * Avaliador externo (tasks #17, #18 e #19)
+ * Espelha docs/api/openapi.yaml (tag evaluations). Campos marcados como PROPOSTA ainda não
+ * existem no contrato; estão descritos em api/README.md para aprovação do back-end.
+ * ----------------------------------------------------------------------------------------- */
+
+/** FinalEvaluationStatus (enum final_evaluation_status). */
+export type FinalEvaluationStatus = 'PENDING' | 'IN_PROGRESS' | 'FINALIZED';
+
+/** TeamRef */
+export interface TeamRef {
+  id: number;
+  name: string;
+  code: string;
+}
+
+/** PublicProject — identidade pública do projeto (sem entregas, notas ou feedbacks). */
+export interface FinalistProject {
+  id: number;
+  edition: EditionSummary;
+  title: string;
+  summary: string;
+  course: CourseSummary;
+  sdg: SdgSummary;
+  category: { id: number; name: string } | null;
+  members: { name: string }[];
+}
+
+/** FinalistRow — item de GET /api/evaluator/finalists (RF42, x-status: proposed). */
+export interface FinalistRow {
+  project: FinalistProject;
+  team: TeamRef;
+  my_evaluation_status: FinalEvaluationStatus;
+  /** PROPOSTA: fim do prazo de avaliação da banca (ISO 8601). Coluna "Prazo / nota". */
+  evaluation_deadline?: string | null;
+  /** PROPOSTA: soma das notas do avaliador, só quando FINALIZED (decimal em texto). */
+  my_total_score?: string | null;
+  /** PROPOSTA: pontuação máxima do formulário final (decimal em texto, ex.: "100.00"). */
+  max_total_score?: string | null;
+  /** PROPOSTA: data do envio definitivo (ISO 8601), só quando FINALIZED. */
+  finalized_at?: string | null;
+}
+
+/** Parâmetros de GET /api/evaluator/finalists. */
+export interface FinalistsQuery {
+  course_id?: number;
+  category_id?: number;
+  page?: number;
+  page_size?: number;
+}
+
+export type FinalistMaterialKind = 'FILE' | 'LINK';
+
+/** PROPOSTA: arquivo ou link entregue pela equipe, disponível para consulta da banca. */
+export interface FinalistMaterial {
+  id: number;
+  name: string;
+  kind: FinalistMaterialKind;
+  url: string;
+  /** Formato do arquivo (ex.: "PDF") ou serviço do link (ex.: "Figma"). */
+  format: string | null;
+  size_bytes: number | null;
+}
+
+/** PROPOSTA: integrante com curso, papel e função na equipe. */
+export interface FinalistMember {
+  name: string;
+  course: string | null;
+  role: 'LEADER' | 'MEMBER';
+  responsibility: string | null;
+}
+
+/**
+ * PROPOSTA: GET /api/evaluator/finalists/{project_id} — detalhe do projeto para a banca.
+ * O contrato atual só expõe o PublicProject (título e resumo); a tela de detalhe precisa da
+ * descrição, dos integrantes e dos materiais entregues.
+ */
+export interface FinalistProjectDetail extends FinalistRow {
+  /** Código de identificação exibido no subtítulo (ex.: "DX-2026-014"). */
+  code: string | null;
+  description: string | null;
+  /** Objetivo e resultados. */
+  objective: string | null;
+  advisor: string | null;
+  technologies: string[];
+  team_members: FinalistMember[];
+  materials: FinalistMaterial[];
+  /** Data da última entrega (ISO 8601). */
+  submitted_at: string | null;
+}
+
+/** QuestionType — tipo de pergunta do formulário final. */
+export type QuestionType = 'SCORE' | 'TEXT';
+
+/** FinalQuestion — critério (SCORE) ou pergunta aberta (TEXT) do formulário final. */
+export interface FinalQuestion {
+  id: number;
+  position: number;
+  prompt: string;
+  type: QuestionType;
+  /** Decimal em texto (ex.: "20.00"); null em perguntas TEXT. */
+  max_score: string | null;
+  /** PROPOSTA: descrição do critério ("Contribuição para a comunidade e alinhamento ao ODS"). */
+  description?: string | null;
+}
+
+/** FinalForm — formulário da etapa final publicado pelo administrador (RF12). */
+export interface FinalForm {
+  id: number;
+  edition_id: number;
+  title: string | null;
+  published: boolean;
+  questions: FinalQuestion[];
+  created_at: string;
+  updated_at: string;
+}
+
+/** FinalAnswer */
+export interface FinalAnswer {
+  question_id: number;
+  type: QuestionType;
+  /** Nota (SCORE), decimal em texto. */
+  value: string | null;
+  /** TEXT: resposta. SCORE: justificativa da nota (obrigatória na tela). */
+  answer_text: string | null;
+  /** PROPOSTA: comentário opcional à equipe, por critério. */
+  comment?: string | null;
+}
+
+/** FinalEvaluation — avaliação do avaliador autenticado (uma por avaliador e projeto). */
+export interface FinalEvaluation {
+  id: number;
+  status: FinalEvaluationStatus;
+  /** Parecer final (feedback geral à equipe). */
+  comment: string | null;
+  answers: FinalAnswer[];
+  finalized_at: string | null;
+  created_at: string;
+  updated_at: string;
+  /** PROPOSTA: protocolo gerado no envio definitivo (ex.: "AV-2026-014-HM"). */
+  protocol?: string | null;
+}
+
+/** FinalEvaluationForm — GET /api/evaluator/finalists/{project_id}/final-evaluation (RF43). */
+export interface FinalEvaluationForm {
+  project: FinalistProject;
+  form: FinalForm;
+  evaluation: FinalEvaluation | null;
+}
+
+/** FinalAnswerWrite */
+export interface FinalAnswerWrite {
+  question_id: number;
+  value?: string | null;
+  answer_text?: string | null;
+  /** PROPOSTA (ver FinalAnswer.comment). */
+  comment?: string | null;
+}
+
+/** FinalEvaluationWrite — PUT .../final-evaluation (x-status: proposed, P-30). */
+export interface FinalEvaluationWrite {
+  status: 'IN_PROGRESS' | 'FINALIZED';
+  comment?: string | null;
+  answers: FinalAnswerWrite[];
 }

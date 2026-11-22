@@ -104,6 +104,98 @@
   font-size: var(--font-size-caption);
 }
 
+/* --- Avaliador externo (Figma: 06 - Avaliador): cabeçalho em degradê + abas --- */
+.app-header--brand {
+  min-height: 6.25rem;
+  padding: 0 var(--spacing-8);
+  border-radius: var(--spacing-4);
+  background: linear-gradient(90deg, #292b5e, #474591);
+  box-shadow: none;
+  color: var(--color-text-on-dark);
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  min-width: 0;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.app-header__brand strong {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+}
+
+.app-header__tagline {
+  overflow: hidden;
+  font-size: var(--font-size-small);
+  text-overflow: ellipsis;
+}
+
+.app-header__logo {
+  display: none;
+}
+
+.app-header--brand .app-header__account {
+  gap: var(--spacing-3);
+}
+
+.app-header--brand .app-header__profile {
+  align-items: flex-start;
+}
+
+.app-header--brand .app-header__name,
+.app-header--brand .app-header__meta {
+  color: var(--color-text-on-dark);
+}
+
+.app-header__avatar {
+  border: 1px solid var(--color-text-on-dark);
+}
+
+.app-tabs {
+  display: flex;
+  gap: var(--spacing-7);
+  padding: var(--spacing-3) var(--spacing-8);
+  overflow-x: auto;
+  background: var(--color-bg-secondary);
+}
+
+.app-tabs__link {
+  flex: 0 0 auto;
+  padding: var(--spacing-2) 0;
+  border-bottom: 2px solid transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.app-tabs__link:hover {
+  color: var(--color-primary);
+}
+
+.app-tabs__link.active {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.app-shell--brand .sidebar__link.active {
+  background: var(--color-primary);
+}
+
+.app-shell--brand,
+.app-shell--brand .app-content {
+  background: var(--color-bg-50);
+}
+
+.app-shell--brand .app-content {
+  padding: var(--spacing-8);
+}
+
 /* --- Barra lateral (Figma: "Tab Bar - Acadêmico", 72px fechada / 202px aberta) --- */
 .sidebar {
   position: sticky;
@@ -454,6 +546,56 @@
   }
 
   .app-content {
+    padding: var(--spacing-4);
+  }
+
+  /* Avaliador externo (Figma: "Externo · Projetos finalistas · Mobile"): sem trilho lateral;
+     a navegação fica nas abas e o cabeçalho mostra a logo. */
+  .app-shell.app-shell--brand {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell--brand > .sidebar {
+    display: none;
+  }
+
+  .app-shell.app-shell--brand > .app-main {
+    grid-column: 1;
+  }
+
+  .app-header--brand {
+    min-height: 4rem;
+    padding: 0 var(--spacing-4);
+    border-radius: 0 0 var(--spacing-4) var(--spacing-4);
+  }
+
+  .app-header__logo {
+    display: inline-flex;
+  }
+
+  .app-header__logo svg {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .app-header__brand {
+    gap: var(--spacing-2);
+  }
+
+  .app-header__brand strong {
+    font-size: var(--font-size-h3);
+  }
+
+  .app-header__tagline {
+    display: none;
+  }
+
+  .app-tabs {
+    gap: var(--spacing-4);
+    padding: var(--spacing-2) var(--spacing-4);
+  }
+
+  .app-shell--brand .app-content {
     padding: var(--spacing-4);
   }
 

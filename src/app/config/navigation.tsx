@@ -1,13 +1,6 @@
 import type { ReactNode } from 'react';
 import type { Role } from '@/features/auth';
-import {
-  IconArchive,
-  IconCalendar,
-  IconClipboard,
-  IconFile,
-  IconHome,
-  IconUsers,
-} from '@/shared/ui/icons';
+import { IconArchive, IconCalendar, IconHome, IconUsers } from '@/shared/ui/icons';
 import {
   NavIconArchive,
   NavIconHelp,
@@ -33,6 +26,18 @@ export interface NavItem {
   mobileBar?: boolean;
   /** Só aparece para o líder da equipe (Figma: "Sidebar - Acadêmico (Líder)"). */
   leaderOnly?: boolean;
+  /** Outras rotas em que o item também fica ativo (ex.: telas internas da listagem). */
+  activePaths?: readonly string[];
+}
+
+/**
+ * Ativo em uma das rotas internas listadas em `activePaths` (ex.: detalhe do projeto dentro de
+ * "Projetos finalistas"). A rota do próprio item continua a cargo do NavLink.
+ */
+export function isNavItemActive(item: NavItem, pathname: string) {
+  return (item.activePaths ?? []).some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
 }
 
 /** Nome da área de cada perfil (exibido no cabeçalho e no rótulo da navegação). */
@@ -79,9 +84,18 @@ export const NAV_ITEMS: Record<NavigationProfile, NavItem[]> = {
     },
     { to: '/acervo', label: 'Acervo', icon: <NavIconArchive /> },
   ],
+  // Figma: 06 - Avaliador › "Navegação lateral" e "Navegação da área externa" (abas).
+  // "Início" é a home pública, que continua dentro do layout do avaliador (ver PublicLayout).
   EXTERNAL_EVALUATOR: [
-    { to: '/avaliador', label: 'Projetos finalistas', icon: <IconClipboard />, end: true },
-    { to: '/avaliador/avaliacoes', label: 'Minhas avaliações', icon: <IconFile /> },
+    { to: '/', label: 'Início', icon: <NavIconHome />, end: true },
+    {
+      to: '/avaliador',
+      label: 'Projetos finalistas',
+      icon: <NavIconProjects />,
+      end: true,
+      activePaths: ['/avaliador/projetos'],
+    },
+    { to: '/avaliador/avaliacoes', label: 'Minhas avaliações', icon: <NavIconArchive /> },
   ],
   ADMIN: [
     { to: '/admin', label: 'Início', icon: <IconHome />, end: true },

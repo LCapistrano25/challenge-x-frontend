@@ -52,7 +52,15 @@ import type {
 import type { DeliverableSubmissionItem, PublishEvaluationInput } from '@/features/deliveries';
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import { buildProjectScores } from './fixtures/scores';
-import type { MemberNoteCreate } from '@/features/evaluations';
+import {
+  EVALUATOR_WITHOUT_PANEL,
+  buildFinalEvaluation,
+  buildFinalistProject,
+  buildFinalists,
+  resetEvaluatorMock,
+  saveFinalEvaluation,
+} from './fixtures/evaluator';
+import type { FinalEvaluationWrite, MemberNoteCreate } from '@/features/evaluations';
 import type { SupportTicket, SupportTicketCreate } from '@/features/support';
 import type {
   Invitation,
@@ -110,6 +118,13 @@ const initialUsers: Record<string, MockUser> = {
     id: '3',
     name: 'Eva Avaliadora',
     email: 'avaliador@exemplo.com',
+    role: 'EXTERNAL_EVALUATOR',
+  },
+  // Avaliador externo sem projetos atribuídos (task #17: estado "Sem projetos atribuídos").
+  [EVALUATOR_WITHOUT_PANEL]: {
+    id: '4',
+    name: 'Helena Martins',
+    email: EVALUATOR_WITHOUT_PANEL,
     role: 'EXTERNAL_EVALUATOR',
   },
   // Acadêmico sem equipe: abre "Encontre sua equipe" (task #10).
@@ -452,6 +467,49 @@ export const handlers = [
       );
     }
     return HttpResponse.json(result.detail);
+  }),
+  // Avaliador externo (tasks #17 a #19): banca de projetos finalistas.
+  http.get('*/api/evaluator/finalists', ({ request }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const url = new URL(request.url);
+    const courseId = url.searchParams.get('course_id');
+    return HttpResponse.json(
+      paginate(buildFinalists(session.email, courseId ? Number(courseId) : undefined), url),
+    );
+  }),
+  http.get('*/api/evaluator/finalists/:projectId', ({ params }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const detail = buildFinalistProject(session.email, Number(params.projectId));
+    return detail
+      ? HttpResponse.json(detail)
+      : apiError(404, 'not_found', 'Projeto não encontrado na sua banca.');
+  }),
+  http.get('*/api/evaluator/finalists/:projectId/final-evaluation', ({ params }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const form = buildFinalEvaluation(session.email, Number(params.projectId));
+    return form
+      ? HttpResponse.json(form)
+      : apiError(404, 'not_found', 'Projeto não encontrado na sua banca.');
+  }),
+  http.put('*/api/evaluator/finalists/:projectId/final-evaluation', async ({ params, request }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const result = saveFinalEvaluation(
+      session.email,
+      Number(params.projectId),
+      (await request.json()) as FinalEvaluationWrite,
+    );
+    if (result.ok) return HttpResponse.json(result.evaluation);
+    // Simula a falha de conexão do Figma ("Revisão · Erro de envio").
+    if ('network' in result) return HttpResponse.error();
+    return apiError(result.status, result.code, result.message);
   }),
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();
@@ -1206,6 +1264,7 @@ export const handlers = [
 export function resetMockSession() {
   session = null;
   resetTeacherMock();
+  resetEvaluatorMock();
   for (const email of Object.keys(users)) delete users[email];
   Object.assign(users, structuredClone(initialUsers));
   readNotifications.clear();
