@@ -17,6 +17,7 @@ function renderForm(projectId: number) {
         <Routes>
           <Route path="/avaliador/projetos/:projectId/avaliar" element={<EvaluationFormPage />} />
           <Route path="/avaliador/projetos/:projectId" element={<p>Detalhe do projeto</p>} />
+          <Route path="/avaliador/avaliacoes/:projectId" element={<p>Consulta da avaliação</p>} />
           <Route path="/avaliador" element={<p>Projetos finalistas</p>} />
         </Routes>
       </MemoryRouter>
@@ -38,7 +39,10 @@ async function goToReview() {
 
 describe('EvaluationFormPage', () => {
   beforeEach(async () => {
-    await http.post('/auth/login', { email: 'avaliador@exemplo.com', password: '123456' });
+    await http.post('/api/auth/sessions/password', {
+      email: 'avaliador@exemplo.com',
+      password: '123456',
+    });
   });
 
   it('mostra o total, a soma das notas e a configuração da etapa', async () => {
@@ -176,6 +180,6 @@ describe('EvaluationFormPage', () => {
   it('abre a consulta quando a avaliação já foi enviada (somente leitura)', async () => {
     renderForm(44);
 
-    expect(await screen.findByText('Detalhe do projeto')).toBeInTheDocument();
+    expect(await screen.findByText('Consulta da avaliação')).toBeInTheDocument();
   });
 });

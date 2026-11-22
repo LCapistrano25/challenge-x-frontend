@@ -27,8 +27,8 @@ const EDITION: EditionSummary = {
   status: 'IN_PROGRESS',
 };
 
-const ES = { id: 1, name: 'Engenharia de Software', slug: 'ES' };
-const SI = { id: 2, name: 'Sistemas de Informação', slug: 'SI' };
+const ES = { id: 1, name: 'Engenharia de Software' };
+const SI = { id: 2, name: 'Sistemas de Informação' };
 
 const SDG = {
   4: { id: 4, number: 4, title: 'Educação de qualidade' },

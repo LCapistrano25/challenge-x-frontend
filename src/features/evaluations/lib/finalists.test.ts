@@ -26,7 +26,7 @@ function row(
       edition: { id: 3, year: 2026, semester: 2, name: null, status: 'IN_PROGRESS' },
       title,
       summary: '',
-      course: { id: courseId, name: `Curso ${courseId}`, slug: `C${courseId}` },
+      course: { id: courseId, name: `Curso ${courseId}` },
       sdg: { id: 1, number: 1, title: 'ODS' },
       category: null,
       members: [],

@@ -7,7 +7,7 @@ import { FinalistProjectDetailPage } from './FinalistProjectDetailPage';
 import { FinalistProjectsPage } from './FinalistProjectsPage';
 
 async function loginAs(email: string) {
-  await http.post('/auth/login', { email, password: '123456' });
+  await http.post('/api/auth/sessions/password', { email, password: '123456' });
 }
 
 function renderAt(path: string) {

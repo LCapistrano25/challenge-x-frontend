@@ -7,5 +7,6 @@ export const finalistPath = (projectId: number | string) => `/avaliador/projetos
 export const evaluationFormPath = (projectId: number | string) =>
   `/avaliador/projetos/${projectId}/avaliar`;
 
-/** Consulta da avaliação enviada. Até existir a tela própria, abre o detalhe do projeto. */
-export const evaluationViewPath = (projectId: number | string) => finalistPath(projectId);
+/** Consulta da avaliação enviada (somente leitura). */
+export const evaluationViewPath = (projectId: number | string) =>
+  `/avaliador/avaliacoes/${projectId}`;
