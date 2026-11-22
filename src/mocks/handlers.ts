@@ -54,11 +54,13 @@ import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import { buildProjectScores } from './fixtures/scores';
 import {
   EVALUATOR_WITHOUT_PANEL,
+  buildFinalEvaluation,
   buildFinalistProject,
   buildFinalists,
   resetEvaluatorMock,
+  saveFinalEvaluation,
 } from './fixtures/evaluator';
-import type { MemberNoteCreate } from '@/features/evaluations';
+import type { FinalEvaluationWrite, MemberNoteCreate } from '@/features/evaluations';
 import type { SupportTicket, SupportTicketCreate } from '@/features/support';
 import type {
   Invitation,
@@ -485,6 +487,29 @@ export const handlers = [
     return detail
       ? HttpResponse.json(detail)
       : apiError(404, 'not_found', 'Projeto não encontrado na sua banca.');
+  }),
+  http.get('*/api/evaluator/finalists/:projectId/final-evaluation', ({ params }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const form = buildFinalEvaluation(session.email, Number(params.projectId));
+    return form
+      ? HttpResponse.json(form)
+      : apiError(404, 'not_found', 'Projeto não encontrado na sua banca.');
+  }),
+  http.put('*/api/evaluator/finalists/:projectId/final-evaluation', async ({ params, request }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const result = saveFinalEvaluation(
+      session.email,
+      Number(params.projectId),
+      (await request.json()) as FinalEvaluationWrite,
+    );
+    if (result.ok) return HttpResponse.json(result.evaluation);
+    // Simula a falha de conexão do Figma ("Revisão · Erro de envio").
+    if ('network' in result) return HttpResponse.error();
+    return apiError(result.status, result.code, result.message);
   }),
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();

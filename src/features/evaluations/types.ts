@@ -169,3 +169,78 @@ export interface FinalistProjectDetail extends FinalistRow {
   /** Data da última entrega (ISO 8601). */
   submitted_at: string | null;
 }
+
+/** QuestionType — tipo de pergunta do formulário final. */
+export type QuestionType = 'SCORE' | 'TEXT';
+
+/** FinalQuestion — critério (SCORE) ou pergunta aberta (TEXT) do formulário final. */
+export interface FinalQuestion {
+  id: number;
+  position: number;
+  prompt: string;
+  type: QuestionType;
+  /** Decimal em texto (ex.: "20.00"); null em perguntas TEXT. */
+  max_score: string | null;
+  /** PROPOSTA: descrição do critério ("Contribuição para a comunidade e alinhamento ao ODS"). */
+  description?: string | null;
+}
+
+/** FinalForm — formulário da etapa final publicado pelo administrador (RF12). */
+export interface FinalForm {
+  id: number;
+  edition_id: number;
+  title: string | null;
+  published: boolean;
+  questions: FinalQuestion[];
+  created_at: string;
+  updated_at: string;
+}
+
+/** FinalAnswer */
+export interface FinalAnswer {
+  question_id: number;
+  type: QuestionType;
+  /** Nota (SCORE), decimal em texto. */
+  value: string | null;
+  /** TEXT: resposta. SCORE: justificativa da nota (obrigatória na tela). */
+  answer_text: string | null;
+  /** PROPOSTA: comentário opcional à equipe, por critério. */
+  comment?: string | null;
+}
+
+/** FinalEvaluation — avaliação do avaliador autenticado (uma por avaliador e projeto). */
+export interface FinalEvaluation {
+  id: number;
+  status: FinalEvaluationStatus;
+  /** Parecer final (feedback geral à equipe). */
+  comment: string | null;
+  answers: FinalAnswer[];
+  finalized_at: string | null;
+  created_at: string;
+  updated_at: string;
+  /** PROPOSTA: protocolo gerado no envio definitivo (ex.: "AV-2026-014-HM"). */
+  protocol?: string | null;
+}
+
+/** FinalEvaluationForm — GET /api/evaluator/finalists/{project_id}/final-evaluation (RF43). */
+export interface FinalEvaluationForm {
+  project: FinalistProject;
+  form: FinalForm;
+  evaluation: FinalEvaluation | null;
+}
+
+/** FinalAnswerWrite */
+export interface FinalAnswerWrite {
+  question_id: number;
+  value?: string | null;
+  answer_text?: string | null;
+  /** PROPOSTA (ver FinalAnswer.comment). */
+  comment?: string | null;
+}
+
+/** FinalEvaluationWrite — PUT .../final-evaluation (x-status: proposed, P-30). */
+export interface FinalEvaluationWrite {
+  status: 'IN_PROGRESS' | 'FINALIZED';
+  comment?: string | null;
+  answers: FinalAnswerWrite[];
+}

@@ -94,3 +94,45 @@ back-end (abrangência do `edition_evaluator`, P-32).
 
 Mocks: `avaliador@exemplo.com` (6 projetos do Figma) e `avaliador.sem-banca@exemplo.com`
 (estado "Sem projetos atribuídos"), senha `123456`.
+
+## Avaliador externo — Formulário, revisão e confirmação de envio (task #18 [FRONTEND])
+
+Tela: `/avaliador/projetos/:projectId/avaliar` (`EvaluationFormPage`), em três passos na mesma
+rota: preencher → revisar e confirmar → confirmação com protocolo.
+
+| Passo                        | Chamada                                                      | Situação no openapi |
+| ---------------------------- | ------------------------------------------------------------ | ------------------- |
+| Formulário e avaliação salva | `GET /api/evaluator/finalists/{project_id}/final-evaluation` | confirmada (RF43)   |
+| Ao abrir a revisão           | `PUT .../final-evaluation` com `status: IN_PROGRESS`         | proposta (P-30)     |
+| Confirmar e enviar           | `PUT .../final-evaluation` com `status: FINALIZED`           | proposta (P-30)     |
+| Equipe e arquivos entregues  | `GET /api/evaluator/finalists/{project_id}` (task #17)       | proposta            |
+
+### Como o formulário vira o contrato
+
+- Cada critério é uma pergunta `SCORE` do formulário publicado: nota em `value`, **justificativa**
+  (obrigatória na tela) em `answer_text` e comentário opcional em `comment` (proposta abaixo).
+- Perguntas `TEXT`, se existirem, aparecem como resposta obrigatória (`answer_text`).
+- **Parecer final** (mínimo de 50 caracteres) vai em `comment` da avaliação.
+- **Modelo de nota (0–10 ou 0–20):** a tela não fixa a escala. Limites, referência ("0 = não
+  atende · 10 = parcialmente · 20 = plenamente") e o total máximo vêm do `max_score` de cada
+  pergunta. A nota aceita até duas casas decimais, como o decimal da API; se a regra final for
+  "só inteiros", basta trocar `parseScore` em `lib/final-evaluation.ts`.
+
+### Regras da tela
+
+- "Revisar avaliação" valida tudo; com erro, mostra "Revise N campos…", marca os campos, troca o
+  resumo por "Total indisponível" e fica bloqueado até a correção. Nada do que foi digitado é perdido.
+- O envio exige o checkbox de confirmação; o botão fica bloqueado enquanto envia (sem duplo envio).
+- Falha de conexão: a revisão continua com os dados e o botão vira "Tentar enviar novamente".
+  `409 final_evaluation_already_finalized` avisa que a avaliação já foi enviada.
+- Avaliação já `FINALIZED` não abre o formulário: vai direto para a consulta (somente leitura).
+
+### Propostas para o back-end (pendentes de aprovação)
+
+1. `FinalQuestion.description` — descrição do critério exibida no cartão.
+2. `FinalAnswer.comment` / `FinalAnswerWrite.comment` — comentário opcional à equipe por critério.
+3. `FinalEvaluation.protocol` — protocolo gerado no envio definitivo (tela de sucesso e consulta).
+   Sem ele, a tela mostra o `id` da avaliação.
+
+Mock: o primeiro envio definitivo do "Mapa de Acessibilidade" falha de propósito, para conferir o
+estado "Revisão · Erro de envio".
