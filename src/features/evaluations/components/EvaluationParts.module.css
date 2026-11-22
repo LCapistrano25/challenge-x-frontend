@@ -1,0 +1,124 @@
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nextStep {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.criterionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.criterionHeader h2 {
+  flex: 1;
+  min-width: 0;
+}
+
+.statusRow {
+  display: flex;
+}
+
+.total {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+/* Resumo do projeto (Design System) */
+.projectCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--spacing-4);
+  background: var(--color-bg-secondary);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.05);
+}
+
+.projectBanner {
+  display: flex;
+  align-items: flex-start;
+  height: 62px;
+  padding: 10px;
+  background: var(--color-primary-soft);
+}
+
+.sdgBadge {
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgb(0 0 0 / 0.3);
+  color: var(--color-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.projectBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3);
+  padding: 10px 15px var(--spacing-4);
+}
+
+.projectBody h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.projectMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-text-secondary);
+}
+
+.projectFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.projectLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 var(--spacing-4);
+  border-radius: 8px;
+  color: var(--color-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+
+.projectLink:hover {
+  background: var(--color-primary-soft);
+}

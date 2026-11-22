@@ -1,0 +1,241 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-6);
+}
+
+/* Formulário à esquerda e contexto (352px) à direita, como no Figma. */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 352px;
+  gap: var(--spacing-6);
+  align-items: start;
+}
+
+.mainColumn,
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.side {
+  gap: var(--spacing-6);
+}
+
+.criterionHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.criterionHeader h2 {
+  flex: 1;
+  min-width: 0;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.scoreField {
+  flex: 0 0 160px;
+}
+
+.scale {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.textRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  align-items: start;
+}
+
+/* Entradas de texto com 120px (critério) e 184px (parecer final), como no Figma. */
+.textRow textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.feedback textarea {
+  min-height: 184px;
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.actions > p {
+  flex: 1;
+}
+
+.errorSummary {
+  outline: none;
+}
+
+.alignStart {
+  align-self: flex-start;
+}
+
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: var(--font-size-small);
+}
+
+.confirm label {
+  align-items: flex-start;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+/* Confirmação de envio */
+.sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-6);
+  padding: var(--spacing-12) var(--spacing-8);
+  border-radius: var(--radius-large, 12px);
+  background: var(--color-bg-secondary);
+  text-align: center;
+}
+
+.sentIcon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--color-success-soft);
+  color: var(--color-success-text);
+}
+
+.sent h2 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.sentLead {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.4;
+}
+
+.receipt {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+  width: min(100%, 640px);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large, 12px);
+  background: var(--color-bg-secondary);
+  box-shadow: 0 4px 12px rgb(0 26 56 / 0.03);
+  text-align: left;
+}
+
+.receiptHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.receiptHeader h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.receiptScore {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.4;
+}
+
+.sentActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-4);
+}
+
+.progress {
+  align-self: stretch;
+  text-align: left;
+}
+
+@media (max-width: 1024px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Figma: "Avaliar projeto · Mobile" — campos empilhados e botões em largura total. */
+@media (max-width: 720px) {
+  .scoreRow,
+  .criterionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .scoreField {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .textRow {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .actions > a,
+  .actions > button,
+  .sentActions > a {
+    width: 100%;
+  }
+
+  .sent {
+    padding: var(--spacing-8) var(--spacing-5);
+  }
+
+  .sent h2 {
+    font-size: var(--font-size-h3);
+  }
+
+  .progress {
+    text-align: center;
+  }
+}
