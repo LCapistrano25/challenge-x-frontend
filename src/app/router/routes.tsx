@@ -129,6 +129,10 @@ const roleRoutes: RouteObject[] = [
             lazy: lazyPage(evaluations, 'EvaluationFormPage'),
           },
           { path: '/avaliador/avaliacoes', lazy: lazyPage(evaluations, 'MyEvaluationsPage') },
+          {
+            path: '/avaliador/avaliacoes/:projectId',
+            lazy: lazyPage(evaluations, 'EvaluationViewPage'),
+          },
         ],
       },
     ],

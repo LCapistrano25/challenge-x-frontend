@@ -136,3 +136,22 @@ rota: preencher → revisar e confirmar → confirmação com protocolo.
 
 Mock: o primeiro envio definitivo do "Mapa de Acessibilidade" falha de propósito, para conferir o
 estado "Revisão · Erro de envio".
+
+## Avaliador externo — Minhas avaliações e Ver avaliação (task #19 [FRONTEND])
+
+Telas: `/avaliador/avaliacoes` (`MyEvaluationsPage`) e `/avaliador/avaliacoes/:projectId`
+(`EvaluationViewPage`), somente leitura.
+
+| Tela                                   | Chamada                                                      | Situação no openapi |
+| -------------------------------------- | ------------------------------------------------------------ | ------------------- |
+| Histórico, contadores e filtros        | `GET /api/evaluator/finalists` (só `FINALIZED`)              | proposta (P-29)     |
+| Notas, comentários, parecer, protocolo | `GET /api/evaluator/finalists/{project_id}/final-evaluation` | confirmada (RF43)   |
+| Equipe do projeto                      | `GET /api/evaluator/finalists/{project_id}` (task #17)       | proposta            |
+
+- O histórico usa a mesma listagem de finalistas: os contadores de enviadas e pendentes são sempre
+  os mesmos da tela "Projetos finalistas". Envio e nota vêm de `finalized_at` e `my_total_score`
+  (propostas da task #17). Não é preciso um endpoint novo.
+- Edição: o avaliador só acessa a edição vigente (RF41); o filtro lista as edições presentes no
+  histórico. Etapa: o avaliador externo só avalia a etapa final.
+- A consulta não tem nenhum campo editável. Avaliação ainda não enviada não é exibida: a tela
+  orienta a concluir o envio no formulário.
