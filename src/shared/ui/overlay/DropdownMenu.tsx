@@ -15,14 +15,20 @@ export interface DropdownMenuProps {
   trigger: ReactNode; // um botão: <Button variant="secondary">Ações</Button>
   items: DropdownItem[];
   align?: 'start' | 'center' | 'end';
+  side?: 'top' | 'right' | 'bottom' | 'left';
 }
 
-export function DropdownMenu({ trigger, items, align = 'end' }: DropdownMenuProps) {
+export function DropdownMenu({
+  trigger,
+  items,
+  align = 'end',
+  side = 'bottom',
+}: DropdownMenuProps) {
   return (
     <Menu.Root>
       <Menu.Trigger asChild>{trigger}</Menu.Trigger>
       <Menu.Portal>
-        <Menu.Content align={align} sideOffset={6} className={styles.content}>
+        <Menu.Content align={align} side={side} sideOffset={6} className={styles.content}>
           {items.map((item) => (
             <Menu.Item
               key={item.label}

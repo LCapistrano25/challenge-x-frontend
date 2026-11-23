@@ -12,6 +12,8 @@ import { AuthContext, type AuthContextValue } from './auth-context';
 import type { User } from './types';
 
 const ME_KEY = ['auth', 'me'] as const;
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const IDLE_EVENTS = ['mousedown', 'keydown', 'scroll', 'touchstart'] as const;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
@@ -62,6 +64,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [microsoftLoginAsync],
   );
   const logout = useCallback(() => logoutAsync(), [logoutAsync]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let idleTimer: number | undefined;
+
+    const startIdleTimer = () => {
+      if (idleTimer !== undefined) window.clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(() => {
+        void logoutAsync()
+          .then(() => {
+            window.location.replace('/');
+          })
+          .catch(() => undefined);
+      }, IDLE_TIMEOUT_MS);
+    };
+
+    IDLE_EVENTS.forEach((eventName) => window.addEventListener(eventName, startIdleTimer, true));
+    startIdleTimer();
+
+    return () => {
+      if (idleTimer !== undefined) window.clearTimeout(idleTimer);
+      IDLE_EVENTS.forEach((eventName) =>
+        window.removeEventListener(eventName, startIdleTimer, true),
+      );
+    };
+  }, [logoutAsync, user]);
   const refresh = useCallback(async () => {
     await queryClient.refetchQueries({ queryKey: ME_KEY });
   }, [queryClient]);

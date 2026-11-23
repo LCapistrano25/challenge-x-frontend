@@ -2,11 +2,19 @@ import { useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { isNavItemActive, type NavItem } from '@/app/config/navigation';
 import { BrandLogo, NavIconUser } from '@/app/config/nav-icons';
-import { Tooltip } from '@/shared/ui';
+import { Avatar, Tooltip } from '@/shared/ui';
 
 export type SidebarFooter =
   | { label: string; to: string; onClick?: never }
-  | { label: string; onClick: () => void; to?: never };
+  | { label: string; onClick: () => void; to?: never }
+  | {
+      label: string;
+      avatarName: string;
+      roleLabel: string;
+      onLogout: () => void;
+      to?: never;
+      onClick?: never;
+    };
 
 type SidebarProps = {
   area: string;
@@ -150,21 +158,51 @@ export function Sidebar({ area, nav, footer, drawer }: SidebarProps) {
           ))}
         </nav>
 
-        {footer && (
-          <WithTooltip show={!expanded} label={footer.label}>
-            {footer.to ? (
-              <Link to={footer.to} className="sidebar__footer" onClick={closeOnMobile}>
-                <NavIconUser />
-                <Label>{footer.label}</Label>
-              </Link>
+        {footer &&
+          ('onLogout' in footer ? (
+            expanded ? (
+              <div className="sidebar__account">
+                <Avatar name={footer.avatarName} tone="blue" size="sm" />
+                <div className="sidebar__account-info">
+                  <strong className="sidebar__account-name">{footer.avatarName}</strong>
+                  <span className="sidebar__account-role">{footer.roleLabel}</span>
+                </div>
+                <button
+                  type="button"
+                  className="sidebar__logout"
+                  onClick={footer.onLogout}
+                  aria-label={`Sair da conta de ${footer.avatarName}`}
+                >
+                  Sair
+                </button>
+              </div>
             ) : (
-              <button type="button" className="sidebar__footer" onClick={footer.onClick}>
-                <NavIconUser />
-                <Label>{footer.label}</Label>
-              </button>
-            )}
-          </WithTooltip>
-        )}
+              <WithTooltip show label="Sair">
+                <button
+                  type="button"
+                  className="sidebar__footer"
+                  onClick={footer.onLogout}
+                  aria-label={`Sair da conta de ${footer.avatarName}`}
+                >
+                  <Avatar name={footer.avatarName} tone="blue" size="sm" />
+                </button>
+              </WithTooltip>
+            )
+          ) : (
+            <WithTooltip show={!expanded} label={footer.label}>
+              {footer.to ? (
+                <Link to={footer.to} className="sidebar__footer" onClick={closeOnMobile}>
+                  <NavIconUser />
+                  <Label>{footer.label}</Label>
+                </Link>
+              ) : (
+                <button type="button" className="sidebar__footer" onClick={footer.onClick}>
+                  <NavIconUser />
+                  <Label>{footer.label}</Label>
+                </button>
+              )}
+            </WithTooltip>
+          ))}
       </aside>
     </>
   );
