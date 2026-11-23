@@ -225,6 +225,62 @@ export interface LeadershipRequest {
   decision_justification: string | null;
   created_at: string;
   decided_at: string | null;
+  /**
+   * PROPOSTA (ainda não está no openapi): contexto exibido no Figma "Aprovação de Liderança"
+   * (projeto, curso, etapa, líder atual, motivo e o anexo de comunicação de saída). Confirmar
+   * com o back-end antes de depender destes campos.
+   */
+  project?: { id: number; title: string } | null;
+  course?: string | null;
+  stage_label?: string | null;
+  current_leader?: UserSummary | null;
+  reason?: string | null;
+  attachment?: { name: string; size_label: string; description: string } | null;
+}
+
+/** LeadershipDecision — POST /api/leadership-requests/{id}/decide (RF28, RF40). */
+export interface LeadershipDecision {
+  status: 'APPROVED' | 'REJECTED';
+  decision_justification: string;
+}
+
+/**
+ * MemberNote — observação registrada pelo líder sobre um integrante (RF33). O conteúdo só é
+ * consultável por professor do curso e admin (RF39, GET /api/teams/{id}/member-notes).
+ */
+export interface MemberNote {
+  id: number;
+  member: UserSummary;
+  author: UserSummary;
+  content: string;
+  created_at: string;
+  /**
+   * PROPOSTA (ainda não está no openapi): contexto exibido no Figma "Observações sobre
+   * Integrantes" (equipe, projeto, curso, semestre, etapa, resumo e o papel do autor à época).
+   */
+  team?: { id: number; name: string } | null;
+  project?: string | null;
+  course?: string | null;
+  semester?: string | null;
+  stage_label?: string | null;
+  summary?: string | null;
+  author_role_label?: string | null;
+}
+
+/**
+ * TeacherProjectRow — linha do acompanhamento do professor (RF37,
+ * GET /api/teacher/projects). Aqui só usamos a equipe e o curso para listar as equipes dos
+ * cursos vinculados; os demais campos seguem o contrato para uso futuro.
+ */
+export interface TeacherProjectRow {
+  project: { id: number; title: string };
+  team: TeamRef;
+  challenge_course: { id: number; name: string; slug: string };
+  stage: { id: number; name: string; position: number } | null;
+  deliverable_status: DeliverableStatus | null;
+  evaluation_count: number;
+  min_evaluators: number;
+  my_evaluation_status: string;
 }
 
 /**
