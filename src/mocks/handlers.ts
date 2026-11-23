@@ -31,6 +31,11 @@ import {
   publishDeliveryEvaluation,
   resetTeacherMock,
 } from './fixtures/teacher-dashboard';
+import {
+  buildTeacherLeadershipRequests,
+  buildTeacherMemberNotes,
+  buildTeacherProjectRows,
+} from './fixtures/teacher-members';
 import { TAKEN_PROJECT_TITLES, buildProject, buildProjectOptions } from './fixtures/project';
 import {
   PROJECT_LEADER_MEMBER_ID,
@@ -64,6 +69,7 @@ import type { SupportTicket, SupportTicketCreate } from '@/features/support';
 import type {
   Invitation,
   JoinRequest,
+  LeadershipDecision,
   LeadershipRequest,
   Team,
   TeamCreate,
@@ -200,6 +206,9 @@ let receivedJoinRequests: JoinRequest[] = [];
 let leadershipRequests: LeadershipRequest[] = [];
 // Avaliação de membro (task #14): observações registradas pelo líder.
 let memberNotes: MockMemberNote[] = [];
+// Integrantes na visão do professor (Figma: 05 - Professor): fila de liderança e observações.
+let teacherLeadershipRequests = buildTeacherLeadershipRequests();
+let teacherMemberNotes = buildTeacherMemberNotes();
 // Central de dúvidas (task #14): chamados abertos na sessão.
 let supportTickets: SupportTicket[] = [];
 
@@ -213,6 +222,8 @@ function resetMyTeams() {
   receivedJoinRequests = buildMyTeamJoinRequests();
   leadershipRequests = [];
   memberNotes = buildMemberNotes();
+  teacherLeadershipRequests = buildTeacherLeadershipRequests();
+  teacherMemberNotes = buildTeacherMemberNotes();
   supportTickets = [];
 }
 resetMyTeams();
@@ -498,6 +509,62 @@ export const handlers = [
       );
     }
     return HttpResponse.json(result.detail);
+  }),
+  // Integrantes do professor (Figma: 05 - Professor › Liderança). Solicitações dos cursos
+  // vinculados (RF40).
+  http.get('*/api/teacher/leadership-requests', ({ request }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    const items = teacherLeadershipRequests.filter((r) => !status || r.status === status);
+    return HttpResponse.json(paginate(items, url));
+  }),
+  // Decisão do professor (RF28/RF40): aprovar torna o solicitante líder; recusar mantém sem líder.
+  http.post('*/api/leadership-requests/:id/decide', async ({ params, request }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    const found = teacherLeadershipRequests.find((r) => r.id === Number(params.id));
+    if (!found) return apiError(404, 'not_found', 'Solicitação não encontrada.');
+    if (found.status !== 'PENDING') {
+      return apiError(409, 'leadership_request_not_pending', 'A solicitação não está pendente.');
+    }
+    const body = (await request.json()) as Partial<LeadershipDecision>;
+    if (
+      (body.status !== 'APPROVED' && body.status !== 'REJECTED') ||
+      !body.decision_justification?.trim()
+    ) {
+      return validationError({ decision_justification: ['Campo obrigatório.'] });
+    }
+    const decided: LeadershipRequest = {
+      ...found,
+      status: body.status,
+      teacher: { user_id: session.id, name: session.name },
+      decision_justification: body.decision_justification.trim(),
+      decided_at: new Date().toISOString(),
+    };
+    teacherLeadershipRequests = teacherLeadershipRequests.map((r) =>
+      r.id === decided.id ? decided : r,
+    );
+    return HttpResponse.json(decided);
+  }),
+  // Acompanhamento do professor (RF37). Aqui a tela usa só as equipes dos cursos vinculados.
+  http.get('*/api/teacher/projects', ({ request }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    return HttpResponse.json(paginate(buildTeacherProjectRows(), new URL(request.url)));
+  }),
+  // Avaliações registradas pela liderança (RF39): exclusivo de professor do curso e admin.
+  http.get('*/api/teams/:teamId/member-notes', ({ params }) => {
+    if (session?.role !== 'TEACHER' && session?.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Somente professores do curso e administradores.');
+    }
+    const notes = teacherMemberNotes[Number(params.teamId)];
+    if (!notes) return apiError(404, 'not_found', 'Equipe não encontrada.');
+    return HttpResponse.json(notes);
   }),
   // Avaliador externo (tasks #17 a #19): banca de projetos finalistas.
   http.get('*/api/evaluator/finalists', ({ request }) => {

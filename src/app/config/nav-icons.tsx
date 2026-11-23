@@ -99,6 +99,27 @@ export function NavIconObservations() {
   );
 }
 
+export function NavIconLeadership() {
+  return (
+    <svg {...svg}>
+      <path
+        d="M16 3.33325L26.6667 7.99992V14.6666C26.6667 21.0666 22.08 26.9733 16 28.6666C9.92004 26.9733 5.33337 21.0666 5.33337 14.6666V7.99992L16 3.33325Z"
+        stroke="#F3F2FA"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <path
+        d="M11.3334 15.4666L14.6667 18.7999L20.9334 12.5333"
+        stroke="#F3F2FA"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function NavIconProjects() {
   return (
     <svg {...svg}>

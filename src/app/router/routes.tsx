@@ -108,6 +108,7 @@ const roleRoutes: RouteObject[] = [
         element: <AppLayout area={ROLE_AREA.TEACHER} nav={NAV_ITEMS.TEACHER} />,
         children: [
           { path: '/professor', element: <TeacherHomePage /> },
+          { path: '/professor/lideranca', lazy: lazyPage(teams, 'LeadershipApprovalPage') },
           { path: '/professor/integrantes', lazy: lazyPage(teams, 'MemberObservationsPage') },
           {
             path: '/professor/entregas/:deliveryId',

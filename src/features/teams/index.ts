@@ -1,6 +1,7 @@
 export { FindTeamPage } from './pages/FindTeamPage';
 export { MyTeamPage } from './pages/MyTeamPage';
 export { MemberObservationsPage } from './pages/MemberObservationsPage';
+export { LeadershipApprovalPage } from './pages/LeadershipApprovalPage';
 export { TeamStatusCards } from './components/TeamStatusCards';
 export { TeamMembersCard } from './components/TeamMembersCard';
 export {
@@ -34,7 +35,10 @@ export type {
   InvitationCreate,
   InvitationStatus,
   JoinRequestDecision,
+  LeadershipDecision,
   LeadershipRequest,
+  MemberNote,
+  TeacherProjectRow,
   TeamUpdate,
   UserSummary,
   DashboardStage,

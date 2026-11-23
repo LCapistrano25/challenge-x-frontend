@@ -5,6 +5,7 @@ import {
   NavIconArchive,
   NavIconHelp,
   NavIconHome,
+  NavIconLeadership,
   NavIconNotes,
   NavIconObservations,
   NavIconProject,
@@ -72,14 +73,21 @@ export const NAV_ITEMS: Record<NavigationProfile, NavItem[]> = {
     { to: '/academico/duvidas', label: 'Dúvidas', icon: <NavIconHelp /> },
   ],
   // Figma: "Sidebar - Professor". Projetos, detalhes e Acervo são as páginas públicas, que
-  // continuam dentro do layout do professor (ver PublicLayout).
+  // continuam dentro do layout do professor (ver PublicLayout). Liderança e Integrantes são
+  // telas separadas (Figma: "Liderança" e "Avaliar integrante"), cada uma com seu ícone.
   TEACHER: [
     { to: '/professor', label: 'Início', icon: <NavIconHome />, end: true, mobileBar: true },
     { to: '/projetos', label: 'Projetos', icon: <NavIconProjects /> },
     {
       to: '/professor/integrantes',
       label: 'Integrantes',
-      icon: <NavIconTeam />,
+      icon: <NavIconObservations />,
+      mobileBar: true,
+    },
+    {
+      to: '/professor/lideranca',
+      label: 'Liderança',
+      icon: <NavIconLeadership />,
       mobileBar: true,
     },
     { to: '/acervo', label: 'Acervo', icon: <NavIconArchive /> },
