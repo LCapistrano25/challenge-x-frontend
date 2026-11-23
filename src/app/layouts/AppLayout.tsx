@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { NavLink, Outlet, ScrollRestoration, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/features/auth';
+import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
+import { ROLE_LABEL, useAuth } from '@/features/auth';
 import { useCurrentEdition } from '@/features/public-panel';
 import { useStudentDashboard } from '@/features/teams';
-import { Avatar, IconMenu } from '@/shared/ui';
+import { Avatar, ConfirmDialog, DropdownMenu, IconMenu, notify } from '@/shared/ui';
 import { BrandLogo } from '@/app/config/nav-icons';
 import { isNavItemActive, type NavItem } from '@/app/config/navigation';
 import { PageHeaderProvider } from './PageHeaderProvider';
@@ -18,7 +18,15 @@ type AppLayoutProps = {
 };
 
 /** Cabeçalho branco (Figma: "header"): título da página à esquerda e conta à direita. */
-function AppHeader({ area, onOpenMenu }: { area: string; onOpenMenu?: () => void }) {
+function AppHeader({
+  area,
+  onOpenMenu,
+  onRequestLogout,
+}: {
+  area: string;
+  onOpenMenu?: () => void;
+  onRequestLogout: () => void;
+}) {
   const { user } = useAuth();
   const content = usePageHeaderContent();
   const edition = useCurrentEdition().data?.edition;
@@ -53,7 +61,20 @@ function AppHeader({ area, onOpenMenu }: { area: string; onOpenMenu?: () => void
               {edition && ` · Edição ${edition.year}`}
             </span>
           </div>
-          <Avatar name={user.name} tone="blue" />
+          <DropdownMenu
+            align="end"
+            trigger={
+              <button
+                type="button"
+                className="app-header__avatar-trigger"
+                aria-label={`Abrir opções da conta de ${user.name}`}
+                title="Opções da conta"
+              >
+                <Avatar name={user.name} tone="blue" />
+              </button>
+            }
+            items={[{ label: 'Sair', tone: 'danger', onSelect: onRequestLogout }]}
+          />
         </div>
       )}
     </header>
@@ -64,7 +85,7 @@ function AppHeader({ area, onOpenMenu }: { area: string; onOpenMenu?: () => void
  * Cabeçalho do avaliador externo (Figma: 06 - Avaliador › "Cabeçalho do sistema"): faixa em
  * degradê com a identificação do sistema e o perfil.
  */
-function BrandHeader({ area }: { area: string }) {
+function BrandHeader({ area, onRequestLogout }: { area: string; onRequestLogout: () => void }) {
   const { user } = useAuth();
   return (
     <header className="app-header app-header--brand">
@@ -81,7 +102,20 @@ function BrandHeader({ area }: { area: string }) {
             <span className="app-header__name">{user.name}</span>
             <span className="app-header__meta">{area}</span>
           </div>
-          <Avatar name={user.name} tone="blue" className="app-header__avatar" />
+          <DropdownMenu
+            align="end"
+            trigger={
+              <button
+                type="button"
+                className="app-header__avatar-trigger"
+                aria-label={`Abrir opções da conta de ${user.name}`}
+                title="Opções da conta"
+              >
+                <Avatar name={user.name} tone="blue" className="app-header__avatar" />
+              </button>
+            }
+            items={[{ label: 'Sair', tone: 'danger', onSelect: onRequestLogout }]}
+          />
         </div>
       )}
     </header>
@@ -110,7 +144,6 @@ function AreaTabs({ area, items }: { area: string; items: readonly NavItem[] }) 
 /** Layout das áreas autenticadas. Cada perfil passa o próprio menu. */
 export function AppLayout({ area, nav }: AppLayoutProps) {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   // Itens do líder (ex.: "Observações") dependem de StudentDashboard.is_leader.
   const isLeader =
     useStudentDashboard({ enabled: user?.role === 'STUDENT' }).data?.is_leader === true;
@@ -120,10 +153,20 @@ export function AppLayout({ area, nav }: AppLayoutProps) {
   const barItems = items.filter((item) => item.mobileBar);
   const hybrid = barItems.length > 0;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   async function handleLogout() {
-    await logout();
-    navigate('/login', { replace: true });
+    setLoggingOut(true);
+    try {
+      await logout();
+      setLogoutConfirmOpen(false);
+      window.location.replace('/');
+    } catch {
+      notify.error('Não foi possível sair. Tente novamente.');
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   return (
@@ -134,24 +177,47 @@ export function AppLayout({ area, nav }: AppLayoutProps) {
         <Sidebar
           area={area}
           nav={items}
-          // Figma: ícone de usuário + "Login" no rodapé (aqui, encerra a sessão).
-          footer={{ label: 'Login', onClick: handleLogout }}
+          footer={
+            user
+              ? {
+                  label: 'Conta',
+                  avatarName: user.name,
+                  roleLabel: ROLE_LABEL[user.role],
+                  onLogout: () => setLogoutConfirmOpen(true),
+                }
+              : undefined
+          }
           drawer={hybrid ? { open: menuOpen, onClose: () => setMenuOpen(false) } : undefined}
         />
         <div className="app-main">
           {brand ? (
             <>
-              <BrandHeader area={area} />
+              <BrandHeader area={area} onRequestLogout={() => setLogoutConfirmOpen(true)} />
               <AreaTabs area={area} items={items} />
             </>
           ) : (
-            <AppHeader area={area} onOpenMenu={hybrid ? () => setMenuOpen(true) : undefined} />
+            <AppHeader
+              area={area}
+              onOpenMenu={hybrid ? () => setMenuOpen(true) : undefined}
+              onRequestLogout={() => setLogoutConfirmOpen(true)}
+            />
           )}
           <main className="app-content">
             <Outlet />
           </main>
         </div>
         {hybrid && <BottomNav area={area} items={barItems} />}
+        <ConfirmDialog
+          open={logoutConfirmOpen}
+          onOpenChange={setLogoutConfirmOpen}
+          title="Deseja mesmo sair?"
+          description="Sua sessão atual será encerrada."
+          confirmLabel="Sair"
+          cancelLabel="Cancelar"
+          tone="danger"
+          loading={loggingOut}
+          onConfirm={handleLogout}
+        />
         {/* Cada navegação nova abre no topo; voltar/avançar recupera a posição anterior. */}
         <ScrollRestoration />
       </div>

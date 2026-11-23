@@ -85,6 +85,22 @@
   gap: var(--spacing-4);
 }
 
+.app-header__avatar-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.app-header__avatar-trigger:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
 .app-header__profile {
   display: flex;
   flex-direction: column;
@@ -333,6 +349,54 @@
 
 .sidebar--expanded .sidebar__footer {
   padding: 0.8125rem 0.625rem;
+}
+
+.sidebar__account {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.625rem;
+  width: 100%;
+  min-height: 4.25rem;
+  padding: 0.625rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-text-on-dark) 18%, transparent);
+}
+
+.sidebar__account-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.25;
+}
+
+.sidebar__account-name {
+  overflow: hidden;
+  color: var(--color-text-on-dark);
+  font-size: var(--font-size-small);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar__account-role {
+  color: color-mix(in srgb, var(--color-text-on-dark) 72%, transparent);
+  font-size: var(--font-size-caption);
+}
+
+.sidebar__logout {
+  min-height: 2rem;
+  padding: 0.375rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--color-text-on-dark) 28%, transparent);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-on-dark);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.sidebar__logout:hover {
+  background: color-mix(in srgb, var(--color-text-on-dark) 12%, transparent);
 }
 
 /* --- Navegação híbrida (celular): ☰ no cabeçalho + barra inferior --- */
