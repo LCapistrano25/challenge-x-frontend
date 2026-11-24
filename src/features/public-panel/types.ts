@@ -25,6 +25,14 @@ export interface PublicEdition {
   challenges: PublicChallenge[];
 }
 
+/** Integrante na identidade pública do projeto. O contrato só garante `name`. */
+export interface PublicProjectMember {
+  name: string;
+  /** PROPOSTA (Figma "Detalhe do Projeto"): curso e papel exibidos na lista de integrantes. */
+  course?: string | null;
+  role?: 'LEADER' | 'MEMBER' | null;
+}
+
 /** PublicProject — item de GET /api/public/projects */
 export interface PublicProject {
   id: number;
@@ -34,7 +42,24 @@ export interface PublicProject {
   course: CourseSummary;
   sdg: SdgSummary;
   category: { id: number; name: string } | null;
-  members: { name: string }[];
+  members: PublicProjectMember[];
+}
+
+/** Entrega pública exibida no detalhe do projeto (Figma "Detalhe do Projeto" › Entregas). */
+export interface PublicDeliverableLink {
+  id: number;
+  label: string;
+  type: 'FILE' | 'LINK';
+  href?: string | null;
+}
+
+/**
+ * PublicProjectDetail — GET /api/public/projects/{id}. O contrato retorna o mesmo PublicProject;
+ * os campos abaixo são PROPOSTA (Figma): resumo expandido, palavra-chave e entregas públicas.
+ */
+export interface PublicProjectDetail extends PublicProject {
+  keywords?: string | null;
+  deliverables?: PublicDeliverableLink[];
 }
 
 export interface PublicProjectsQuery {

@@ -58,6 +58,12 @@ describe('Avaliação da entrega: preencher e publicar', () => {
     expect(screen.getByText('XLSX • 124 KB • Planejamento')).toBeInTheDocument();
     expect(screen.getByText('4 integrantes • Líder atual: Ana Souza')).toBeInTheDocument();
 
+    // Leva à tela de detalhes do projeto, guardando o caminho de volta para a avaliação.
+    expect(screen.getByRole('link', { name: 'Ver mais detalhes do projeto' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('/projetos/501'),
+    );
+
     expect(screen.getByText('Rascunho')).toBeInTheDocument();
     CRITERIA.forEach((name) => expect(score(name)).toHaveValue(''));
     expect(screen.getByText('0,0 / 10,0')).toBeInTheDocument();

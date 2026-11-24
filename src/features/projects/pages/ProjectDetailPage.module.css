@@ -1,0 +1,200 @@
+.page {
+  display: grid;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-5) var(--spacing-6);
+}
+
+/* Cartão de título (Figma: faixa lilás com "Detalhe do Projeto"). */
+.hero {
+  display: grid;
+  gap: var(--spacing-1);
+  padding: var(--spacing-5) var(--spacing-6);
+  border-radius: 16px;
+  background: var(--color-primary-soft, #ecebff);
+}
+
+.heroKicker {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+}
+
+.heroTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 34px;
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.2;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--spacing-5);
+}
+
+.card {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-surface, #fff);
+  min-width: 0;
+}
+
+.aside {
+  display: grid;
+  gap: var(--spacing-4);
+  min-width: 0;
+}
+
+.asideCard {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-bg-surface, #fff);
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: var(--font-size-h3, 20px);
+  font-weight: var(--font-weight-bold);
+}
+
+.summary {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+}
+
+.members {
+  display: grid;
+  gap: var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.memberInfo {
+  display: grid;
+  gap: 1px;
+}
+
+.memberName {
+  font-weight: var(--font-weight-medium);
+}
+
+.memberMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.infoList {
+  display: grid;
+  gap: var(--spacing-3);
+  margin: 0;
+}
+
+.infoList div {
+  display: grid;
+  gap: 2px;
+}
+
+.infoLabel {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.infoValue {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.back {
+  width: 100%;
+  justify-content: center;
+}
+
+.backActions {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.deliverables {
+  display: grid;
+  gap: var(--spacing-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deliverable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: var(--font-size-small);
+}
+
+.deliverable:hover {
+  background: var(--color-bg-50, #f5f7ff);
+}
+
+.deliverableLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.deliverableLabel span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deliverableIcon {
+  color: var(--color-text-secondary);
+  flex: 0 0 auto;
+}
+
+@media (max-width: 64rem) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: 0 var(--spacing-4) var(--spacing-6);
+  }
+  .card,
+  .asideCard {
+    padding: var(--spacing-4);
+  }
+  .heroTitle {
+    font-size: 26px;
+  }
+}

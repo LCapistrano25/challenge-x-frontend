@@ -83,6 +83,8 @@ export interface EvaluationCriterion {
 /** Entrega com o material enviado e a rubrica da etapa (GET /api/teacher/deliveries/{id}). */
 export interface DeliveryEvaluationDetail {
   id: string;
+  /** Id do projeto na vitrine pública, para "Ver mais detalhes do projeto" (/projetos/:id). */
+  project_id?: number | null;
   project_name: string;
   team_name: string;
   course: string;

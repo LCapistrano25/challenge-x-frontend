@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { getApiError } from '@/shared/lib/api-error';
 import { usePageHeader } from '@/shared/lib/page-header';
 import { Alert, Button, ButtonLink, IconCheckCircle, Spinner, Textarea } from '@/shared/ui';
@@ -32,6 +32,7 @@ const scoreText = (score: number | null) => (score === null ? '' : formatScore(s
  */
 export function DeliveryEvaluationPage() {
   const { deliveryId = '' } = useParams();
+  const location = useLocation();
   const { data, isLoading, isError, error, refetch } = useDeliveryEvaluation(deliveryId);
   const publish = usePublishEvaluation(deliveryId);
 
@@ -129,7 +130,18 @@ export function DeliveryEvaluationPage() {
             {formatScore(max)}
           </p>
         </div>
-        <StatusBadge status={published ? 'EVALUATED' : data.status} />
+        <div className={styles.contextActions}>
+          {data.project_id != null && (
+            <ButtonLink
+              to={`/projetos/${data.project_id}?from=${encodeURIComponent(location.pathname)}`}
+              variant="secondary"
+              size="small"
+            >
+              Ver mais detalhes do projeto
+            </ButtonLink>
+          )}
+          <StatusBadge status={published ? 'EVALUATED' : data.status} />
+        </div>
       </div>
 
       {published ? (
