@@ -5,7 +5,7 @@
  */
 import type { StudentDashboard, TeamMember } from '@/features/teams';
 import type { Notification } from '@/features/notifications';
-import type { PublicEdition, PublicProject } from '@/features/public-panel';
+import type { PublicEdition, PublicProject, PublicProjectDetail } from '@/features/public-panel';
 import type { CourseSummary, EditionSummary, StageSchedule } from '@/shared/types/api';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -183,6 +183,34 @@ export const publicProjects: PublicProject[] = [
     'Igor Melo',
   ]),
 ];
+
+const EXPANDED_SUMMARY =
+  'Este projeto conecta a comunidade acadêmica a demandas reais da região, com foco em impacto social mensurável. A equipe mapeou o problema junto aos usuários, prototipou a solução e validou as hipóteses em campo, documentando os aprendizados a cada etapa. A proposta prevê continuidade após o Desafio X, com materiais abertos para que outras turmas possam evoluir o trabalho.';
+
+/**
+ * Detalhe público do projeto (GET /api/public/projects/{id}). O contrato devolve o PublicProject;
+ * resumo expandido, curso/papel dos integrantes, palavra-chave e entregas são PROPOSTA (Figma).
+ */
+export function buildPublicProjectDetail(id: number): PublicProjectDetail | null {
+  const base = publicProjects.find((project) => project.id === id);
+  if (!base) return null;
+  return {
+    ...base,
+    summary: EXPANDED_SUMMARY,
+    keywords: `${base.sdg.title}, ${base.course.name}`,
+    members: base.members.map((member, index) => ({
+      name: member.name,
+      course: base.course.name,
+      role: index === 0 ? 'LEADER' : 'MEMBER',
+    })),
+    deliverables: [
+      { id: 1, label: 'Resumo.pdf', type: 'FILE', href: '/mocks/resumo.pdf' },
+      { id: 2, label: 'Prints.png', type: 'FILE', href: '/mocks/prints.png' },
+      { id: 3, label: 'Link do projeto', type: 'LINK', href: 'https://exemplo.com/projeto' },
+      { id: 4, label: 'Entrega Final.pdf', type: 'FILE', href: '/mocks/entrega-final.pdf' },
+    ],
+  };
+}
 
 /** Aluno sem equipe: só o aviso da coordenação (Figma 551:11777). */
 export function buildEditionNotifications(): Notification[] {

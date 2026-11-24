@@ -1,0 +1,128 @@
+.page {
+  display: grid;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-5) var(--spacing-6);
+}
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.headerMain {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.badge {
+  justify-self: start;
+}
+
+.title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.count {
+  display: grid;
+  justify-items: end;
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.countValue {
+  font-size: 28px;
+  font-weight: var(--font-weight-bold);
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.countLabel {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end;
+  gap: var(--spacing-3);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grid > li {
+  display: flex;
+  min-width: 0;
+}
+
+.grid > li > * {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 64rem) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 48rem) {
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .filters > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: 0 var(--spacing-4) var(--spacing-6);
+  }
+  /* Título em cima, contador em linha única abaixo (não "flutua" ao quebrar). */
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+  }
+  .count {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-items: start;
+    gap: 6px;
+    text-align: left;
+  }
+  .countValue {
+    font-size: 22px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 30rem) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}

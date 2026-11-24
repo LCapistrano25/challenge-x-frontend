@@ -3,6 +3,7 @@ import {
   buildCurrentEdition,
   buildEditionNotifications,
   buildNotifications,
+  buildPublicProjectDetail,
   buildStudentDashboard,
   publicProjects,
 } from './fixtures/academic-home';
@@ -28,6 +29,7 @@ import {
 import {
   buildDeliveryEvaluation,
   buildTeacherDashboard,
+  buildTeacherProjectDetail,
   publishDeliveryEvaluation,
   resetTeacherMock,
 } from './fixtures/teacher-dashboard';
@@ -1443,6 +1445,13 @@ export const handlers = [
   http.get('*/api/public/projects', ({ request }) =>
     HttpResponse.json(paginate(publicProjects, new URL(request.url))),
   ),
+  http.get('*/api/public/projects/:projectId', ({ params }) => {
+    const id = Number(params.projectId);
+    const detail = buildPublicProjectDetail(id) ?? buildTeacherProjectDetail(id);
+    return detail
+      ? HttpResponse.json(detail)
+      : apiError(404, 'not_found', 'Projeto não encontrado.');
+  }),
   http.get('*/api/notifications', ({ request }) => {
     const url = new URL(request.url);
     const source = currentViewer() ? buildNotifications() : buildEditionNotifications();
