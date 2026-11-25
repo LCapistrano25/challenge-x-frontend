@@ -1173,9 +1173,41 @@ export const handlers = [
   }),
 
   http.get('*/api/public/editions/current', () => HttpResponse.json(buildCurrentEdition())),
-  http.get('*/api/public/projects', ({ request }) =>
-    HttpResponse.json(paginate(publicProjects, new URL(request.url))),
-  ),
+
+  http.get('*/api/public/projects', ({ request }) => {
+    const url = new URL(request.url);
+
+    const search = normalize(url.searchParams.get('search') ?? '').trim();
+
+    const courseId = url.searchParams.get('course_id');
+    const sdgId = url.searchParams.get('sdg_id');
+
+    const filteredProjects = publicProjects.filter((project) => {
+      const searchableText = normalize(
+        `${project.title} ${project.summary} ${project.course.name}`,
+      );
+
+      const matchesSearch = !search || searchableText.includes(search);
+
+      const matchesCourse = !courseId || String(project.course.id) === courseId;
+
+      const matchesSdg = !sdgId || String(project.sdg.id) === sdgId;
+
+      return matchesSearch && matchesCourse && matchesSdg;
+    });
+
+    return HttpResponse.json(paginate(filteredProjects, url));
+  }),
+
+  http.get('*/api/public/projects/:projectId', ({ params }) => {
+    const project = publicProjects.find((item) => String(item.id) === String(params.projectId));
+
+    if (!project) {
+      return HttpResponse.json({ message: 'Projeto não encontrado.' }, { status: 404 });
+    }
+
+    return HttpResponse.json(project);
+  }),
   http.get('*/api/notifications', ({ request }) => {
     const url = new URL(request.url);
     const source = currentViewer() ? buildNotifications() : buildEditionNotifications();

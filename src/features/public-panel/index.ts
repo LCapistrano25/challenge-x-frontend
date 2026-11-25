@@ -7,7 +7,12 @@ export { NewsList } from './components/NewsList';
 export { HelpResources } from './components/HelpResources';
 export { EditalCard } from './components/EditalCard';
 export { ProjectCard, ProjectCarousel } from './components/ProjectCard';
-export { useCurrentEdition, usePublicProjects, publicKeys } from './hooks/usePublicPanel';
+export {
+  useCurrentEdition,
+  usePublicProjects,
+  useCourses,
+  publicKeys,
+} from './hooks/usePublicPanel';
 export { fetchCurrentEdition, fetchPublicProjects } from './api/public.api';
 export { NEWS } from './content/news';
 export type {

@@ -1,18 +1,18 @@
-import { fetchCurrentEdition, fetchPublicProjects } from './public.api';
+import { http } from '@/shared/lib/http';
+import type { CourseSummary, Paginated } from '@/shared/types/api';
+import type { PublicEdition, PublicProject, PublicProjectsQuery } from '../types';
 
-describe('public.api (API simulada)', () => {
-  it('retorna a edição vigente com edital e cronograma', async () => {
-    const current = await fetchCurrentEdition();
+export async function fetchCurrentEdition(): Promise<PublicEdition> {
+  const { data } = await http.get<PublicEdition>('/api/public/editions/current');
+  return data;
+}
 
-    expect(current.edition.year).toBeGreaterThan(2000);
-    expect(current.stages.length).toBeGreaterThan(0);
-  });
+export async function fetchPublicProjects(params: PublicProjectsQuery = {}) {
+  const { data } = await http.get<Paginated<PublicProject>>('/api/public/projects', { params });
+  return data;
+}
 
-  it('respeita page_size na vitrine de projetos', async () => {
-    const page = await fetchPublicProjects({ page_size: 2 });
-
-    expect(page.results).toHaveLength(2);
-    expect(page.count).toBeGreaterThanOrEqual(2);
-    expect(page.results[0]?.sdg).toHaveProperty('number');
-  });
-});
+export async function fetchCourses(): Promise<CourseSummary[]> {
+  const { data } = await http.get<CourseSummary[]>('/api/courses');
+  return data;
+}
