@@ -1,0 +1,470 @@
+/*
+ * Telas de configuração da avaliação (Figma: 04 - Administrador › Etapas e Avaliações).
+ * "Conteúdo administrativo": 32px de respiro e 24px entre os blocos.
+ */
+.page {
+  display: grid;
+  gap: var(--spacing-6);
+  padding: var(--spacing-2);
+}
+
+/* --- Contexto e ação: trilha, orientação e ação principal --- */
+.context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.contextText {
+  display: grid;
+  flex: 1 1 20rem;
+  gap: var(--spacing-2);
+  min-width: 0;
+  line-height: 1.4;
+}
+
+.breadcrumb {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  color: var(--color-primary);
+  font-size: var(--font-size-caption);
+}
+
+.breadcrumb li + li::before {
+  content: '/';
+  padding: 0 0.25em;
+}
+
+.breadcrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* --- Seletor "Edição atual" (cabeçalho) --- */
+.edition {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.edition label {
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.edition select {
+  width: 11.5625rem;
+  min-height: 48px;
+}
+
+.edition > div {
+  gap: var(--spacing-1);
+}
+
+.situation {
+  display: inline-flex;
+  align-self: flex-end;
+  margin-bottom: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #fff7e6;
+  color: #925b05;
+  font-size: var(--font-size-caption);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.situationPublished {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.situationClosed {
+  background: var(--color-bg-muted);
+  color: var(--color-text-secondary);
+}
+
+/* --- Indicadores (Resumo) --- */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--spacing-4);
+}
+
+.indicator {
+  display: grid;
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+.indicatorLabel {
+  font-size: var(--font-size-small);
+}
+
+.indicatorValue {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.8;
+}
+
+.indicatorCaption {
+  font-size: var(--font-size-caption);
+}
+
+/* --- Bloco de gestão --- */
+.card {
+  display: grid;
+  gap: var(--spacing-5);
+  min-width: 0;
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-bg-secondary);
+  box-shadow: 0 2px 8px rgb(0 26 56 / 0.03);
+}
+
+/* Sem isso, a tabela larga estica o cartão em vez de rolar dentro dele. */
+.card > * {
+  min-width: 0;
+}
+
+.cardHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+}
+
+.cardSubtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+/* Abas de texto do bloco "Critérios da edição" (Critérios / Rubricas / Pontuações). */
+.sections {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.sections li + li::before {
+  content: '/';
+  padding: 0 0.3em;
+}
+
+.sections a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.sections a:hover,
+.sections a[aria-current='page'] {
+  color: var(--color-primary);
+}
+
+/* --- Campos (Figma: inputs de 48px, rótulo Medium 14px) --- */
+.fields {
+  display: grid;
+  gap: var(--spacing-5);
+}
+
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--spacing-6);
+  align-items: start;
+}
+
+.fields label,
+.filters label {
+  font-weight: 500;
+}
+
+.fields :where(input, select),
+.filters :where(input, select),
+.fields [aria-haspopup='listbox'] {
+  min-height: 48px;
+  font-size: var(--font-size-body);
+}
+
+.fields textarea {
+  min-height: 112px;
+  font-size: var(--font-size-body);
+}
+
+.fields :where(p[role='alert'], p[id$='-hint']) {
+  font-size: var(--font-size-caption);
+}
+
+/* --- Busca e filtros --- */
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 11.5625rem;
+  gap: var(--spacing-4);
+  align-items: end;
+}
+
+/* --- Tabela de registros --- */
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 46rem;
+  border-collapse: collapse;
+  line-height: 1.4;
+}
+
+.table th {
+  padding: var(--spacing-3);
+  background: #fafafd;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  text-align: left;
+}
+
+.table td {
+  height: 76px;
+  padding: var(--spacing-4) var(--spacing-3);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  vertical-align: middle;
+}
+
+.table th + th,
+.table td + td {
+  padding-left: var(--spacing-4);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.link:disabled {
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+.accent,
+.table td.accent {
+  color: var(--color-primary);
+}
+
+.muted,
+.table td.muted {
+  color: var(--color-text-secondary);
+}
+
+.selectedRow td {
+  background: var(--color-primary-soft);
+}
+
+.tableFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-5);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* Matriz da rubrica: cada nível é um botão que leva ao formulário. */
+.levelCell {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.levelCell:hover {
+  text-decoration: underline;
+}
+
+.levelCell:disabled {
+  cursor: default;
+  text-decoration: none;
+}
+
+.levelSelected {
+  color: var(--color-primary);
+}
+
+.levelOver {
+  color: var(--color-danger);
+}
+
+.levelEmpty {
+  color: var(--color-text-secondary);
+  font-style: italic;
+}
+
+/* --- Mensagem de orientação --- */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-radius: 8px;
+  line-height: 1.5;
+}
+
+.noticeIcon {
+  flex-shrink: 0;
+}
+
+.noticeTitle {
+  display: block;
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.noticeText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.success {
+  background: #edf9f0;
+  color: #147c37;
+}
+
+.warning {
+  background: #fff7e6;
+  color: #925b05;
+}
+
+.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+
+.info {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+/* --- Ações do formulário --- */
+.actions {
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--spacing-3);
+}
+
+.actionsHint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.actionsError {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-small);
+  text-align: right;
+}
+
+/* --- Rodapé de contexto --- */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding-top: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  line-height: 1.4;
+}
+
+.state {
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-8);
+}
+
+@media (max-width: 48rem) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .edition {
+    width: 100%;
+  }
+
+  .edition > div {
+    flex: 1 1 auto;
+  }
+
+  .edition select {
+    width: 100%;
+  }
+
+  .situation {
+    display: none;
+  }
+}

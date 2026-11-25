@@ -47,11 +47,13 @@ function AppHeader({
       <div className="app-header__title">
         {content && (
           <>
+            {content.eyebrow && <span className="app-header__eyebrow">{content.eyebrow}</span>}
             <h1>{content.title}</h1>
             {content.subtitle && <p>{content.subtitle}</p>}
           </>
         )}
       </div>
+      {content?.actions && <div className="app-header__actions">{content.actions}</div>}
       {user && (
         <div className="app-header__account">
           <div className="app-header__profile">
