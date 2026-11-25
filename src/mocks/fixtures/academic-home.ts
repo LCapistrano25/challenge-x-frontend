@@ -184,30 +184,87 @@ export const publicProjects: PublicProject[] = [
   ]),
 ];
 
-const EXPANDED_SUMMARY =
-  'Este projeto conecta a comunidade acadêmica a demandas reais da região, com foco em impacto social mensurável. A equipe mapeou o problema junto aos usuários, prototipou a solução e validou as hipóteses em campo, documentando os aprendizados a cada etapa. A proposta prevê continuidade após o Desafio X, com materiais abertos para que outras turmas possam evoluir o trabalho.';
+const EXPANDED_ABOUT =
+  'Este projeto conecta a comunidade acadêmica a demandas reais da região, com foco em impacto social mensurável. A equipe mapeou o problema junto aos usuários, prototipou a solução e validou as hipóteses em campo, documentando os aprendizados a cada etapa.\n\nA proposta prevê continuidade após o Desafio X, com materiais abertos para que outras turmas possam evoluir o trabalho.';
+
+const OBJECTIVE =
+  'Ampliar a participação da comunidade nas ações do projeto. No piloto, a maioria dos participantes concluiu a jornada sem apoio. A próxima etapa prevê acompanhar adesão e permanência.';
+
+/** Business Model Canvas ilustrativo (Figma "Detalhe do Projeto"). 6 blocos preenchidos. */
+export function buildProjectCanvas() {
+  return [
+    {
+      title: 'Proposta de valor',
+      text: 'Reunir ações de extensão em um único portal acessível, facilitando a descoberta de atividades gratuitas e a inscrição da comunidade.',
+    },
+    {
+      title: 'Público-alvo',
+      text: 'Moradores da comunidade e estudantes que buscam oficinas, atendimentos e outras oportunidades de extensão universitária.',
+    },
+    {
+      title: 'Canais e relacionamento',
+      text: 'Portal web para consulta e inscrição nas atividades, com divulgação pelas redes sociais e canais institucionais da universidade.',
+    },
+    {
+      title: 'Atividades e recursos-chave',
+      text: 'Cadastrar e divulgar ações, gerenciar inscrições e acompanhar a participação. Recursos: plataforma web e equipe acadêmica.',
+    },
+    {
+      title: 'Parcerias-chave',
+      text: 'Coordenação de extensão, docentes e projetos universitários, em articulação com organizações e lideranças da comunidade.',
+    },
+    {
+      title: 'Custos e sustentabilidade',
+      text: 'Hospedagem, manutenção e suporte ao portal. Apoio institucional e editais de extensão para manter o acesso gratuito à comunidade.',
+    },
+  ];
+}
 
 /**
  * Detalhe público do projeto (GET /api/public/projects/{id}). O contrato devolve o PublicProject;
- * resumo expandido, curso/papel dos integrantes, palavra-chave e entregas são PROPOSTA (Figma).
+ * descrição, objetivo, orientação, tecnologias, integrantes e arquivos são PROPOSTA (Figma).
  */
 export function buildPublicProjectDetail(id: number): PublicProjectDetail | null {
   const base = publicProjects.find((project) => project.id === id);
   if (!base) return null;
   return {
     ...base,
-    summary: EXPANDED_SUMMARY,
     keywords: `${base.sdg.title}, ${base.course.name}`,
+    about: EXPANDED_ABOUT,
+    objective: OBJECTIVE,
+    code: `DX-${base.edition.year}-${String(base.id).padStart(3, '0')}`,
+    stage_label: 'Etapa final',
+    advisor: 'Prof.ª Juliana Ribeiro',
+    technologies: ['React', 'Node.js', 'PostgreSQL', 'Figma'],
+    submitted_at: '2026-10-20T14:32:00',
+    canvas: buildProjectCanvas(),
     members: base.members.map((member, index) => ({
       name: member.name,
       course: base.course.name,
       role: index === 0 ? 'LEADER' : 'MEMBER',
     })),
     deliverables: [
-      { id: 1, label: 'Resumo.pdf', type: 'FILE', href: '/mocks/resumo.pdf' },
-      { id: 2, label: 'Prints.png', type: 'FILE', href: '/mocks/prints.png' },
-      { id: 3, label: 'Link do projeto', type: 'LINK', href: 'https://exemplo.com/projeto' },
-      { id: 4, label: 'Entrega Final.pdf', type: 'FILE', href: '/mocks/entrega-final.pdf' },
+      {
+        id: 1,
+        label: 'Relatório final.pdf',
+        type: 'FILE',
+        href: '/mocks/relatorio-final.pdf',
+        meta: 'PDF · 2,4 MB',
+      },
+      {
+        id: 2,
+        label: 'Apresentação da equipe.pdf',
+        type: 'FILE',
+        href: '/mocks/apresentacao.pdf',
+        meta: 'PDF · 4,8 MB',
+      },
+      {
+        id: 3,
+        label: 'Protótipo navegável',
+        type: 'LINK',
+        href: 'https://exemplo.com/projeto',
+        meta: 'Link externo · Figma',
+      },
     ],
   };
 }

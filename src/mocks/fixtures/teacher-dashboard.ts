@@ -7,7 +7,7 @@ import type {
   TeacherDelivery,
 } from '@/features/deliveries';
 import type { PublicProjectDetail } from '@/features/public-panel';
-import { buildCurrentEdition } from './academic-home';
+import { buildCurrentEdition, buildProjectCanvas } from './academic-home';
 
 const ES = 'Engenharia de Software';
 const SI = 'Sistemas de Informação';
@@ -90,6 +90,12 @@ const RUBRIC: Omit<EvaluationCriterion, 'score'>[] = [
     max_score: 2,
   },
 ];
+
+const STATUS_LABEL_PT: Record<DeliveryStatus, string> = {
+  PENDING_EVALUATION: 'Em avaliação',
+  SUBMITTED: 'Em preenchimento',
+  EVALUATED: 'Avaliado',
+};
 
 /**
  * Metadados do projeto de cada entrega para a tela de detalhe compartilhada (/projetos/:id).
@@ -217,6 +223,16 @@ export function buildDeliveryEvaluation(id: string): DeliveryEvaluationDetail | 
  * Detalhe público do projeto de uma entrega do professor (reaproveita os dados da avaliação).
  * Alimenta /projetos/:id quando o id é de um projeto de curso, fora da vitrine pública.
  */
+const firstSentence = (text: string) => {
+  const end = text.indexOf('. ');
+  return end >= 0 ? text.slice(0, end + 1) : text;
+};
+
+const fileSize = (bytes: number) =>
+  bytes >= 1024 * 1024
+    ? `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`
+    : `${Math.round(bytes / 1024)} KB`;
+
 export function buildTeacherProjectDetail(projectId: number): PublicProjectDetail | null {
   const found = Object.entries(PROJECT_META).find(([, meta]) => meta.project_id === projectId);
   if (!found) return null;
@@ -225,11 +241,23 @@ export function buildTeacherProjectDetail(projectId: number): PublicProjectDetai
   if (!detail) return null;
   const course = { id: 0, name: detail.course };
   const sdg = { id: meta.sdg[0], number: meta.sdg[0], title: meta.sdg[1] };
+  const about = detail.team_message ?? 'Projeto da edição vigente do Desafio X.';
   return {
     id: projectId,
     edition: buildCurrentEdition().edition,
     title: detail.project_name,
-    summary: detail.team_message ?? 'Projeto da edição vigente do Desafio X.',
+    team: { name: detail.team_name },
+    summary: firstSentence(about),
+    about,
+    objective:
+      'Ampliar a participação da comunidade nas ações do projeto e acompanhar os resultados ao longo das etapas de avaliação.',
+    code: `DX-${buildCurrentEdition().edition.year}-${String(projectId).padStart(3, '0')}`,
+    stage_label: `Etapa ${detail.stage}`,
+    status_label: STATUS_LABEL_PT[detail.status],
+    advisor: 'Prof.ª Juliana Ribeiro',
+    technologies: ['React', 'Node.js', 'PostgreSQL', 'Figma'],
+    submitted_at: detail.submitted_at,
+    canvas: buildProjectCanvas(),
     course,
     sdg,
     category: null,
@@ -244,6 +272,7 @@ export function buildTeacherProjectDetail(projectId: number): PublicProjectDetai
       label: file.name,
       type: 'FILE' as const,
       href: file.download_url,
+      meta: `${file.type} · ${fileSize(file.size_bytes)}`,
     })),
   };
 }
