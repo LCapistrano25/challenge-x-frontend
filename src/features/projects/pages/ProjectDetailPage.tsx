@@ -1,9 +1,11 @@
 import { useParams, useSearchParams } from 'react-router-dom';
+import { ROLE_LABEL, useAuth } from '@/features/auth';
 import {
   editionLabel,
   usePublicProject,
   useCurrentEdition,
   type PublicDeliverableLink,
+  type PublicProjectMember,
 } from '@/features/public-panel';
 import { getApiError } from '@/shared/lib/api-error';
 import { usePageHeader } from '@/shared/lib/page-header';
@@ -12,33 +14,52 @@ import {
   Avatar,
   Button,
   ButtonLink,
+  IconChevronLeft,
   IconChevronRight,
   IconDownload,
   IconFile,
+  IconInfo,
   Spinner,
 } from '@/shared/ui';
 import styles from './ProjectDetailPage.module.css';
 
-const MEMBER_TONES = ['blue', 'green', 'orange', 'pink'] as const;
+/** "20/10/2026 às 14h32" */
+function formatSentAt(iso: string) {
+  const date = new Date(iso);
+  const day = new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date);
+  const time = new Intl.DateTimeFormat('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+    .format(date)
+    .replace(':', 'h');
+  return `${day} às ${time}`;
+}
 
 /**
  * Detalhe do Projeto (Figma: "Detalhe do Projeto"). Tela única e pública (RF34/RF45): abre com
- * a navbar do perfil que está logado (o PublicLayout mantém a moldura do aluno, professor,
- * avaliador ou visitante) e "Voltar para Vitrine" retorna à listagem dentro da mesma moldura.
+ * a navbar do perfil logado (PublicLayout mantém a moldura do aluno, professor, avaliador ou
+ * visitante). O selo do topo mostra o perfil de quem consulta e "Voltar" respeita a origem.
  */
 export function ProjectDetailPage() {
   const { projectId = '' } = useParams();
   const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const id = Number(projectId);
   const { data, isLoading, isError, error, refetch } = usePublicProject(
     Number.isFinite(id) ? id : undefined,
   );
   const edition = useCurrentEdition().data?.edition;
 
-  // Rota interna de onde o usuário veio (ex.: avaliação do professor), para "voltar" no contexto.
   const fromParam = searchParams.get('from');
   const backTo =
     fromParam && fromParam.startsWith('/') && !fromParam.startsWith('//') ? fromParam : null;
+  const backLabel = backTo ? 'Voltar para a avaliação' : 'Voltar para a vitrine';
 
   usePageHeader(
     edition ? `Desafio X · Edição ${editionLabel(edition)}` : 'Projetos',
@@ -62,8 +83,8 @@ export function ProjectDetailPage() {
           title={notFound ? 'Projeto não encontrado' : 'Não foi possível carregar o projeto'}
           action={
             notFound ? (
-              <ButtonLink to="/projetos" size="small" variant="secondary">
-                Voltar para Vitrine
+              <ButtonLink to={backTo ?? '/projetos'} size="small" variant="secondary">
+                {backLabel}
               </ButtonLink>
             ) : (
               <Button size="small" variant="secondary" onClick={() => void refetch()}>
@@ -80,77 +101,112 @@ export function ProjectDetailPage() {
     );
   }
 
+  const roleLabel = user ? ROLE_LABEL[user.role] : 'Visitante';
+  const kicker = edition ? `${roleLabel} · Edição ${editionLabel(edition)}` : roleLabel;
+  const notice = roleNotice(user?.role);
+  const footerText = `Desafio X / ${user ? roleLabel : 'Área pública'}${
+    edition ? ` / ${editionLabel(edition)}` : ''
+  } · Dados ilustrativos`;
+  const metaLine = [data.team?.name, data.code && `Projeto ${data.code}`, data.stage_label]
+    .filter(Boolean)
+    .join(' · ');
+  const aboutParagraphs = (data.about ?? data.summary).split('\n\n').filter(Boolean);
+
   return (
     <div className={`page-flush ${styles.page}`}>
+      <ButtonLink to={backTo ?? '/projetos'} variant="ghost" size="small" className={styles.back}>
+        <IconChevronLeft size={16} aria-hidden="true" /> {backLabel}
+      </ButtonLink>
+
       <header className={styles.hero}>
-        <p className={styles.heroKicker}>Detalhe do Projeto</p>
-        <h2 className={styles.heroTitle}>{data.title}</h2>
+        <div className={styles.heroMain}>
+          <span className={styles.kicker}>{kicker}</span>
+          <h2 className={styles.title}>{data.title}</h2>
+          {metaLine && <p className={styles.metaLine}>{metaLine}</p>}
+          <p className={styles.lead}>{data.summary}</p>
+        </div>
+        {data.status_label && (
+          <span className={`${styles.tag} ${styles.tagAttention}`}>{data.status_label}</span>
+        )}
       </header>
 
       <div className={styles.columns}>
-        <section className={styles.card} aria-label="Resumo e integrantes">
-          <div>
-            <h3 className={styles.sectionTitle}>Resumo Expandido</h3>
-            <p className={styles.summary}>{data.summary}</p>
-          </div>
+        <div className={styles.mainCol}>
+          <section className={styles.card} aria-label="Sobre o projeto">
+            <h3 className={styles.cardTitle}>Sobre o projeto</h3>
+            {aboutParagraphs.map((paragraph, index) => (
+              <p key={index} className={styles.paragraph}>
+                {paragraph}
+              </p>
+            ))}
+            {data.objective && (
+              <>
+                <h4 className={styles.subTitle}>Objetivo e resultados</h4>
+                <p className={styles.paragraph}>{data.objective}</p>
+              </>
+            )}
+          </section>
 
-          <div>
-            <h3 className={styles.sectionTitle}>Integrantes</h3>
+          <section
+            className={styles.card}
+            aria-label={`Integrantes da ${data.team?.name ?? 'equipe'}`}
+          >
+            <h3 className={styles.cardTitle}>
+              Integrantes {data.team?.name ? `da ${data.team.name}` : 'da equipe'}
+            </h3>
             <ul className={styles.members}>
               {data.members.map((member, index) => (
                 <li key={`${member.name}-${index}`} className={styles.member}>
-                  <Avatar name={member.name} tone={MEMBER_TONES[index % MEMBER_TONES.length]} />
+                  <Avatar name={member.name} tone="blue" />
                   <div className={styles.memberInfo}>
                     <span className={styles.memberName}>{member.name}</span>
-                    {member.course && <span className={styles.memberMeta}>{member.course}</span>}
-                    {member.role === 'LEADER' && <span className={styles.memberMeta}>Líder</span>}
+                    <span className={styles.memberMeta}>{memberMeta(member)}</span>
                   </div>
                 </li>
               ))}
             </ul>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        <aside className={styles.aside}>
-          <section className={styles.asideCard} aria-label="Informações do projeto">
-            <h3 className={styles.sectionTitle}>Informações</h3>
+        <aside className={styles.asideCol}>
+          <section className={styles.card} aria-label="Informações acadêmicas">
+            <h3 className={styles.cardTitle}>Informações acadêmicas</h3>
             <dl className={styles.infoList}>
               <div>
                 <dt className={styles.infoLabel}>Curso</dt>
                 <dd className={styles.infoValue}>{data.course.name}</dd>
               </div>
               <div>
-                <dt className={styles.infoLabel}>ODS</dt>
-                <dd className={styles.infoValue}>
-                  {data.sdg.number} - {data.sdg.title}
+                <dt className={styles.infoLabel}>Objetivo de Desenvolvimento Sustentável</dt>
+                <dd className={styles.infoOds}>
+                  <span className={`${styles.tag} ${styles.tagInfo}`}>ODS {data.sdg.number}</span>
+                  <span className={styles.infoValue}>{data.sdg.title}</span>
                 </dd>
               </div>
-              {data.keywords && (
+              {data.advisor && (
                 <div>
-                  <dt className={styles.infoLabel}>Palavra-chave</dt>
-                  <dd className={styles.infoValue}>{data.keywords}</dd>
+                  <dt className={styles.infoLabel}>Orientação</dt>
+                  <dd className={styles.infoValue}>{data.advisor}</dd>
+                </div>
+              )}
+              {data.technologies && data.technologies.length > 0 && (
+                <div>
+                  <dt className={styles.infoLabel}>Tecnologias</dt>
+                  <dd className={styles.chips}>
+                    {data.technologies.map((tech) => (
+                      <span key={tech} className={`${styles.tag} ${styles.tagInfo}`}>
+                        {tech}
+                      </span>
+                    ))}
+                  </dd>
                 </div>
               )}
             </dl>
-            {backTo ? (
-              <div className={styles.backActions}>
-                <ButtonLink to={backTo} className={styles.back}>
-                  Voltar para a avaliação
-                </ButtonLink>
-                <ButtonLink to="/projetos" variant="ghost" className={styles.back}>
-                  Ver todos os projetos
-                </ButtonLink>
-              </div>
-            ) : (
-              <ButtonLink to="/projetos" className={styles.back}>
-                Voltar para Vitrine
-              </ButtonLink>
-            )}
           </section>
 
           {data.deliverables && data.deliverables.length > 0 && (
-            <section className={styles.asideCard} aria-label="Entregas do projeto">
-              <h3 className={styles.sectionTitle}>Entregas</h3>
+            <section className={styles.card} aria-label="Arquivos entregues">
+              <h3 className={styles.cardTitle}>Arquivos entregues</h3>
               <ul className={styles.deliverables}>
                 {data.deliverables.map((item) => (
                   <li key={item.id}>
@@ -158,12 +214,77 @@ export function ProjectDetailPage() {
                   </li>
                 ))}
               </ul>
+              {data.submitted_at && (
+                <p className={styles.sentAt}>Enviado em {formatSentAt(data.submitted_at)}</p>
+              )}
             </section>
           )}
         </aside>
       </div>
+
+      {data.canvas && data.canvas.length > 0 && (
+        <section className={styles.canvasCard} aria-label="Business Model Canvas">
+          <div className={styles.canvasHead}>
+            <div>
+              <h3 className={styles.canvasTitle}>Business Model Canvas</h3>
+              <p className={styles.canvasSubtitle}>
+                Informações preenchidas pelos acadêmicos no cadastro do projeto.
+              </p>
+            </div>
+            <span className={`${styles.tag} ${styles.tagInfo}`}>Somente leitura</span>
+          </div>
+          <ol className={styles.canvasGrid}>
+            {data.canvas.map((block, index) => (
+              <li
+                key={block.title}
+                className={`${styles.canvasBlock} ${styles[`canvas${index + 1}`]}`}
+              >
+                <p className={styles.canvasBlockHead}>
+                  <span className={styles.canvasNum}>{String(index + 1).padStart(2, '0')}</span>
+                  <span className={styles.canvasBlockTitle}>{block.title}</span>
+                </p>
+                <p className={styles.canvasText}>{block.text}</p>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      {notice && (
+        <div className={styles.notice}>
+          <IconInfo size={20} className={styles.noticeIcon} aria-hidden="true" />
+          <div>
+            <p className={styles.noticeTitle}>{notice.title}</p>
+            <p className={styles.noticeText}>{notice.description}</p>
+          </div>
+        </div>
+      )}
+
+      <p className={styles.footer}>{footerText}</p>
     </div>
   );
+}
+
+function roleNotice(role: string | undefined) {
+  if (role === 'EXTERNAL_EVALUATOR') {
+    return {
+      title: 'Projeto atribuído à sua avaliação',
+      description:
+        'As entregas são disponibilizadas para consulta. Registre seu parecer no formulário de avaliação conforme os critérios da etapa.',
+    };
+  }
+  if (role === 'TEACHER') {
+    return {
+      title: 'Projeto dos seus cursos vinculados',
+      description:
+        'As entregas estão disponíveis para consulta. Acompanhe e avalie as etapas no seu painel de acompanhamento.',
+    };
+  }
+  return null;
+}
+
+function memberMeta(member: PublicProjectMember) {
+  return [member.course, member.role === 'LEADER' ? 'Líder' : null].filter(Boolean).join(' · ');
 }
 
 function DeliverableRow({ item }: { item: PublicDeliverableLink }) {
@@ -177,13 +298,16 @@ function DeliverableRow({ item }: { item: PublicDeliverableLink }) {
       download={isLink ? undefined : ''}
     >
       <span className={styles.deliverableLabel}>
-        <IconFile size={16} className={styles.deliverableIcon} aria-hidden="true" />
-        <span>{item.label}</span>
+        <IconFile size={18} className={styles.deliverableIcon} aria-hidden="true" />
+        <span className={styles.deliverableText}>
+          <span className={styles.deliverableName}>{item.label}</span>
+          {item.meta && <span className={styles.deliverableMeta}>{item.meta}</span>}
+        </span>
       </span>
       {isLink ? (
-        <IconChevronRight size={16} className={styles.deliverableIcon} aria-hidden="true" />
+        <IconChevronRight size={18} className={styles.deliverableIcon} aria-hidden="true" />
       ) : (
-        <IconDownload size={16} className={styles.deliverableIcon} aria-hidden="true" />
+        <IconDownload size={18} className={styles.deliverableIcon} aria-hidden="true" />
       )}
     </a>
   );

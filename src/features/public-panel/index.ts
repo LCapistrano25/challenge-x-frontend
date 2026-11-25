@@ -18,6 +18,7 @@ export { NEWS } from './content/news';
 export type {
   NewsItem,
   PublicChallenge,
+  ProjectCanvasBlock,
   PublicDeliverableLink,
   PublicEdition,
   PublicProject,
