@@ -78,6 +78,21 @@
   font-size: var(--font-size-body);
 }
 
+.app-header__eyebrow {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+  text-transform: uppercase;
+}
+
+/* Ações da página no cabeçalho (ex.: seletor de edição da administração). */
+.app-header__actions {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: var(--spacing-3);
+  margin-left: auto;
+}
+
 .app-header__account {
   display: flex;
   flex: 0 0 auto;
@@ -542,6 +557,17 @@
 }
 
 @media (max-width: 48rem) {
+  /* Ações da página (ex.: seletor de edição) descem para uma linha própria. */
+  .app-header:has(.app-header__actions) {
+    flex-wrap: wrap;
+  }
+
+  .app-header__actions {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+  }
+
   /* No celular a barra continua à esquerda: fechada com 60px; aberta, cobre o conteúdo. */
   .app-shell {
     grid-template-columns: 3.75rem minmax(0, 1fr);

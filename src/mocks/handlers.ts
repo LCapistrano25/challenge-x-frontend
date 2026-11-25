@@ -58,6 +58,8 @@ import type {
 import type { DeliverableSubmissionItem, PublishEvaluationInput } from '@/features/deliveries';
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import { buildProjectScores } from './fixtures/scores';
+import { buildEvaluationSetup, toStageCriteria } from './fixtures/evaluation-setup';
+import type { CriterionCreate, Stage, StageCreate, StageCriteriaItem } from '@/features/admin';
 import {
   EVALUATOR_WITHOUT_PANEL,
   buildFinalEvaluation,
@@ -338,6 +340,79 @@ let emailDomains = [
   { id: 1, name: 'alunos.universidade.edu.br', role: 'STUDENT' as const, active: true },
   { id: 2, name: 'docentes.universidade.edu.br', role: 'TEACHER' as const, active: true },
 ];
+
+// Configuração da avaliação (task #23): etapas, critérios, rubricas e pontuações.
+let evaluationSetup = buildEvaluationSetup();
+let nextSetupId = 900;
+
+const adminOnly = () =>
+  !session || session.role !== 'ADMIN'
+    ? apiError(403, 'forbidden', 'Acesso restrito a administradores.')
+    : null;
+
+/** A configuração congela após a publicação do edital. */
+function frozenEdition(editionId: number) {
+  const edition = evaluationSetup.editions.find((e) => e.id === editionId);
+  if (!edition) return apiError(404, 'not_found', 'Edição não encontrada.');
+  if (edition.status === 'CLOSED') {
+    return apiError(409, 'edition_closed', 'A edição está encerrada e não pode ser alterada.');
+  }
+  if (edition.status === 'PUBLISHED') {
+    return apiError(
+      409,
+      'edition_published',
+      'A configuração está congelada após a publicação do edital.',
+    );
+  }
+  return null;
+}
+
+const cents = (value: string | null | undefined) => Math.round(Number(value ?? 0) * 100);
+
+const setupValidationError = (field: string, message: string) =>
+  HttpResponse.json(
+    { error: { code: 'validation_error', message, details: { [field]: [message] } } },
+    { status: 400 },
+  );
+
+/** Regras de ensure_stage_max_score_fits (API): etapas ≤ 10 e etapa ≥ seus critérios. */
+function checkStage(candidate: Stage) {
+  if (candidate.ends_at <= candidate.starts_at) {
+    return setupValidationError('ends_at', 'O fim deve ser posterior ao início.');
+  }
+  if (candidate.scored) {
+    if (!candidate.evaluation_ends_at || candidate.evaluation_ends_at <= candidate.ends_at) {
+      return setupValidationError(
+        'evaluation_ends_at',
+        'O prazo de avaliação deve ser posterior ao fim da entrega.',
+      );
+    }
+    if (cents(candidate.max_score) <= 0) {
+      return setupValidationError('max_score', 'Informe a pontuação máxima da etapa.');
+    }
+  }
+  const others = evaluationSetup.stages.filter(
+    (s) => s.edition_id === candidate.edition_id && s.id !== candidate.id,
+  );
+  if (others.some((s) => s.order === candidate.order)) {
+    return apiError(409, 'stage_position_taken', 'Já existe etapa nesta posição.');
+  }
+  const total = others.reduce((sum, s) => sum + (s.scored ? cents(s.max_score) : 0), 0);
+  if (candidate.scored && total + cents(candidate.max_score) > 1000) {
+    return setupValidationError(
+      'max_score',
+      'As etapas pontuadas da edição passariam de 10 pontos.',
+    );
+  }
+  const criteria = (evaluationSetup.links[candidate.id] ?? []).reduce(
+    (sum, item) => sum + cents(item.max_score),
+    0,
+  );
+  if (candidate.scored && criteria > cents(candidate.max_score)) {
+    return setupValidationError('max_score', 'Os critérios da etapa somam mais que este valor.');
+  }
+  return null;
+}
 
 function resetEmailDomains() {
   emailDomains = [
@@ -1528,6 +1603,136 @@ export const handlers = [
     emailDomains = emailDomains.map((d) => (d.id === id ? updated : d));
     return HttpResponse.json(updated);
   }),
+
+  // --- Configuração da avaliação (task #23) ---
+  http.get(
+    '*/api/admin/editions',
+    () => adminOnly() ?? HttpResponse.json(evaluationSetup.editions),
+  ),
+  http.get('*/api/admin/editions/:editionId/stages', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const editionId = Number(params.editionId);
+    return HttpResponse.json(evaluationSetup.stages.filter((s) => s.edition_id === editionId));
+  }),
+  http.post('*/api/admin/editions/:editionId/stages', async ({ params, request }) => {
+    const editionId = Number(params.editionId);
+    const denied = adminOnly() ?? frozenEdition(editionId);
+    if (denied) return denied;
+    const body = (await request.json()) as StageCreate;
+    const created: Stage = {
+      id: nextSetupId++,
+      edition_id: editionId,
+      min_evaluations: 1,
+      submission_fields: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      ...body,
+    };
+    const invalid = checkStage(created);
+    if (invalid) return invalid;
+    evaluationSetup.stages = [...evaluationSetup.stages, created];
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.get('*/api/admin/stages/:stageId', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const found = evaluationSetup.stages.find((s) => s.id === Number(params.stageId));
+    return found ? HttpResponse.json(found) : apiError(404, 'not_found', 'Etapa não encontrada.');
+  }),
+  http.patch('*/api/admin/stages/:stageId', async ({ params, request }) => {
+    const existing = evaluationSetup.stages.find((s) => s.id === Number(params.stageId));
+    if (!existing) return adminOnly() ?? apiError(404, 'not_found', 'Etapa não encontrada.');
+    const denied = adminOnly() ?? frozenEdition(existing.edition_id);
+    if (denied) return denied;
+    const body = (await request.json()) as Partial<StageCreate>;
+    const updated: Stage = { ...existing, ...body, updated_at: new Date().toISOString() };
+    const invalid = checkStage(updated);
+    if (invalid) return invalid;
+    evaluationSetup.stages = evaluationSetup.stages.map((s) => (s.id === updated.id ? updated : s));
+    return HttpResponse.json(updated);
+  }),
+  http.get('*/api/admin/stages/:stageId/criteria', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    return HttpResponse.json(toStageCriteria(evaluationSetup, Number(params.stageId)));
+  }),
+  http.put('*/api/admin/stages/:stageId/criteria', async ({ params, request }) => {
+    const stageId = Number(params.stageId);
+    const target = evaluationSetup.stages.find((s) => s.id === stageId);
+    if (!target) return adminOnly() ?? apiError(404, 'not_found', 'Etapa não encontrada.');
+    const denied = adminOnly() ?? frozenEdition(target.edition_id);
+    if (denied) return denied;
+    const { items } = (await request.json()) as { items: StageCriteriaItem[] };
+    if (!target.scored) return setupValidationError('items', 'A etapa não é pontuada.');
+    if (items.some((item) => cents(item.max_score) <= 0)) {
+      return setupValidationError('items', 'A pontuação de cada critério deve ser maior que zero.');
+    }
+    const sum = items.reduce((total, item) => total + cents(item.max_score), 0);
+    if (sum > cents(target.max_score)) {
+      return setupValidationError('max_score', 'Os critérios passariam do valor da etapa.');
+    }
+    evaluationSetup.links = { ...evaluationSetup.links, [stageId]: items };
+    return HttpResponse.json(toStageCriteria(evaluationSetup, stageId));
+  }),
+  http.get('*/api/admin/editions/:editionId/criteria', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const editionId = Number(params.editionId);
+    return HttpResponse.json(evaluationSetup.criteria.filter((c) => c.edition_id === editionId));
+  }),
+  http.post('*/api/admin/editions/:editionId/criteria', async ({ params, request }) => {
+    const editionId = Number(params.editionId);
+    const denied = adminOnly() ?? frozenEdition(editionId);
+    if (denied) return denied;
+    const body = (await request.json()) as CriterionCreate;
+    const name = (body.name ?? '').trim();
+    if (!name) return setupValidationError('name', 'Informe o nome do critério.');
+    const taken = evaluationSetup.criteria.some(
+      (c) => c.edition_id === editionId && normalize(c.name) === normalize(name),
+    );
+    if (taken) return apiError(409, 'criterion_name_taken', 'Já existe critério com este nome.');
+    const created = {
+      id: nextSetupId++,
+      edition_id: editionId,
+      name,
+      rubric: body.rubric ?? null,
+      tiebreak_order: body.tiebreak_order ?? null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    evaluationSetup.criteria = [...evaluationSetup.criteria, created];
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.patch('*/api/admin/criteria/:criterionId', async ({ params, request }) => {
+    const existing = evaluationSetup.criteria.find((c) => c.id === Number(params.criterionId));
+    if (!existing) return adminOnly() ?? apiError(404, 'not_found', 'Critério não encontrado.');
+    const denied = adminOnly() ?? frozenEdition(existing.edition_id);
+    if (denied) return denied;
+    const body = (await request.json()) as Partial<CriterionCreate>;
+    const name = body.name?.trim();
+    if (
+      name &&
+      evaluationSetup.criteria.some(
+        (c) =>
+          c.id !== existing.id &&
+          c.edition_id === existing.edition_id &&
+          normalize(c.name) === normalize(name),
+      )
+    ) {
+      return apiError(409, 'criterion_name_taken', 'Já existe critério com este nome.');
+    }
+    const updated = {
+      ...existing,
+      ...body,
+      name: name ?? existing.name,
+      updated_at: new Date().toISOString(),
+    };
+    evaluationSetup.criteria = evaluationSetup.criteria.map((c) =>
+      c.id === updated.id ? updated : c,
+    );
+    return HttpResponse.json(updated);
+  }),
 ];
 
 /** Usado nos testes para isolar a sessão simulada entre os casos. */
@@ -1543,6 +1748,8 @@ export function resetMockSession() {
   receivedInvitations = buildReceivedInvitations();
   createdTeam = null;
   resetEmailDomains();
+  evaluationSetup = buildEvaluationSetup();
+  nextSetupId = 900;
   resetMyTeams();
   resetProjects();
 }
