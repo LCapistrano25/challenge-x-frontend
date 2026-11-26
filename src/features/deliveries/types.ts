@@ -1,16 +1,28 @@
+import type { CanvasContent, SwotContent } from '@/features/projects';
+
 /**
- * Envio de entrega (task #13). POST /api/projects/{project_id}/stages/{stage_id}/versions é
- * PROPOSTO (P-23, P-43): corpo multipart com `items` (JSON), `files[]` e `notes`.
+ * Envio de entrega (task #13 + Canvas/SWOT).
+ * POST /api/projects/{project_id}/stages/{stage_id}/versions:
+ * - JSON quando não há arquivos;
+ * - multipart/form-data com `items` (JSON), `files[]` e `notes` quando há arquivos.
  */
 
-/** Item de `items` (string JSON): LINK leva o endereço; FILE aponta a posição em `files`. */
 export type DeliverableSubmissionItem =
-  { field_id: number; link: string } | { field_id: number; file_index: number };
+  | { field_id: number; link: string }
+  | { field_id: number; file_index: number }
+  | { field_id: number; content: CanvasContent | SwotContent };
+
+export interface DeliverableSubmissionJson {
+  items: Exclude<DeliverableSubmissionItem, { file_index: number }>[];
+  notes?: string;
+}
 
 /** Preenchimento da tela "Enviar entrega", por campo da etapa. */
 export interface DeliveryFormValues {
   files: Record<number, File | null>;
   links: Record<number, string>;
+  canvas?: Record<number, CanvasContent>;
+  swot?: Record<number, SwotContent>;
   notes: string;
 }
 
@@ -71,6 +83,8 @@ export interface EvaluationCriterion {
 /** Entrega com o material enviado e a rubrica da etapa (GET /api/teacher/deliveries/{id}). */
 export interface DeliveryEvaluationDetail {
   id: string;
+  /** Id do projeto na vitrine pública, para "Ver mais detalhes do projeto" (/projetos/:id). */
+  project_id?: number | null;
   project_name: string;
   team_name: string;
   course: string;

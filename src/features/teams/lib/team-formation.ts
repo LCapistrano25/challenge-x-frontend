@@ -32,18 +32,40 @@ export const describeInterestArea = (area: InterestArea) => INTEREST_AREA_LABEL[
 
 /* --- Criar equipe --- */
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export interface CreateTeamValues {
   name: string;
   interestArea: string;
   description: string;
+  inviteEmails: string;
 }
 
 export type CreateTeamErrors = Partial<Record<keyof CreateTeamValues, string>>;
 
-export function validateCreateTeam(values: CreateTeamValues): CreateTeamErrors {
+/** Extrai e-mails únicos separados por vírgula, ponto e vírgula ou quebra de linha. */
+export function parseInviteEmails(raw: string): string[] {
+  const seen = new Set<string>();
+  const emails: string[] = [];
+  for (const part of raw.split(/[\s,;]+/)) {
+    const email = part.trim().toLowerCase();
+    if (email && !seen.has(email)) {
+      seen.add(email);
+      emails.push(email);
+    }
+  }
+  return emails;
+}
+
+export function validateCreateTeam(
+  values: CreateTeamValues,
+  maxMembers = DEFAULT_MAX_MEMBERS,
+): CreateTeamErrors {
   const errors: CreateTeamErrors = {};
   const name = values.name.trim();
   const description = values.description.trim();
+  const emails = parseInviteEmails(values.inviteEmails);
+  const maxInvites = Math.max(1, maxMembers - 1);
 
   if (!name) errors.name = 'Informe o nome da equipe.';
   else if (name.length < TEAM_NAME_MIN || name.length > TEAM_NAME_MAX)
@@ -56,6 +78,14 @@ export function validateCreateTeam(values: CreateTeamValues): CreateTeamErrors {
   else if (description.length > TEAM_DESCRIPTION_MAX)
     errors.description = `A apresentação deve ter até ${TEAM_DESCRIPTION_MAX} caracteres.`;
 
+  if (emails.length === 0) {
+    errors.inviteEmails = 'Informe ao menos um e-mail institucional para convidar.';
+  } else if (emails.some((email) => email.length > 254 || !EMAIL_PATTERN.test(email))) {
+    errors.inviteEmails = 'Há um e-mail inválido na lista de convites.';
+  } else if (emails.length > maxInvites) {
+    errors.inviteEmails = `Convide no máximo ${maxInvites} estudantes na criação.`;
+  }
+
   return errors;
 }
 
@@ -63,6 +93,7 @@ export function validateCreateTeam(values: CreateTeamValues): CreateTeamErrors {
 export function toTeamCreate(values: CreateTeamValues): TeamCreate {
   return {
     name: values.name.trim(),
+    invitations: parseInviteEmails(values.inviteEmails).map((email) => ({ email })),
     ...(isInterestArea(values.interestArea) ? { interest_area: values.interestArea } : {}),
     description: values.description.trim(),
   };
@@ -161,6 +192,7 @@ const ERROR_MESSAGE: Record<string, string> = {
   student_already_in_team: 'Você já participa de uma equipe nesta edição.',
   join_request_pending_exists: 'Você já tem uma solicitação pendente para esta equipe.',
   team_name_taken: 'Já existe uma equipe com este nome nesta edição.',
+  team_invitations_required: 'Convide os integrantes exigidos pela edição para criar a equipe.',
   no_current_edition: 'Não há edição vigente no momento.',
   request_not_pending: 'Esta solicitação não está mais pendente.',
 };

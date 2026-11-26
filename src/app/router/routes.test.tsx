@@ -21,7 +21,11 @@ describe('rotas e layouts', () => {
   it('professor usa navegação híbrida no celular', () => {
     const mobileItems = NAV_ITEMS.TEACHER.filter((item) => item.mobileBar);
 
-    expect(mobileItems.map((item) => item.to)).toEqual(['/professor', '/professor/integrantes']);
+    expect(mobileItems.map((item) => item.to)).toEqual([
+      '/professor',
+      '/professor/integrantes',
+      '/professor/lideranca',
+    ]);
   });
 
   it.each(['/login', '/admin/login', '/recuperar-senha'])(

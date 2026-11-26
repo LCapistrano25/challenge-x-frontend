@@ -21,13 +21,19 @@ async function renderTeacher(path: string) {
 const sidebar = () => screen.getByRole('complementary', { name: /Professor/ });
 
 describe('navegação do professor', () => {
-  it('a barra lateral tem Início, Projetos, Integrantes e Acervo', async () => {
+  it('a barra lateral tem Início, Projetos, Liderança, Integrantes e Acervo', async () => {
     await renderTeacher('/professor');
     await screen.findByRole('heading', { name: 'Olá, Paulo!' });
 
     const links = within(sidebar()).getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual(
-      expect.arrayContaining(['/professor', '/projetos', '/professor/integrantes', '/acervo']),
+      expect.arrayContaining([
+        '/professor',
+        '/projetos',
+        '/professor/lideranca',
+        '/professor/integrantes',
+        '/acervo',
+      ]),
     );
   });
 

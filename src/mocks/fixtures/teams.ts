@@ -9,13 +9,13 @@ import type { CourseSummary } from '@/shared/types/api';
 const DAY = 24 * 60 * 60 * 1000;
 const daysAgo = (days: number) => new Date(Date.now() - days * DAY).toISOString();
 
-const ES: CourseSummary = { id: 1, name: 'Engenharia de Software', slug: 'ES' };
-const AGRO: CourseSummary = { id: 2, name: 'Agronomia', slug: 'AGRO' };
-const ARQ: CourseSummary = { id: 5, name: 'Arquitetura', slug: 'ARQ' };
-const SI: CourseSummary = { id: 6, name: 'Sistemas de Informação', slug: 'SI' };
-const AMB: CourseSummary = { id: 7, name: 'Engenharia Ambiental', slug: 'AMB' };
-const ADM: CourseSummary = { id: 8, name: 'Administração', slug: 'ADM' };
-const PSI: CourseSummary = { id: 3, name: 'Psicologia', slug: 'PSI' };
+const ES: CourseSummary = { id: 1, name: 'Engenharia de Software' };
+const AGRO: CourseSummary = { id: 2, name: 'Agronomia' };
+const ARQ: CourseSummary = { id: 5, name: 'Arquitetura' };
+const SI: CourseSummary = { id: 6, name: 'Sistemas de Informação' };
+const AMB: CourseSummary = { id: 7, name: 'Engenharia Ambiental' };
+const ADM: CourseSummary = { id: 8, name: 'Administração' };
+const PSI: CourseSummary = { id: 3, name: 'Psicologia' };
 
 /** Equipe da edição com o total de integrantes; `available_slots` sai do limite (6). */
 export interface MockTeam extends Omit<TeamListing, 'available_slots'> {

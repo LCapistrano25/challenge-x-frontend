@@ -1,0 +1,161 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-6);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.listCard {
+  gap: 0;
+}
+
+.listCard .listTitle {
+  margin-bottom: var(--spacing-4);
+}
+
+/* Colunas do Figma: projeto, etapa, envio, pontuação e status com a ação. */
+.tableHead,
+.row {
+  display: grid;
+  grid-template-columns: 30fr 16fr 21fr 15fr 26fr;
+  gap: var(--spacing-4);
+  align-items: center;
+  padding: var(--spacing-4);
+}
+
+.tableHead {
+  background: var(--color-primary-soft);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.list {
+  margin: 0 0 var(--spacing-4);
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row {
+  padding-block: var(--spacing-5);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.score {
+  color: var(--color-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.statusCell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-5);
+}
+
+.action {
+  color: var(--color-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.action:hover {
+  text-decoration: underline;
+}
+
+.toFinalists {
+  align-self: flex-end;
+}
+
+.alignStart {
+  align-self: flex-start;
+}
+
+.mobileCard {
+  display: none;
+}
+
+.full {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .stats,
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .listCard {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .listTitle,
+  .tableHead,
+  .row {
+    display: none;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+
+  .item {
+    border-bottom: 0;
+  }
+
+  .mobileCard {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    padding: var(--spacing-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-large, 12px);
+    background: var(--color-bg-secondary);
+    box-shadow: 0 4px 12px rgb(0 26 56 / 0.03);
+  }
+
+  .mobileCard h3 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-h3);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.4;
+  }
+
+  .mobileCard p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+    line-height: 1.4;
+  }
+
+  .toFinalists {
+    align-self: stretch;
+  }
+}

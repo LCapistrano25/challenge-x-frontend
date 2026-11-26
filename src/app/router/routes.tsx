@@ -1,6 +1,11 @@
 import type { ComponentType } from 'react';
 import type { RouteObject } from 'react-router-dom';
-import { CompleteProfilePage, ForgotPasswordPage, LoginPage } from '@/features/auth';
+import {
+  CompleteProfilePage,
+  ForgotPasswordPage,
+  LoginPage,
+  MicrosoftCallbackPage,
+} from '@/features/auth';
 import { RequireProfilePending } from '../guards/RequireProfilePending';
 import { RequireRole } from '../guards/RequireRole';
 import { AppLayout } from '../layouts/AppLayout';
@@ -34,6 +39,7 @@ const authRoutes: RouteObject = {
   children: [
     { path: '/login', element: <LoginPage /> },
     { path: '/admin/login', element: <LoginPage adminOnly /> },
+    { path: '/auth/microsoft/callback', element: <MicrosoftCallbackPage /> },
     { path: '/recuperar-senha', element: <ForgotPasswordPage /> },
   ],
 };
@@ -102,6 +108,7 @@ const roleRoutes: RouteObject[] = [
         element: <AppLayout area={ROLE_AREA.TEACHER} nav={NAV_ITEMS.TEACHER} />,
         children: [
           { path: '/professor', element: <TeacherHomePage /> },
+          { path: '/professor/lideranca', lazy: lazyPage(teams, 'LeadershipApprovalPage') },
           { path: '/professor/integrantes', lazy: lazyPage(teams, 'MemberObservationsPage') },
           {
             path: '/professor/entregas/:deliveryId',
@@ -119,16 +126,20 @@ const roleRoutes: RouteObject[] = [
           <AppLayout area={ROLE_AREA.EXTERNAL_EVALUATOR} nav={NAV_ITEMS.EXTERNAL_EVALUATOR} />
         ),
         children: [
-          { path: '/avaliador', lazy: lazyPage(projects, 'FinalistProjectsPage') },
+          { path: '/avaliador', lazy: lazyPage(evaluations, 'FinalistProjectsPage') },
           {
             path: '/avaliador/projetos/:projectId',
-            lazy: lazyPage(projects, 'FinalistProjectDetailPage'),
+            lazy: lazyPage(evaluations, 'FinalistProjectDetailPage'),
           },
           {
             path: '/avaliador/projetos/:projectId/avaliar',
             lazy: lazyPage(evaluations, 'EvaluationFormPage'),
           },
           { path: '/avaliador/avaliacoes', lazy: lazyPage(evaluations, 'MyEvaluationsPage') },
+          {
+            path: '/avaliador/avaliacoes/:projectId',
+            lazy: lazyPage(evaluations, 'EvaluationViewPage'),
+          },
         ],
       },
     ],

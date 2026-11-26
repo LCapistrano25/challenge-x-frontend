@@ -1,0 +1,431 @@
+.page {
+  display: grid;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-5) var(--spacing-8);
+}
+
+.back {
+  justify-self: start;
+  gap: 4px;
+  padding-left: 0;
+  color: var(--color-text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.back:hover {
+  color: var(--color-primary);
+}
+
+/* --- Cabeçalho --- */
+.hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  padding-bottom: var(--spacing-1);
+}
+
+.heroMain {
+  display: grid;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.kicker {
+  justify-self: start;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 30px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.metaLine {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.lead {
+  margin: var(--spacing-1) 0 0;
+  max-width: 60ch;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+}
+
+/* --- Colunas --- */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--spacing-5);
+}
+
+.mainCol,
+.asideCol {
+  display: grid;
+  gap: var(--spacing-5);
+  min-width: 0;
+}
+
+/* --- Cartões (estilo do design system: superfície elevada, cantos arredondados) --- */
+.card,
+.canvasCard {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-top: 3px solid var(--color-primary);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+}
+
+.subTitle {
+  margin: var(--spacing-2) 0 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.paragraph {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* --- Integrantes --- */
+.members {
+  display: grid;
+  gap: var(--spacing-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  padding: var(--spacing-2);
+  border-radius: var(--radius-lg);
+  transition: background var(--transition-fast);
+}
+
+.member:hover {
+  background: var(--color-bg-subtle);
+}
+
+.memberInfo {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.memberName {
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.memberMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* --- Informações acadêmicas --- */
+.infoList {
+  display: grid;
+  gap: var(--spacing-4);
+  margin: 0;
+}
+
+.infoList > div {
+  display: grid;
+  gap: var(--spacing-1);
+}
+
+.infoLabel {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.infoValue {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+}
+
+.infoOds {
+  display: grid;
+  gap: var(--spacing-2);
+  margin: 0;
+  justify-items: start;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-2);
+  margin: 0;
+}
+
+/* --- Selos (tokens do design system) --- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.tagInfo {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.tagAttention {
+  background: var(--color-attention-soft);
+  color: var(--color-attention-text);
+  flex: 0 0 auto;
+}
+
+/* --- Arquivos entregues --- */
+.deliverables {
+  display: grid;
+  gap: var(--spacing-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.deliverable {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+.deliverable:hover {
+  background: var(--color-bg-subtle);
+}
+
+.deliverableLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  min-width: 0;
+}
+
+.deliverableText {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.deliverableName {
+  overflow: hidden;
+  color: var(--color-primary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deliverableMeta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.deliverableIcon {
+  color: var(--color-text-secondary);
+  flex: 0 0 auto;
+}
+
+.sentAt {
+  margin: var(--spacing-1) 0 0;
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* --- Business Model Canvas (cores das ODS do design system) --- */
+.canvasHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.canvasTitle {
+  margin: 0;
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.canvasSubtitle {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.canvasGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.canvasBlock {
+  display: grid;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  border: 1px solid
+    color-mix(in srgb, var(--block, var(--color-primary)) 24%, var(--color-bg-secondary));
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--block, var(--color-primary)) 7%, var(--color-bg-secondary));
+}
+
+.canvasBlockHead {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-2);
+  margin: 0;
+}
+
+.canvasNum {
+  color: color-mix(in srgb, var(--block, var(--color-primary)) 72%, var(--color-text-primary));
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-bold);
+}
+
+.canvasBlockTitle {
+  color: color-mix(in srgb, var(--block, var(--color-primary)) 72%, var(--color-text-primary));
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+}
+
+.canvasText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.6;
+}
+
+.canvas1 {
+  --block: var(--color-ods6);
+}
+.canvas2 {
+  --block: var(--color-ods10);
+}
+.canvas3 {
+  --block: var(--color-ods13);
+}
+.canvas4 {
+  --block: var(--color-ods7);
+}
+.canvas5 {
+  --block: var(--color-ods16);
+}
+.canvas6 {
+  --block: var(--color-ods9);
+}
+
+/* --- Aviso e rodapé --- */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-info-soft);
+}
+
+.noticeIcon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-primary);
+}
+
+.noticeTitle {
+  margin: 0;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.noticeText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.footer {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+@media (max-width: 64rem) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+  .canvasGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: 0 var(--spacing-4) var(--spacing-6);
+  }
+  .card,
+  .canvasCard {
+    padding: var(--spacing-5);
+  }
+  .hero {
+    flex-direction: column;
+  }
+  .title {
+    font-size: 24px;
+  }
+  .canvasGrid {
+    grid-template-columns: 1fr;
+  }
+}

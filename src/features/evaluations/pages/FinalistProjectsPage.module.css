@@ -1,0 +1,150 @@
+.filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+}
+
+.counters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+.listCard {
+  gap: 0;
+}
+
+.listCard .listTitle {
+  margin-bottom: var(--spacing-4);
+}
+
+/* Colunas do Figma: 280 / 340 / 180 / 150 / restante, com 16px entre elas. */
+.tableHead,
+.row {
+  display: grid;
+  grid-template-columns: 28fr 34fr 18fr 15fr 15fr;
+  gap: var(--spacing-4);
+  padding: var(--spacing-4);
+}
+
+.tableHead {
+  align-items: start;
+  background: var(--color-primary-soft);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+}
+
+.list {
+  margin: 0 0 var(--spacing-4);
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.row {
+  align-items: center;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+  min-width: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.action {
+  color: var(--color-primary);
+  font-size: var(--font-size-small);
+  line-height: 1.4;
+  text-decoration: none;
+}
+
+.action:hover {
+  text-decoration: underline;
+}
+
+.mobileCard {
+  display: none;
+}
+
+.retry {
+  align-self: flex-start;
+}
+
+.full {
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .tableHead,
+  .row {
+    grid-template-columns: 26fr 30fr 19fr 15fr 17fr;
+    gap: var(--spacing-3);
+    padding: var(--spacing-3);
+  }
+}
+
+/* Celular: filtros empilhados e um cartão por projeto. */
+@media (max-width: 720px) {
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .listCard {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .listTitle,
+  .tableHead,
+  .row {
+    display: none;
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+  }
+
+  .item {
+    border-bottom: 0;
+  }
+
+  .mobileCard {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+    padding: var(--spacing-5);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-large, 12px);
+    background: var(--color-bg-secondary);
+    box-shadow: 0 4px 12px rgb(0 26 56 / 0.03);
+  }
+
+  .mobileCard h3 {
+    margin: 0;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-h3);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.4;
+  }
+
+  .mobileCard p {
+    margin: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+    line-height: 1.4;
+  }
+}

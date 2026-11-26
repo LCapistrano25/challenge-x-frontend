@@ -1,4 +1,10 @@
-import { fetchCurrentUser, login, simulateMicrosoftLogin } from './auth.api';
+import {
+  fetchCurrentUser,
+  getLoginErrorMessage,
+  login,
+  loginWithMicrosoftCode,
+  simulateMicrosoftLogin,
+} from './auth.api';
 
 describe('auth.api (API simulada)', () => {
   it('faz login e devolve o usuário com perfil', async () => {
@@ -24,6 +30,26 @@ describe('auth.api (API simulada)', () => {
 
   it('não simula Microsoft para avaliador externo', async () => {
     await expect(simulateMicrosoftLogin('avaliador@exemplo.com')).rejects.toThrow();
+  });
+
+  it('troca o code OAuth da Microsoft pela sessão real e mapeia 401/403', async () => {
+    const user = await loginWithMicrosoftCode('new-student');
+
+    expect(user).toMatchObject({
+      email: 'novo.aluno@exemplo.com',
+      role: 'STUDENT',
+      profileComplete: false,
+    });
+
+    const invalid = await loginWithMicrosoftCode('invalid').catch((err: unknown) => err);
+    expect(getLoginErrorMessage(invalid, { microsoft: true })).toContain(
+      'código inválido, expirado',
+    );
+
+    const domainErr = await loginWithMicrosoftCode('domain-error').catch((err: unknown) => err);
+    expect(getLoginErrorMessage(domainErr, { microsoft: true })).toContain(
+      'domínio de e-mail institucional',
+    );
   });
 
   it('retorna null quando não há sessão', async () => {

@@ -11,9 +11,11 @@ import {
   formatDateBR,
   getStageView,
   stagePosition,
+  type CanvasContent,
   type Project,
   type StageDeliverable,
   type StageView,
+  type SwotContent,
 } from '@/features/projects';
 import {
   describeMembersBadge,
@@ -34,11 +36,17 @@ import {
 import { FileUploadField } from '../components/FileUploadField';
 import { useDeliveryContext, useStageParam, useSubmitDelivery } from '../hooks/useDelivery';
 import {
+  CANVAS_BLOCKS,
+  CANVAS_SWOT_TEXT_MAX,
   EMPTY_DELIVERY,
+  SWOT_QUADRANT_MAX_ITEMS,
+  SWOT_QUADRANTS,
   describeDeliveryError,
+  emptyCanvas,
+  emptySwot,
   hasDeliveryContent,
   isDeadlineClosedError,
-  toSubmissionFormData,
+  toSubmissionBody,
   validateDelivery,
   validateFile,
 } from '../lib/submission';
@@ -195,6 +203,61 @@ function SubmitDeliveryContent({
     if (errors[fieldId]) setErrors((current) => ({ ...current, [fieldId]: undefined }));
   }
 
+  function setCanvasBlock(fieldId: number, block: keyof CanvasContent, text: string) {
+    setValues((current) => ({
+      ...current,
+      canvas: {
+        ...current.canvas,
+        [fieldId]: { ...(current.canvas?.[fieldId] ?? emptyCanvas()), [block]: text },
+      },
+    }));
+    if (errors[fieldId]) setErrors((current) => ({ ...current, [fieldId]: undefined }));
+  }
+
+  function setSwotEntry(fieldId: number, quadrant: keyof SwotContent, index: number, text: string) {
+    setValues((current) => {
+      const currentSwot = current.swot?.[fieldId] ?? emptySwot();
+      const nextEntries = [...currentSwot[quadrant]];
+      nextEntries[index] = text;
+      return {
+        ...current,
+        swot: { ...current.swot, [fieldId]: { ...currentSwot, [quadrant]: nextEntries } },
+      };
+    });
+    if (errors[fieldId]) setErrors((current) => ({ ...current, [fieldId]: undefined }));
+  }
+
+  function addSwotEntry(fieldId: number, quadrant: keyof SwotContent) {
+    setValues((current) => {
+      const currentSwot = current.swot?.[fieldId] ?? emptySwot();
+      if (currentSwot[quadrant].length >= SWOT_QUADRANT_MAX_ITEMS) return current;
+      return {
+        ...current,
+        swot: {
+          ...current.swot,
+          [fieldId]: { ...currentSwot, [quadrant]: [...currentSwot[quadrant], ''] },
+        },
+      };
+    });
+  }
+
+  function removeSwotEntry(fieldId: number, quadrant: keyof SwotContent, index: number) {
+    setValues((current) => {
+      const currentSwot = current.swot?.[fieldId] ?? emptySwot();
+      if (currentSwot[quadrant].length <= 1) return current;
+      return {
+        ...current,
+        swot: {
+          ...current.swot,
+          [fieldId]: {
+            ...currentSwot,
+            [quadrant]: currentSwot[quadrant].filter((_, i) => i !== index),
+          },
+        },
+      };
+    });
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (blocked || submit.isPending) return;
@@ -210,7 +273,7 @@ function SubmitDeliveryContent({
       if (first) document.getElementById(`${formId}-field-${first.id}`)?.focus();
       return;
     }
-    submit.mutate(toSubmissionFormData(item.fields, values), {
+    submit.mutate(toSubmissionBody(item.fields, values), {
       onSuccess: (version) => {
         notify.success('Entrega enviada. Ela fica aguardando avaliação da orientação.');
         navigate(deliveryConfirmationPath(item.stage.id, version.id));
@@ -278,6 +341,100 @@ function SubmitDeliveryContent({
                         disabled={submit.isPending}
                         onChange={(file) => setFile(field.id, file)}
                       />
+                    ) : field.type === 'CANVAS' ? (
+                      <fieldset
+                        key={field.id}
+                        className={styles.fieldGroup}
+                        disabled={submit.isPending}
+                      >
+                        <legend className={styles.label}>
+                          {field.label}
+                          {field.required ? '' : ' (opcional)'}
+                        </legend>
+                        {CANVAS_BLOCKS.map((block) => (
+                          <div key={block.key} className={styles.field}>
+                            <label
+                              htmlFor={`${formId}-field-${field.id}-${block.key}`}
+                              className={styles.label}
+                            >
+                              {block.label}
+                            </label>
+                            <textarea
+                              id={`${formId}-field-${field.id}-${block.key}`}
+                              className={styles.textarea}
+                              rows={2}
+                              maxLength={CANVAS_SWOT_TEXT_MAX}
+                              value={(values.canvas?.[field.id] ?? emptyCanvas())[block.key]}
+                              onChange={(event) =>
+                                setCanvasBlock(field.id, block.key, event.target.value)
+                              }
+                            />
+                          </div>
+                        ))}
+                        {errors[field.id] && (
+                          <p role="alert" className={styles.error}>
+                            {errors[field.id]}
+                          </p>
+                        )}
+                      </fieldset>
+                    ) : field.type === 'SWOT' ? (
+                      <fieldset
+                        key={field.id}
+                        className={styles.fieldGroup}
+                        disabled={submit.isPending}
+                      >
+                        <legend className={styles.label}>
+                          {field.label}
+                          {field.required ? '' : ' (opcional)'}
+                        </legend>
+                        {SWOT_QUADRANTS.map((quadrant) => {
+                          const entries = (values.swot?.[field.id] ?? emptySwot())[quadrant.key];
+                          return (
+                            <div key={quadrant.key} className={styles.field}>
+                              <span className={styles.label}>{quadrant.label}</span>
+                              {entries.map((entry, idx) => (
+                                <div key={`${quadrant.key}-${idx}`} className={styles.field}>
+                                  <textarea
+                                    aria-label={`${quadrant.label} — item ${idx + 1}`}
+                                    className={styles.textarea}
+                                    rows={2}
+                                    maxLength={CANVAS_SWOT_TEXT_MAX}
+                                    value={entry}
+                                    onChange={(event) =>
+                                      setSwotEntry(field.id, quadrant.key, idx, event.target.value)
+                                    }
+                                  />
+                                  {entries.length > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="small"
+                                      onClick={() => removeSwotEntry(field.id, quadrant.key, idx)}
+                                    >
+                                      Remover
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                              {entries.length < SWOT_QUADRANT_MAX_ITEMS && (
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  size="small"
+                                  onClick={() => addSwotEntry(field.id, quadrant.key)}
+                                >
+                                  Adicionar item em {quadrant.label}
+                                </Button>
+                              )}
+                            </div>
+                          );
+                        })}
+                        {errors[field.id] && (
+                          <p role="alert" className={styles.error}>
+                            {errors[field.id]}
+                          </p>
+                        )}
+                      </fieldset>
                     ) : (
                       <div key={field.id} className={styles.field}>
                         <label htmlFor={`${formId}-field-${field.id}`} className={styles.label}>

@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http as mswHttp, HttpResponse } from 'msw';
 import { useState, type ReactNode } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { server } from '@/mocks/server';
+import { buildStudentDashboard } from '@/mocks/fixtures/academic-home';
 import { http } from '@/shared/lib/http';
 import {
   PageHeaderContentContext,
@@ -31,7 +34,7 @@ function HeaderProbe({ children }: { children: ReactNode }) {
 /** Entra na sessão simulada com o login de cada cenário */
 async function signIn(email: string, name: string) {
   auth.user = { id: 'x', name, role: 'STUDENT' };
-  await http.post('/auth/login', { email, password: '123456' });
+  await http.post('/api/auth/sessions/password', { email, password: '123456' });
 }
 
 function renderPage() {
@@ -219,5 +222,69 @@ describe('MyTeamPage — sem líder', () => {
 
     expect(await screen.findByRole('button', { name: 'Solicitação enviada' })).toBeDisabled();
     expect(screen.getByText(/Aguardando a decisão de um professor/)).toBeInTheDocument();
+  });
+});
+
+describe('MyTeamPage — mudancas-equipes', () => {
+  it('exige confirmacao extra quando saida deixa equipe abaixo do minimo', async () => {
+    const user = userEvent.setup({ delay: null });
+    await signIn('participante@exemplo.com', 'João Silva');
+    const seenConfirm: boolean[] = [];
+
+    server.use(
+      mswHttp.post('*/api/teams/:teamId/leave', async ({ request }) => {
+        const body = (await request.json().catch(() => ({}))) as { confirm?: boolean };
+        seenConfirm.push(Boolean(body.confirm));
+        if (!body.confirm) {
+          return HttpResponse.json(
+            {
+              error: {
+                code: 'leave_below_minimum',
+                message: 'Sua saída deixa a equipe com 2 de 3 integrantes. Confirme para sair.',
+                details: {},
+              },
+            },
+            { status: 409 },
+          );
+        }
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    renderPage();
+    await user.click(await screen.findByRole('button', { name: 'Sair da equipe' }));
+    const first = within(await screen.findByRole('dialog'));
+    await user.click(first.getByRole('button', { name: 'Sair da equipe' }));
+
+    const second = within(await screen.findByRole('dialog'));
+    expect(second.getByText('Equipe abaixo do mínimo')).toBeInTheDocument();
+    expect(second.getByText(/2 de 3 integrantes/)).toBeInTheDocument();
+    await user.click(second.getByRole('button', { name: 'Confirmar saída' }));
+
+    expect(await screen.findByText('Encontre sua equipe')).toBeInTheDocument();
+    expect(seenConfirm).toEqual([false, true]);
+  });
+
+  it('exibe prazo extra, mantem convites liberados e bloqueia saida quando formation_extended_until esta no futuro', async () => {
+    auth.user = { id: '1', name: 'Ana Maria', role: 'STUDENT' };
+    const dashboard = buildStudentDashboard();
+    const closedStages = dashboard.stages.map((item, index) =>
+      index === 0 ? { ...item, stage: { ...item.stage, phase_status: 'CLOSED' as const } } : item,
+    );
+    const future = new Date(Date.now() + 36 * 60 * 60 * 1000).toISOString();
+    const extendedTeam = { ...dashboard.team!, formation_extended_until: future };
+
+    server.use(
+      mswHttp.get('*/api/me/dashboard', () =>
+        HttpResponse.json({ ...dashboard, team: extendedTeam, stages: closedStages }),
+      ),
+      mswHttp.get('*/api/teams/:teamId', () => HttpResponse.json(extendedTeam)),
+    );
+
+    renderPage();
+
+    expect((await screen.findAllByText(/Prazo extra até/)).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Enviar convite' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Sair da equipe' })).toBeDisabled();
   });
 });

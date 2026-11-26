@@ -60,3 +60,98 @@ Ainda não há tela no Figma; o layout segue os cartões de "Projeto da equipe".
 Regras aplicadas no front (RF32): a nota só aparece quando `status = FINALIZED`; `PENDING` e `PARTIAL` aparecem como
 "Pendente" e sem valor (P-33); `deliverable_status = NOT_DELIVERED` mostra o aviso de nota zero. O resumo soma as
 notas definitivas sobre o total de pontos das etapas pontuadas (a fórmula da nota final ainda está em aberto, P-30).
+
+## Avaliador externo — Projetos finalistas e detalhe (task #17 [FRONTEND])
+
+Telas: `/avaliador` (`FinalistProjectsPage`) e `/avaliador/projetos/:projectId`
+(`FinalistProjectDetailPage`). O avaliador só vê os projetos atribuídos a ele: o filtro é do
+back-end (abrangência do `edition_evaluator`, P-32).
+
+| Tela                                  | Chamada                                     | Situação no openapi       |
+| ------------------------------------- | ------------------------------------------- | ------------------------- |
+| Lista, contadores e filtros           | `GET /api/evaluator/finalists` (RF42)       | proposta (P-29, P-32)     |
+| Detalhe: sobre, integrantes, arquivos | `GET /api/evaluator/finalists/{project_id}` | **proposta — não existe** |
+| Edição no título ("EDIÇÃO 2026.2")    | `GET /api/public/editions/current`          | confirmada                |
+
+- A tela pede `page_size=100` (máximo da API) e faz busca, filtro de curso e de status na página:
+  a banca é pequena e assim os contadores (atribuídos, pendentes, enviadas) refletem a banca toda.
+- "Pendentes" = `PENDING` + `IN_PROGRESS`. Ordem: em preenchimento, pendentes (pelo prazo) e enviadas.
+- Ação por status: `PENDING` → "Ver projeto", `IN_PROGRESS` → "Continuar" (formulário),
+  `FINALIZED` → "Ver avaliação". Datas sempre no horário de Brasília.
+- `409 final_form_not_published` mostra o aviso de formulário ainda não publicado.
+
+### Propostas para o back-end (pendentes de aprovação)
+
+1. **Campos extras em `FinalistRow`** (todos opcionais/anuláveis): `evaluation_deadline` (prazo da
+   banca, coluna "Prazo / nota"), `my_total_score` e `max_total_score` (nota "86 / 100" quando
+   `FINALIZED`) e `finalized_at` (data do envio, usada em "Minhas avaliações").
+2. **`GET /api/evaluator/finalists/{project_id}`** → `FinalistProjectDetail`: o `FinalistRow` mais
+   `code`, `description`, `objective`, `advisor`, `technologies[]`,
+   `team_members[{ name, course, role, responsibility }]`,
+   `materials[{ id, name, kind: FILE|LINK, url, format, size_bytes }]` e `submitted_at`. O
+   `PublicProject` atual só tem título e resumo. As URLs dos arquivos seguem a P-43 (assinadas e
+   com validade), e os links abrem em nova aba.
+
+Mocks: `avaliador@exemplo.com` (6 projetos do Figma) e `avaliador.sem-banca@exemplo.com`
+(estado "Sem projetos atribuídos"), senha `123456`.
+
+## Avaliador externo — Formulário, revisão e confirmação de envio (task #18 [FRONTEND])
+
+Tela: `/avaliador/projetos/:projectId/avaliar` (`EvaluationFormPage`), em três passos na mesma
+rota: preencher → revisar e confirmar → confirmação com protocolo.
+
+| Passo                        | Chamada                                                      | Situação no openapi |
+| ---------------------------- | ------------------------------------------------------------ | ------------------- |
+| Formulário e avaliação salva | `GET /api/evaluator/finalists/{project_id}/final-evaluation` | confirmada (RF43)   |
+| Ao abrir a revisão           | `PUT .../final-evaluation` com `status: IN_PROGRESS`         | proposta (P-30)     |
+| Confirmar e enviar           | `PUT .../final-evaluation` com `status: FINALIZED`           | proposta (P-30)     |
+| Equipe e arquivos entregues  | `GET /api/evaluator/finalists/{project_id}` (task #17)       | proposta            |
+
+### Como o formulário vira o contrato
+
+- Cada critério é uma pergunta `SCORE` do formulário publicado: nota em `value`, **justificativa**
+  (obrigatória na tela) em `answer_text` e comentário opcional em `comment` (proposta abaixo).
+- Perguntas `TEXT`, se existirem, aparecem como resposta obrigatória (`answer_text`).
+- **Parecer final** (mínimo de 50 caracteres) vai em `comment` da avaliação.
+- **Modelo de nota (0–10 ou 0–20):** a tela não fixa a escala. Limites, referência ("0 = não
+  atende · 10 = parcialmente · 20 = plenamente") e o total máximo vêm do `max_score` de cada
+  pergunta. A nota aceita até duas casas decimais, como o decimal da API; se a regra final for
+  "só inteiros", basta trocar `parseScore` em `lib/final-evaluation.ts`.
+
+### Regras da tela
+
+- "Revisar avaliação" valida tudo; com erro, mostra "Revise N campos…", marca os campos, troca o
+  resumo por "Total indisponível" e fica bloqueado até a correção. Nada do que foi digitado é perdido.
+- O envio exige o checkbox de confirmação; o botão fica bloqueado enquanto envia (sem duplo envio).
+- Falha de conexão: a revisão continua com os dados e o botão vira "Tentar enviar novamente".
+  `409 final_evaluation_already_finalized` avisa que a avaliação já foi enviada.
+- Avaliação já `FINALIZED` não abre o formulário: vai direto para a consulta (somente leitura).
+
+### Propostas para o back-end (pendentes de aprovação)
+
+1. `FinalQuestion.description` — descrição do critério exibida no cartão.
+2. `FinalAnswer.comment` / `FinalAnswerWrite.comment` — comentário opcional à equipe por critério.
+3. `FinalEvaluation.protocol` — protocolo gerado no envio definitivo (tela de sucesso e consulta).
+   Sem ele, a tela mostra o `id` da avaliação.
+
+Mock: o primeiro envio definitivo do "Mapa de Acessibilidade" falha de propósito, para conferir o
+estado "Revisão · Erro de envio".
+
+## Avaliador externo — Minhas avaliações e Ver avaliação (task #19 [FRONTEND])
+
+Telas: `/avaliador/avaliacoes` (`MyEvaluationsPage`) e `/avaliador/avaliacoes/:projectId`
+(`EvaluationViewPage`), somente leitura.
+
+| Tela                                   | Chamada                                                      | Situação no openapi |
+| -------------------------------------- | ------------------------------------------------------------ | ------------------- |
+| Histórico, contadores e filtros        | `GET /api/evaluator/finalists` (só `FINALIZED`)              | proposta (P-29)     |
+| Notas, comentários, parecer, protocolo | `GET /api/evaluator/finalists/{project_id}/final-evaluation` | confirmada (RF43)   |
+| Equipe do projeto                      | `GET /api/evaluator/finalists/{project_id}` (task #17)       | proposta            |
+
+- O histórico usa a mesma listagem de finalistas: os contadores de enviadas e pendentes são sempre
+  os mesmos da tela "Projetos finalistas". Envio e nota vêm de `finalized_at` e `my_total_score`
+  (propostas da task #17). Não é preciso um endpoint novo.
+- Edição: o avaliador só acessa a edição vigente (RF41); o filtro lista as edições presentes no
+  histórico. Etapa: o avaliador externo só avalia a etapa final.
+- A consulta não tem nenhum campo editável. Avaliação ainda não enviada não é exibida: a tela
+  orienta a concluir o envio no formulário.

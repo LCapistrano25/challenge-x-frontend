@@ -1,8 +1,6 @@
 export { ProjectDetailPage } from './pages/ProjectDetailPage';
 export { ProjectRegistrationPage } from './pages/ProjectRegistrationPage';
 export { TeamProjectPage } from './pages/TeamProjectPage';
-export { FinalistProjectsPage } from './pages/FinalistProjectsPage';
-export { FinalistProjectDetailPage } from './pages/FinalistProjectDetailPage';
 export { ProjectSummaryCard } from './components/ProjectSummaryCard';
 export { StageStatusTag } from './components/StageStatusTag';
 export { TeamResponsibleCard } from './components/TeamResponsibleCard';
@@ -31,6 +29,7 @@ export {
   submitDeliveryPath,
 } from './lib/team-project';
 export type {
+  CanvasContent,
   CategoryRef,
   DeliverableField,
   DeliverableFieldType,
@@ -40,11 +39,15 @@ export type {
   DeliverableVersion,
   ReceiptSummary,
   StageDeliverable,
+  SwotContent,
   ChallengeSummary,
   EligibleChallenge,
   Project,
   ProjectCategory,
+  ProjectCategoryInput,
+  ProjectChallengeInput,
   ProjectDetails,
+  ProjectDetailsInput,
   ProjectDraft,
   ProjectOptions,
   ProjectStatus,

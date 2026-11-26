@@ -9,6 +9,7 @@ import {
 } from '@/features/projects';
 import { studentDashboardKey, useStudentDashboard } from '@/features/teams';
 import { submitDeliverableVersion } from '../api/deliveries.api';
+import type { DeliverableSubmissionJson } from '../types';
 
 /** Lê um id numérico da URL (?etapa=7, ?versao=77). */
 export function useIdParam(name: string): number | null {
@@ -66,7 +67,8 @@ export function useDeliveryContext(stageId: number | null) {
 export function useSubmitDelivery(projectId: number, stageId: number) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (body: FormData) => submitDeliverableVersion(projectId, stageId, body),
+    mutationFn: (body: FormData | DeliverableSubmissionJson) =>
+      submitDeliverableVersion(projectId, stageId, body),
     onSuccess: (version: DeliverableVersion) => {
       queryClient.setQueryData<StageDeliverable[]>(projectDeliverablesKey(projectId), (current) =>
         current?.map((item) =>

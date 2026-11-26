@@ -5,6 +5,7 @@ import {
   firstInvalidField,
   fromProjectDraft,
   hasDraftContent,
+  isProjectIncomplete,
   toProjectDraft,
   toProjectWrite,
   toSdgOptions,
@@ -12,7 +13,7 @@ import {
   validateProjectForm,
   type ProjectFormValues,
 } from './project-registration';
-import type { EligibleChallenge } from '../types';
+import type { EligibleChallenge, Project } from '../types';
 
 const filled: ProjectFormValues = {
   title: '  AgroConecta — da horta à comunidade ',
@@ -30,11 +31,10 @@ const filled: ProjectFormValues = {
   accepted: true,
 };
 
-const challenge = (id: number, sdg: number, title: string): EligibleChallenge => ({
+const challenge = (id: number, sdg: number, description: string): EligibleChallenge => ({
   id,
-  title,
-  description: '',
-  course: { id: 1, name: 'Engenharia de Software', slug: 'ES' },
+  description,
+  course: { id: 1, name: 'Engenharia de Software' },
   sdg: { id: sdg, number: sdg, title: `Título ${sdg}` },
 });
 
@@ -43,38 +43,37 @@ describe('validateProjectForm', () => {
     expect(validateProjectForm(filled)).toEqual({});
   });
 
-  it('exige os campos obrigatórios e a declaração', () => {
+  it('aceita objetivo vazio (opcional no contrato)', () => {
+    expect(validateProjectForm({ ...filled, objective: '' })).toEqual({});
+  });
+
+  it('exige desafio, título, resumo, categoria e a declaração', () => {
     const errors = validateProjectForm(EMPTY_PROJECT_FORM);
     expect(Object.keys(errors)).toEqual([
-      'title',
-      'categoryId',
       'challengeId',
+      'title',
       'summary',
-      'problem',
-      'objective',
-      'methodology',
-      'targetAudience',
-      'location',
+      'categoryId',
       'accepted',
     ]);
-    expect(firstInvalidField(errors)).toBe('title');
+    expect(firstInvalidField(errors)).toBe('challengeId');
   });
 
   it('não aceita espaços como preenchimento', () => {
-    expect(validateProjectForm({ ...filled, problem: '   ' }).problem).toBe(
-      'Descreva o problema identificado.',
+    expect(validateProjectForm({ ...filled, summary: '   ' }).summary).toBe(
+      'Escreva o resumo da proposta.',
     );
   });
 
-  it('limita o título a 100 e o resumo a 1.000 caracteres', () => {
+  it('limita o título a 200 e o resumo a 1.000 caracteres', () => {
     const errors = validateProjectForm({
       ...filled,
-      title: 'a'.repeat(101),
+      title: 'a'.repeat(201),
       summary: 'b'.repeat(1001),
     });
-    expect(errors.title).toBe('O título deve ter até 100 caracteres.');
+    expect(errors.title).toBe('O título deve ter até 200 caracteres.');
     expect(errors.summary).toBe('O resumo deve ter até 1.000 caracteres.');
-    expect(validateProjectForm({ ...filled, title: 'a'.repeat(100) }).title).toBeUndefined();
+    expect(validateProjectForm({ ...filled, title: 'a'.repeat(200) }).title).toBeUndefined();
   });
 
   it('limita problema, objetivo e metodologia a 1.000 caracteres', () => {
@@ -108,7 +107,7 @@ describe('validateProjectForm', () => {
   });
 });
 
-describe('rascunho', () => {
+describe('rascunho e incompletude', () => {
   it('não exige obrigatórios nem a declaração', () => {
     expect(validateProjectDraft({ ...EMPTY_PROJECT_FORM, title: 'Ideia' })).toEqual({});
   });
@@ -154,23 +153,38 @@ describe('rascunho', () => {
   it('formulário vazio sem rascunho', () => {
     expect(fromProjectDraft(null)).toEqual(EMPTY_PROJECT_FORM);
   });
+
+  it('identifica projeto incompleto quando falta desafio, título, resumo ou categoria', () => {
+    const base: Project = {
+      id: 1,
+      team_id: 12,
+      edition_id: 3,
+      challenge: challenge(17, 11, 'Descrição'),
+      category: { id: 1, name: 'Categoria' },
+      title: 'Título',
+      summary: 'Resumo',
+      objective: '',
+      status: 'IN_PROGRESS',
+      courses: [],
+      created_at: '2026-11-01T00:00:00Z',
+      updated_at: '2026-11-01T00:00:00Z',
+    };
+    expect(isProjectIncomplete(base)).toBe(false);
+    expect(isProjectIncomplete({ ...base, challenge: null })).toBe(true);
+    expect(isProjectIncomplete({ ...base, title: '' })).toBe(true);
+    expect(isProjectIncomplete({ ...base, summary: '' })).toBe(true);
+    expect(isProjectIncomplete({ ...base, category: null })).toBe(true);
+  });
 });
 
 describe('toProjectWrite', () => {
-  it('monta o corpo do PUT com ids numéricos, textos aparados e opcionais nulos', () => {
+  it('monta o corpo dos passos com ids numéricos e textos aparados', () => {
     expect(toProjectWrite(filled)).toEqual({
       challenge_id: 17,
       category_id: 1,
       title: 'AgroConecta — da horta à comunidade',
       summary: 'Plataforma digital para conectar agricultores familiares.',
       objective: 'Ampliar o acesso ao comércio local.',
-      problem: 'Poucos canais digitais.',
-      methodology: 'Entrevistas, protótipo e piloto.',
-      target_audience: 'Agricultores familiares',
-      location: 'Campus sede',
-      advisor_name: null,
-      advisor_email: null,
-      reference_url: null,
     });
   });
 });
@@ -183,7 +197,7 @@ describe('toSdgOptions', () => {
     ]);
   });
 
-  it('diferencia desafios com a mesma ODS pelo título', () => {
+  it('diferencia desafios com a mesma ODS pela descrição', () => {
     const labels = toSdgOptions([challenge(1, 11, 'Mobilidade'), challenge(2, 11, 'Comércio')]).map(
       (option) => option.label,
     );

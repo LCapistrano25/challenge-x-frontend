@@ -3,6 +3,7 @@ import {
   buildCurrentEdition,
   buildEditionNotifications,
   buildNotifications,
+  buildPublicProjectDetail,
   buildStudentDashboard,
   publicProjects,
 } from './fixtures/academic-home';
@@ -28,9 +29,15 @@ import {
 import {
   buildDeliveryEvaluation,
   buildTeacherDashboard,
+  buildTeacherProjectDetail,
   publishDeliveryEvaluation,
   resetTeacherMock,
 } from './fixtures/teacher-dashboard';
+import {
+  buildTeacherLeadershipRequests,
+  buildTeacherMemberNotes,
+  buildTeacherProjectRows,
+} from './fixtures/teacher-members';
 import { TAKEN_PROJECT_TITLES, buildProject, buildProjectOptions } from './fixtures/project';
 import {
   PROJECT_LEADER_MEMBER_ID,
@@ -46,17 +53,25 @@ import type {
   DeliverableVersion,
   Project,
   ProjectDraft,
-  ProjectWrite,
   StageDeliverable,
 } from '@/features/projects';
 import type { DeliverableSubmissionItem, PublishEvaluationInput } from '@/features/deliveries';
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import { buildProjectScores } from './fixtures/scores';
-import type { MemberNoteCreate } from '@/features/evaluations';
+import {
+  EVALUATOR_WITHOUT_PANEL,
+  buildFinalEvaluation,
+  buildFinalistProject,
+  buildFinalists,
+  resetEvaluatorMock,
+  saveFinalEvaluation,
+} from './fixtures/evaluator';
+import type { FinalEvaluationWrite, MemberNoteCreate } from '@/features/evaluations';
 import type { SupportTicket, SupportTicketCreate } from '@/features/support';
 import type {
   Invitation,
   JoinRequest,
+  LeadershipDecision,
   LeadershipRequest,
   Team,
   TeamCreate,
@@ -110,6 +125,13 @@ const initialUsers: Record<string, MockUser> = {
     id: '3',
     name: 'Eva Avaliadora',
     email: 'avaliador@exemplo.com',
+    role: 'EXTERNAL_EVALUATOR',
+  },
+  // Avaliador externo sem projetos atribuídos (task #17: estado "Sem projetos atribuídos").
+  [EVALUATOR_WITHOUT_PANEL]: {
+    id: '4',
+    name: 'Helena Martins',
+    email: EVALUATOR_WITHOUT_PANEL,
     role: 'EXTERNAL_EVALUATOR',
   },
   // Acadêmico sem equipe: abre "Encontre sua equipe" (task #10).
@@ -186,6 +208,9 @@ let receivedJoinRequests: JoinRequest[] = [];
 let leadershipRequests: LeadershipRequest[] = [];
 // Avaliação de membro (task #14): observações registradas pelo líder.
 let memberNotes: MockMemberNote[] = [];
+// Integrantes na visão do professor (Figma: 05 - Professor): fila de liderança e observações.
+let teacherLeadershipRequests = buildTeacherLeadershipRequests();
+let teacherMemberNotes = buildTeacherMemberNotes();
 // Central de dúvidas (task #14): chamados abertos na sessão.
 let supportTickets: SupportTicket[] = [];
 
@@ -199,6 +224,8 @@ function resetMyTeams() {
   receivedJoinRequests = buildMyTeamJoinRequests();
   leadershipRequests = [];
   memberNotes = buildMemberNotes();
+  teacherLeadershipRequests = buildTeacherLeadershipRequests();
+  teacherMemberNotes = buildTeacherMemberNotes();
   supportTickets = [];
 }
 resetMyTeams();
@@ -300,47 +327,33 @@ const normalize = (text: string) =>
     .toLowerCase();
 
 const courses = [
-  { id: 'c1', name: 'Engenharia de Software' },
-  { id: 'c2', name: 'Ciência da Computação' },
-  { id: 'c3', name: 'Sistemas de Informação' },
-  { id: 'c4', name: 'Design Digital' },
-  { id: 'c5', name: 'Administração' },
+  { id: 1, name: 'Engenharia de Software' },
+  { id: 2, name: 'Ciência da Computação' },
+  { id: 3, name: 'Sistemas de Informação' },
+  { id: 4, name: 'Design Digital' },
+  { id: 5, name: 'Administração' },
 ];
 
-type ProfileBody = {
-  role?: string;
-  courseId?: string;
-  registration?: string;
-  period?: number;
-  courseIds?: string[];
-  acceptedTerms?: boolean;
-};
+let emailDomains = [
+  { id: 1, name: 'alunos.universidade.edu.br', role: 'STUDENT' as const, active: true },
+  { id: 2, name: 'docentes.universidade.edu.br', role: 'TEACHER' as const, active: true },
+];
+
+function resetEmailDomains() {
+  emailDomains = [
+    { id: 1, name: 'alunos.universidade.edu.br', role: 'STUDENT', active: true },
+    { id: 2, name: 'docentes.universidade.edu.br', role: 'TEACHER', active: true },
+  ];
+}
 
 export const handlers = [
-  http.get('*/courses', () => HttpResponse.json(courses)),
-  // Lista de cursos para o cadastro.
-  http.get('*/api/courses', () => {
-    return HttpResponse.json([
-      {
-        id: 1,
-        name: 'Engenharia de Software',
-        slug: 'ES',
-      },
-      {
-        id: 2,
-        name: 'Sistemas de Informação',
-        slug: 'SI',
-      },
-      {
-        id: 3,
-        name: 'Direito',
-        slug: 'DIR',
-      },
-    ]);
-  }),
+  // Lista de cursos para o cadastro (GET /api/courses).
+  http.get('*/api/courses', () => HttpResponse.json(courses)),
+
+  http.get('*/api/auth/csrf', () => HttpResponse.json({ csrfToken: 'mock' })),
 
   // Login simulado.
-  http.post('*/auth/login', async ({ request }) => {
+  http.post('*/api/auth/sessions/password', async ({ request }) => {
     const { email, password } = (await request.json()) as {
       email: string;
       password: string;
@@ -378,45 +391,91 @@ export const handlers = [
     return HttpResponse.json(user);
   }),
 
+  http.post('*/api/auth/sessions/microsoft', async ({ request }) => {
+    const { code } = (await request.json()) as { code?: string };
+    if (!code || code === 'invalid') {
+      return apiError(401, 'invalid_credentials', 'Credenciais inválidas.');
+    }
+    if (code === 'domain-error') {
+      return apiError(403, 'domain_role_mismatch', 'Perfil não autorizado para este domínio.');
+    }
+    const emailByCode: Record<string, string> = {
+      'new-student': 'novo.aluno@exemplo.com',
+      'new-professor': 'novo.professor@exemplo.com',
+      teacher: 'professor@exemplo.com',
+    };
+    const email = emailByCode[code] ?? 'academico@exemplo.com';
+    const user = users[email];
+    if (!user) {
+      return apiError(401, 'invalid_credentials', 'Credenciais inválidas.');
+    }
+    session = user;
+    return HttpResponse.json({
+      user_id: Number(user.id) || 1,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profile_completed: user.profileComplete !== false,
+    });
+  }),
+
   // Consulta da sessão atual.
-  http.get('*/auth/me', () =>
+  http.get('*/api/auth/me', () =>
     session
       ? HttpResponse.json(session)
       : HttpResponse.json({ message: 'Não autenticado' }, { status: 401 }),
   ),
 
   // Encerramento da sessão.
-  http.post('*/auth/logout', () => {
+  http.post('*/api/auth/logout', () => {
     session = null;
     return new HttpResponse(null, { status: 204 });
   }),
 
-  http.post('*/auth/complete-profile', async ({ request }) => {
+  http.post('*/api/auth/students', async ({ request }) => {
     if (!session) {
-      return HttpResponse.json({ message: 'Não autenticado' }, { status: 401 });
+      return apiError(401, 'not_authenticated', 'Não autenticado.');
     }
     if (session.profileComplete !== false) {
-      return HttpResponse.json({ message: 'O cadastro já foi concluído.' }, { status: 409 });
+      return apiError(409, 'student_profile_exists', 'O cadastro já foi concluído.');
     }
-    const body = (await request.json()) as ProfileBody;
-    const validCourse = (id?: string) => courses.some((course) => course.id === id);
+    const body = (await request.json()) as {
+      course_id?: number;
+      registration_number?: string;
+      term?: number;
+    };
     const valid =
-      body.acceptedTerms === true &&
-      body.role === session.role &&
-      (session.role === 'STUDENT'
-        ? validCourse(body.courseId) &&
-          /^[A-Z0-9]{6,11}$/.test(body.registration ?? '') &&
-          Number.isInteger(body.period)
-        : Array.isArray(body.courseIds) &&
-          body.courseIds.length > 0 &&
-          body.courseIds.every(validCourse));
+      courses.some((course) => course.id === body.course_id) &&
+      /^[A-Z0-9]{6,11}$/.test(body.registration_number ?? '') &&
+      Number.isInteger(body.term);
     if (!valid) {
-      return HttpResponse.json({ message: 'Dados inválidos.' }, { status: 422 });
+      return apiError(400, 'validation_error', 'Dados inválidos.');
     }
     const updated = { ...session, profileComplete: true };
     users[updated.email] = updated;
     session = updated;
-    return HttpResponse.json(updated);
+    return HttpResponse.json({ student: { user_id: Number(updated.id) } }, { status: 201 });
+  }),
+
+  http.post('*/api/auth/teachers', async ({ request }) => {
+    if (!session) {
+      return apiError(401, 'not_authenticated', 'Não autenticado.');
+    }
+    if (session.profileComplete !== false) {
+      return apiError(409, 'teacher_profile_exists', 'O cadastro já foi concluído.');
+    }
+    const body = (await request.json()) as { course_ids?: number[] };
+    const valid =
+      Array.isArray(body.course_ids) &&
+      body.course_ids.length > 0 &&
+      body.course_ids.every((id) => courses.some((course) => course.id === id));
+    if (!valid) {
+      return apiError(400, 'validation_error', 'Dados inválidos.');
+    }
+    const updated = { ...session, profileComplete: true };
+    users[updated.email] = updated;
+    session = updated;
+    return HttpResponse.json({ teacher: { user_id: Number(updated.id) } }, { status: 201 });
   }),
 
   // Home do acadêmico (task #9) — formatos de docs/api/openapi.yaml.
@@ -452,6 +511,105 @@ export const handlers = [
       );
     }
     return HttpResponse.json(result.detail);
+  }),
+  // Integrantes do professor (Figma: 05 - Professor › Liderança). Solicitações dos cursos
+  // vinculados (RF40).
+  http.get('*/api/teacher/leadership-requests', ({ request }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    const items = teacherLeadershipRequests.filter((r) => !status || r.status === status);
+    return HttpResponse.json(paginate(items, url));
+  }),
+  // Decisão do professor (RF28/RF40): aprovar torna o solicitante líder; recusar mantém sem líder.
+  http.post('*/api/leadership-requests/:id/decide', async ({ params, request }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    const found = teacherLeadershipRequests.find((r) => r.id === Number(params.id));
+    if (!found) return apiError(404, 'not_found', 'Solicitação não encontrada.');
+    if (found.status !== 'PENDING') {
+      return apiError(409, 'leadership_request_not_pending', 'A solicitação não está pendente.');
+    }
+    const body = (await request.json()) as Partial<LeadershipDecision>;
+    if (
+      (body.status !== 'APPROVED' && body.status !== 'REJECTED') ||
+      !body.decision_justification?.trim()
+    ) {
+      return validationError({ decision_justification: ['Campo obrigatório.'] });
+    }
+    const decided: LeadershipRequest = {
+      ...found,
+      status: body.status,
+      teacher: { user_id: session.id, name: session.name },
+      decision_justification: body.decision_justification.trim(),
+      decided_at: new Date().toISOString(),
+    };
+    teacherLeadershipRequests = teacherLeadershipRequests.map((r) =>
+      r.id === decided.id ? decided : r,
+    );
+    return HttpResponse.json(decided);
+  }),
+  // Acompanhamento do professor (RF37). Aqui a tela usa só as equipes dos cursos vinculados.
+  http.get('*/api/teacher/projects', ({ request }) => {
+    if (session?.role !== 'TEACHER') {
+      return apiError(403, 'forbidden', 'Somente professores.');
+    }
+    return HttpResponse.json(paginate(buildTeacherProjectRows(), new URL(request.url)));
+  }),
+  // Avaliações registradas pela liderança (RF39): exclusivo de professor do curso e admin.
+  http.get('*/api/teams/:teamId/member-notes', ({ params }) => {
+    if (session?.role !== 'TEACHER' && session?.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Somente professores do curso e administradores.');
+    }
+    const notes = teacherMemberNotes[Number(params.teamId)];
+    if (!notes) return apiError(404, 'not_found', 'Equipe não encontrada.');
+    return HttpResponse.json(notes);
+  }),
+  // Avaliador externo (tasks #17 a #19): banca de projetos finalistas.
+  http.get('*/api/evaluator/finalists', ({ request }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const url = new URL(request.url);
+    const courseId = url.searchParams.get('course_id');
+    return HttpResponse.json(
+      paginate(buildFinalists(session.email, courseId ? Number(courseId) : undefined), url),
+    );
+  }),
+  http.get('*/api/evaluator/finalists/:projectId', ({ params }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const detail = buildFinalistProject(session.email, Number(params.projectId));
+    return detail
+      ? HttpResponse.json(detail)
+      : apiError(404, 'not_found', 'Projeto não encontrado na sua banca.');
+  }),
+  http.get('*/api/evaluator/finalists/:projectId/final-evaluation', ({ params }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const form = buildFinalEvaluation(session.email, Number(params.projectId));
+    return form
+      ? HttpResponse.json(form)
+      : apiError(404, 'not_found', 'Projeto não encontrado na sua banca.');
+  }),
+  http.put('*/api/evaluator/finalists/:projectId/final-evaluation', async ({ params, request }) => {
+    if (session?.role !== 'EXTERNAL_EVALUATOR') {
+      return apiError(403, 'forbidden', 'Somente avaliadores externos.');
+    }
+    const result = saveFinalEvaluation(
+      session.email,
+      Number(params.projectId),
+      (await request.json()) as FinalEvaluationWrite,
+    );
+    if (result.ok) return HttpResponse.json(result.evaluation);
+    // Simula a falha de conexão do Figma ("Revisão · Erro de envio").
+    if ('network' in result) return HttpResponse.error();
+    return apiError(result.status, result.code, result.message);
   }),
   http.get('*/api/me/dashboard', () => {
     const dashboard = buildStudentDashboard();
@@ -528,6 +686,13 @@ export const handlers = [
     }
     if (mockTeams.some((team) => normalize(team.name) === normalize(name))) {
       return apiError(409, 'team_name_taken', 'Já existe equipe com este nome na edição.');
+    }
+    if (!Array.isArray(body.invitations) || body.invitations.length === 0) {
+      return apiError(
+        400,
+        'team_invitations_required',
+        'Convide ao menos 1 aluno para criar a equipe.',
+      );
     }
     const now = new Date().toISOString();
     const id = nextId++;
@@ -748,7 +913,7 @@ export const handlers = [
     const invitation: Invitation = {
       id: nextId++,
       team: teamRef(found.team),
-      student: null,
+      student: { user_id: String(nextId), name: email ?? 'Estudante convidado' },
       invited_email: email ?? null,
       status: 'PENDING',
       created_at: new Date().toISOString(),
@@ -847,15 +1012,23 @@ export const handlers = [
     });
     return HttpResponse.json(team);
   }),
-  http.post('*/api/teams/:teamId/leave', ({ params }) => {
+  http.post('*/api/teams/:teamId/leave', async ({ params, request }) => {
     const found = viewerTeam(params.teamId);
     if ('error' in found) return found.error;
+    const body = (await request.json().catch(() => ({}))) as { confirm?: boolean };
     const others = found.team.members.filter((m) => m.id !== found.member.id);
     if (found.member.role === 'LEADER' && others.length > 0) {
       return apiError(
         409,
         'leader_must_transfer',
         'Transfira a liderança antes de sair da equipe.',
+      );
+    }
+    if (others.length > 0 && others.length < 3 && !body.confirm) {
+      return apiError(
+        409,
+        'leave_below_minimum',
+        `Sua saída deixa a equipe com ${others.length} de 3 integrantes. Confirme para sair.`,
       );
     }
     if (others.length === 0) {
@@ -922,7 +1095,7 @@ export const handlers = [
       ? HttpResponse.json(project)
       : apiError(404, 'not_found', 'A equipe ainda não cadastrou o projeto.');
   }),
-  http.put('*/api/teams/:teamId/project', async ({ params, request }) => {
+  http.put('*/api/teams/:teamId/project/challenge', async ({ params, request }) => {
     const found = viewerTeam(params.teamId, { leader: true });
     if ('error' in found) return found.error;
     const formation = buildStudentDashboard().stages.find(
@@ -931,30 +1104,103 @@ export const handlers = [
     if (!formation) {
       return apiError(409, 'formation_closed', 'O prazo de formação de equipes está encerrado.');
     }
-    const input = (await request.json()) as ProjectWrite;
+    const { challenge_id } = (await request.json()) as { challenge_id?: number };
     const options = buildProjectOptions();
+    const challenge = options.challenges.find((c) => c.id === challenge_id);
+    if (!challenge) {
+      return apiError(400, 'challenge_not_eligible', 'Desafio fora dos cursos da equipe.');
+    }
+    const existing = teamProjects.get(found.team.id);
+    const now = new Date().toISOString();
+    const project: Project = existing
+      ? {
+          ...existing,
+          challenge,
+          updated_at: now,
+          updated_by: { user_id: found.member.student.user_id, name: found.member.student.name },
+        }
+      : {
+          ...buildProject(
+            found.team,
+            {
+              challenge_id: challenge.id,
+              category_id: 0,
+              title: '',
+              summary: '',
+              objective: '',
+            },
+            nextId++,
+          ),
+          category: null,
+          updated_by: { user_id: found.member.student.user_id, name: found.member.student.name },
+        };
+    teamProjects.set(found.team.id, project);
+    return HttpResponse.json(project);
+  }),
+  http.put('*/api/teams/:teamId/project/details', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const formation = buildStudentDashboard().stages.find(
+      (item) => item.stage.type === 'FORMATION' && item.stage.phase_status === 'OPEN',
+    );
+    if (!formation) {
+      return apiError(409, 'formation_closed', 'O prazo de formação de equipes está encerrado.');
+    }
+    const existing = teamProjects.get(found.team.id);
+    if (!existing || !existing.challenge) {
+      return apiError(409, 'challenge_not_selected', 'Selecione um desafio antes dos dados.');
+    }
+    const input = (await request.json()) as {
+      title?: string;
+      summary?: string;
+      objective?: string;
+    };
     if (!input.title?.trim() || !input.summary?.trim()) {
       return apiError(400, 'validation_error', 'Título e resumo são obrigatórios.');
     }
-    if (!options.challenges.some((c) => c.id === input.challenge_id)) {
-      return apiError(400, 'challenge_not_eligible', 'Desafio fora dos cursos da equipe.');
-    }
-    if (!options.categories.some((c) => c.id === input.category_id)) {
-      return apiError(400, 'category_not_available', 'Categoria indisponível na edição.');
-    }
-    const title = normalize(input.title).replace(/\s+/g, ' ').trim();
-    if (TAKEN_PROJECT_TITLES.some((taken) => normalize(taken) === title)) {
+    const normalizedTitle = normalize(input.title).replace(/\s+/g, ' ').trim();
+    if (TAKEN_PROJECT_TITLES.some((taken) => normalize(taken) === normalizedTitle)) {
       return apiError(409, 'project_title_taken', 'Já existe projeto com título equivalente.');
     }
-    const existing = teamProjects.get(found.team.id);
-    const project = {
-      ...buildProject(found.team, input, existing?.id ?? nextId++),
-      ...(existing ? { created_at: existing.created_at } : {}),
+    const project: Project = {
+      ...existing,
+      title: input.title.trim(),
+      summary: input.summary.trim(),
+      objective: (input.objective ?? '').trim(),
+      updated_at: new Date().toISOString(),
       updated_by: { user_id: found.member.student.user_id, name: found.member.student.name },
     };
     teamProjects.set(found.team.id, project);
     projectDrafts.delete(found.team.id);
-    return HttpResponse.json(project, { status: existing ? 200 : 201 });
+    return HttpResponse.json(project);
+  }),
+  http.put('*/api/teams/:teamId/project/category', async ({ params, request }) => {
+    const found = viewerTeam(params.teamId, { leader: true });
+    if ('error' in found) return found.error;
+    const formation = buildStudentDashboard().stages.find(
+      (item) => item.stage.type === 'FORMATION' && item.stage.phase_status === 'OPEN',
+    );
+    if (!formation) {
+      return apiError(409, 'formation_closed', 'O prazo de formação de equipes está encerrado.');
+    }
+    const existing = teamProjects.get(found.team.id);
+    if (!existing) {
+      return apiError(409, 'project_not_found', 'Selecione o desafio antes da categoria.');
+    }
+    const { category_id } = (await request.json()) as { category_id?: number };
+    const options = buildProjectOptions();
+    const category = options.categories.find((c) => c.id === category_id);
+    if (!category) {
+      return apiError(400, 'category_not_available', 'Categoria indisponível na edição.');
+    }
+    const project: Project = {
+      ...existing,
+      category: { id: category.id, name: category.name },
+      updated_at: new Date().toISOString(),
+      updated_by: { user_id: found.member.student.user_id, name: found.member.student.name },
+    };
+    teamProjects.set(found.team.id, project);
+    return HttpResponse.json(project);
   }),
   // PROPOSTA (ainda não está no openapi): rascunho do cadastro.
   http.get('*/api/teams/:teamId/project/draft', ({ params }) => {
@@ -1012,16 +1258,28 @@ export const handlers = [
       return apiError(409, 'stage_deadline_closed', 'O prazo da etapa está encerrado.');
     }
 
-    const form = await request.formData();
     let entries: DeliverableSubmissionItem[];
-    try {
-      entries = JSON.parse(String(form.get('items') ?? '[]')) as DeliverableSubmissionItem[];
-    } catch {
-      return validationError({ items: ['JSON inválido.'] });
+    let files: File[] = [];
+    let notes: string;
+    const contentType = request.headers.get('content-type') ?? '';
+    if (contentType.includes('application/json')) {
+      const json = (await request.json()) as {
+        items?: DeliverableSubmissionItem[];
+        notes?: string;
+      };
+      entries = json.items ?? [];
+      notes = String(json.notes ?? '').trim();
+    } else {
+      const form = await request.formData();
+      try {
+        entries = JSON.parse(String(form.get('items') ?? '[]')) as DeliverableSubmissionItem[];
+      } catch {
+        return validationError({ items: ['JSON inválido.'] });
+      }
+      // Sem instanceof: nos testes, o File do jsdom e o do Node são classes diferentes.
+      files = form.getAll('files').filter((value): value is File => typeof value !== 'string');
+      notes = String(form.get('notes') ?? '').trim();
     }
-    // Sem instanceof: nos testes, o File do jsdom e o do Node são classes diferentes.
-    const files = form.getAll('files').filter((value): value is File => typeof value !== 'string');
-    const notes = String(form.get('notes') ?? '').trim();
 
     const items: DeliverableItem[] = [];
     const details: Record<string, string[]> = {};
@@ -1054,6 +1312,17 @@ export const handlers = [
             size_bytes: file.size,
           });
         }
+      } else if ((field.type === 'CANVAS' || field.type === 'SWOT') && 'content' in entry) {
+        items.push({
+          id: nextId++,
+          field_id: field.id,
+          type: field.type,
+          link: null,
+          file_url: null,
+          file_name: null,
+          size_bytes: null,
+          content: entry.content,
+        });
       } else if (field.type === 'LINK' && 'link' in entry) {
         if (!/^https:\/\/[^\s.]+\.[^\s]+$/.test(entry.link.trim())) {
           details[`field_${field.id}`] = ['Informe um endereço https:// válido.'];
@@ -1200,13 +1469,11 @@ export const handlers = [
   }),
 
   http.get('*/api/public/projects/:projectId', ({ params }) => {
-    const project = publicProjects.find((item) => String(item.id) === String(params.projectId));
-
-    if (!project) {
-      return HttpResponse.json({ message: 'Projeto não encontrado.' }, { status: 404 });
-    }
-
-    return HttpResponse.json(project);
+    const id = Number(params.projectId);
+    const detail = buildPublicProjectDetail(id) ?? buildTeacherProjectDetail(id);
+    return detail
+      ? HttpResponse.json(detail)
+      : apiError(404, 'not_found', 'Projeto não encontrado.');
   }),
   http.get('*/api/notifications', ({ request }) => {
     const url = new URL(request.url);
@@ -1232,12 +1499,65 @@ export const handlers = [
       read_at: notification.read_at ?? new Date().toISOString(),
     });
   }),
+
+  http.get('*/api/admin/email-domains', ({ request }) => {
+    if (!session || session.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
+    }
+    const url = new URL(request.url);
+    const role = url.searchParams.get('role');
+    const active = url.searchParams.get('active');
+    const filtered = emailDomains.filter((d) => {
+      if (role && d.role !== role) return false;
+      if (active === 'true' && !d.active) return false;
+      if (active === 'false' && d.active) return false;
+      return true;
+    });
+    return HttpResponse.json(filtered);
+  }),
+  http.post('*/api/admin/email-domains', async ({ request }) => {
+    if (!session || session.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
+    }
+    const body = (await request.json()) as {
+      name?: string;
+      role?: 'STUDENT' | 'TEACHER';
+      active?: boolean;
+    };
+    const name = body.name?.trim().toLowerCase() ?? '';
+    const role = body.role ?? 'STUDENT';
+    if (!name) return apiError(400, 'validation_error', 'Informe o domínio.');
+    if (emailDomains.some((d) => d.name.toLowerCase() === name && d.role === role)) {
+      return apiError(409, 'email_domain_taken', 'Este domínio já está cadastrado.');
+    }
+    const created = {
+      id: nextId++,
+      name,
+      role,
+      active: body.active ?? true,
+    };
+    emailDomains = [...emailDomains, created];
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.patch('*/api/admin/email-domains/:domainId', async ({ params, request }) => {
+    if (!session || session.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
+    }
+    const id = Number(params.domainId);
+    const existing = emailDomains.find((d) => d.id === id);
+    if (!existing) return apiError(404, 'not_found', 'Domínio não encontrado.');
+    const body = (await request.json()) as Partial<typeof existing>;
+    const updated = { ...existing, ...body };
+    emailDomains = emailDomains.map((d) => (d.id === id ? updated : d));
+    return HttpResponse.json(updated);
+  }),
 ];
 
 /** Usado nos testes para isolar a sessão simulada entre os casos. */
 export function resetMockSession() {
   session = null;
   resetTeacherMock();
+  resetEvaluatorMock();
   for (const email of Object.keys(users)) delete users[email];
   Object.assign(users, structuredClone(initialUsers));
   readNotifications.clear();
@@ -1245,6 +1565,7 @@ export function resetMockSession() {
   joinRequests = buildMockJoinRequests();
   receivedInvitations = buildReceivedInvitations();
   createdTeam = null;
+  resetEmailDomains();
   resetMyTeams();
   resetProjects();
 }

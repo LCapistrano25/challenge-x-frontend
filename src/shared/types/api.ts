@@ -26,7 +26,6 @@ export interface EditionSummary {
 export interface CourseSummary {
   id: number;
   name: string;
-  slug: string;
 }
 
 /** SdgSummary (ODS) */

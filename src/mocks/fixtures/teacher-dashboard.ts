@@ -6,6 +6,8 @@ import type {
   TeacherDashboard,
   TeacherDelivery,
 } from '@/features/deliveries';
+import type { PublicProjectDetail } from '@/features/public-panel';
+import { buildCurrentEdition, buildProjectCanvas } from './academic-home';
 
 const ES = 'Engenharia de Software';
 const SI = 'Sistemas de Informação';
@@ -89,6 +91,52 @@ const RUBRIC: Omit<EvaluationCriterion, 'score'>[] = [
   },
 ];
 
+const STATUS_LABEL_PT: Record<DeliveryStatus, string> = {
+  PENDING_EVALUATION: 'Em avaliação',
+  SUBMITTED: 'Em preenchimento',
+  EVALUATED: 'Avaliado',
+};
+
+/**
+ * Metadados do projeto de cada entrega para a tela de detalhe compartilhada (/projetos/:id).
+ * project_id é o id na vitrine pública; ODS e integrantes são ilustrativos (Figma).
+ */
+const PROJECT_META: Record<
+  string,
+  { project_id: number; sdg: [number, string]; members: string[] }
+> = {
+  d1: {
+    project_id: 501,
+    sdg: [4, 'Educação de Qualidade'],
+    members: ['Ana Souza', 'Bruno Lima', 'Carla Dias', 'Diego Melo'],
+  },
+  d2: {
+    project_id: 502,
+    sdg: [11, 'Cidades e Comunidades Sustentáveis'],
+    members: ['Ana Souza', 'Rafael Nunes', 'Sofia Reis', 'Tiago Alves'],
+  },
+  d3: {
+    project_id: 503,
+    sdg: [10, 'Redução das Desigualdades'],
+    members: ['Ana Souza', 'Marina Dias', 'Pedro Gomes', 'Lia Castro'],
+  },
+  d4: {
+    project_id: 504,
+    sdg: [16, 'Paz, Justiça e Instituições Eficazes'],
+    members: ['Ana Souza', 'Caio Melo', 'Bia Santos', 'Igor Rocha'],
+  },
+  d5: {
+    project_id: 505,
+    sdg: [9, 'Indústria, Inovação e Infraestrutura'],
+    members: ['Ana Souza', 'Lara Pires', 'Hugo Alves', 'Vera Lima'],
+  },
+  d6: {
+    project_id: 506,
+    sdg: [3, 'Saúde e Bem-estar'],
+    members: ['Ana Souza', 'Noa Dias', 'Edu Rocha', 'Gal Costa'],
+  },
+};
+
 const FEEDBACK =
   'A proposta está bem estruturada. Detalhem a distribuição de responsabilidades e os marcos do cronograma antes da próxima etapa.';
 
@@ -132,6 +180,7 @@ export function buildDeliveryEvaluation(id: string): DeliveryEvaluationDetail | 
   const record = published.get(id);
   return {
     id,
+    project_id: PROJECT_META[id]?.project_id ?? null,
     project_name: base.project_name,
     team_name: base.team_name,
     course: base.course,
@@ -167,6 +216,64 @@ export function buildDeliveryEvaluation(id: string): DeliveryEvaluationDetail | 
     criteria: RUBRIC.map((c) => ({ ...c, score: record?.scores[c.id] ?? null })),
     feedback: record?.feedback ?? null,
     total_score: record ? total(record.scores) : null,
+  };
+}
+
+/**
+ * Detalhe público do projeto de uma entrega do professor (reaproveita os dados da avaliação).
+ * Alimenta /projetos/:id quando o id é de um projeto de curso, fora da vitrine pública.
+ */
+const firstSentence = (text: string) => {
+  const end = text.indexOf('. ');
+  return end >= 0 ? text.slice(0, end + 1) : text;
+};
+
+const fileSize = (bytes: number) =>
+  bytes >= 1024 * 1024
+    ? `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} MB`
+    : `${Math.round(bytes / 1024)} KB`;
+
+export function buildTeacherProjectDetail(projectId: number): PublicProjectDetail | null {
+  const found = Object.entries(PROJECT_META).find(([, meta]) => meta.project_id === projectId);
+  if (!found) return null;
+  const [deliveryId, meta] = found;
+  const detail = buildDeliveryEvaluation(deliveryId);
+  if (!detail) return null;
+  const course = { id: 0, name: detail.course };
+  const sdg = { id: meta.sdg[0], number: meta.sdg[0], title: meta.sdg[1] };
+  const about = detail.team_message ?? 'Projeto da edição vigente do Desafio X.';
+  return {
+    id: projectId,
+    edition: buildCurrentEdition().edition,
+    title: detail.project_name,
+    team: { name: detail.team_name },
+    summary: firstSentence(about),
+    about,
+    objective:
+      'Ampliar a participação da comunidade nas ações do projeto e acompanhar os resultados ao longo das etapas de avaliação.',
+    code: `DX-${buildCurrentEdition().edition.year}-${String(projectId).padStart(3, '0')}`,
+    stage_label: `Etapa ${detail.stage}`,
+    status_label: STATUS_LABEL_PT[detail.status],
+    advisor: 'Prof.ª Juliana Ribeiro',
+    technologies: ['React', 'Node.js', 'PostgreSQL', 'Figma'],
+    submitted_at: detail.submitted_at,
+    canvas: buildProjectCanvas(),
+    course,
+    sdg,
+    category: null,
+    members: meta.members.map((name, index) => ({
+      name,
+      course: detail.course,
+      role: index === 0 ? 'LEADER' : 'MEMBER',
+    })),
+    keywords: `${sdg.title}, ${course.name}`,
+    deliverables: detail.files.map((file, index) => ({
+      id: index + 1,
+      label: file.name,
+      type: 'FILE' as const,
+      href: file.download_url,
+      meta: `${file.type} · ${fileSize(file.size_bytes)}`,
+    })),
   };
 }
 

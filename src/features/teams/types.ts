@@ -6,7 +6,7 @@ import type { CourseSummary, EditionSummary, SdgSummary, StageSchedule } from '@
  */
 
 export type MemberRole = 'LEADER' | 'MEMBER';
-export type TeamStatus = 'ACTIVE' | 'DISQUALIFIED';
+export type TeamStatus = 'ACTIVE' | 'DISQUALIFIED' | 'DISBANDED';
 export type TeamQualification = 'QUALIFIED' | 'NOT_QUALIFIED';
 
 /** TeamMember (somente vínculos ativos). */
@@ -30,6 +30,7 @@ export interface Team {
   status: TeamStatus;
   qualification: TeamQualification | null;
   disqualification_reason: string | null;
+  formation_extended_until?: string | null;
   members: TeamMember[];
   created_at: string;
   updated_at: string;
@@ -78,7 +79,7 @@ export interface DashboardProject {
   title: string;
   summary: string;
   status: string;
-  challenge: { id: number; title: string; course: CourseSummary; sdg: SdgSummary };
+  challenge: { id: number; description: string; course: CourseSummary; sdg: SdgSummary } | null;
 }
 
 /** StudentDashboard — GET /api/me/dashboard */
@@ -118,6 +119,8 @@ export interface TeamRef {
 export interface TeamCreate {
   /** Contrato: maxLength 150. O Figma limita a 60 caracteres na tela. */
   name: string;
+  /** Convites iniciais exigidos na criação da equipe (entre min_members - 1 e max_members - 1). */
+  invitations: InvitationCreate[];
   /** PROPOSTA: área de interesse da equipe. */
   interest_area?: InterestArea;
   /** PROPOSTA: apresentação da equipe (até 300 caracteres). */
@@ -184,8 +187,7 @@ export type InvitationCreate = { student_id: string } | { email: string };
 export interface Invitation {
   id: number;
   team: TeamRef;
-  /** null quando o convite foi feito por e-mail a quem ainda não tem cadastro (P-13). */
-  student: UserSummary | null;
+  student: UserSummary;
   invited_email: string | null;
   status: InvitationStatus;
   created_at: string;
@@ -223,6 +225,62 @@ export interface LeadershipRequest {
   decision_justification: string | null;
   created_at: string;
   decided_at: string | null;
+  /**
+   * PROPOSTA (ainda não está no openapi): contexto exibido no Figma "Aprovação de Liderança"
+   * (projeto, curso, etapa, líder atual, motivo e o anexo de comunicação de saída). Confirmar
+   * com o back-end antes de depender destes campos.
+   */
+  project?: { id: number; title: string } | null;
+  course?: string | null;
+  stage_label?: string | null;
+  current_leader?: UserSummary | null;
+  reason?: string | null;
+  attachment?: { name: string; size_label: string; description: string } | null;
+}
+
+/** LeadershipDecision — POST /api/leadership-requests/{id}/decide (RF28, RF40). */
+export interface LeadershipDecision {
+  status: 'APPROVED' | 'REJECTED';
+  decision_justification: string;
+}
+
+/**
+ * MemberNote — observação registrada pelo líder sobre um integrante (RF33). O conteúdo só é
+ * consultável por professor do curso e admin (RF39, GET /api/teams/{id}/member-notes).
+ */
+export interface MemberNote {
+  id: number;
+  member: UserSummary;
+  author: UserSummary;
+  content: string;
+  created_at: string;
+  /**
+   * PROPOSTA (ainda não está no openapi): contexto exibido no Figma "Observações sobre
+   * Integrantes" (equipe, projeto, curso, semestre, etapa, resumo e o papel do autor à época).
+   */
+  team?: { id: number; name: string } | null;
+  project?: string | null;
+  course?: string | null;
+  semester?: string | null;
+  stage_label?: string | null;
+  summary?: string | null;
+  author_role_label?: string | null;
+}
+
+/**
+ * TeacherProjectRow — linha do acompanhamento do professor (RF37,
+ * GET /api/teacher/projects). Aqui só usamos a equipe e o curso para listar as equipes dos
+ * cursos vinculados; os demais campos seguem o contrato para uso futuro.
+ */
+export interface TeacherProjectRow {
+  project: { id: number; title: string };
+  team: TeamRef;
+  challenge_course: { id: number; name: string; slug: string };
+  stage: { id: number; name: string; position: number } | null;
+  deliverable_status: DeliverableStatus | null;
+  evaluation_count: number;
+  min_evaluators: number;
+  my_evaluation_status: string;
 }
 
 /**

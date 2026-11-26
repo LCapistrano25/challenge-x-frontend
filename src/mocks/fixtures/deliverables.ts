@@ -14,8 +14,8 @@ import type {
 import type { Team, TeamMember } from '@/features/teams';
 import type { CourseSummary, StageSchedule } from '@/shared/types/api';
 
-const ES: CourseSummary = { id: 1, name: 'Engenharia de Software', slug: 'ES' };
-const AGRO: CourseSummary = { id: 2, name: 'Agronomia', slug: 'AGRO' };
+const ES: CourseSummary = { id: 1, name: 'Engenharia de Software' };
+const AGRO: CourseSummary = { id: 2, name: 'Agronomia' };
 
 /** Dia relativo a hoje, no horário de Brasília (UTC−3). */
 function brasilia(days: number, hour: number, minute: number) {
@@ -74,7 +74,7 @@ export function buildSeededProject(): Project {
     edition_id: 3,
     challenge: {
       id: 17,
-      title: 'Comércio local e agricultura familiar',
+      description: 'Ampliar o acesso dos pequenos produtores aos consumidores da região.',
       course: AGRO,
       sdg: { id: 11, number: 11, title: 'Cidades sustentáveis' },
     },
