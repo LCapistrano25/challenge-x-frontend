@@ -8,6 +8,13 @@ import {
   publicProjects,
 } from './fixtures/academic-home';
 import {
+  ARCHIVE_EDITION_IDS,
+  buildArchiveProjectDetail,
+  buildArchiveProjects,
+  buildClosedEditions,
+  buildEditionWinners,
+} from './fixtures/archive';
+import {
   MOCK_MAX_MEMBERS,
   STUDENT_WITHOUT_TEAM,
   buildMockJoinRequests,
@@ -1518,6 +1525,12 @@ export const handlers = [
 
   http.get('*/api/public/editions/current', () => HttpResponse.json(buildCurrentEdition())),
 
+  // Acervo histórico (RF35/RF46): edições encerradas e pódio de vencedores.
+  http.get('*/api/public/editions', () => HttpResponse.json(buildClosedEditions())),
+  http.get('*/api/public/editions/:editionId/winners', ({ params }) =>
+    HttpResponse.json(buildEditionWinners(Number(params.editionId))),
+  ),
+
   http.get('*/api/public/projects', ({ request }) => {
     const url = new URL(request.url);
 
@@ -1525,8 +1538,14 @@ export const handlers = [
 
     const courseId = url.searchParams.get('course_id');
     const sdgId = url.searchParams.get('sdg_id');
+    const editionId = Number(url.searchParams.get('edition_id'));
 
-    const filteredProjects = publicProjects.filter((project) => {
+    // Edições encerradas usam o acervo; a vigente usa a vitrine.
+    const source = ARCHIVE_EDITION_IDS.includes(editionId)
+      ? buildArchiveProjects(editionId)
+      : publicProjects;
+
+    const filteredProjects = source.filter((project) => {
       const searchableText = normalize(
         `${project.title} ${project.summary} ${project.course.name}`,
       );
@@ -1545,7 +1564,10 @@ export const handlers = [
 
   http.get('*/api/public/projects/:projectId', ({ params }) => {
     const id = Number(params.projectId);
-    const detail = buildPublicProjectDetail(id) ?? buildTeacherProjectDetail(id);
+    const detail =
+      buildPublicProjectDetail(id) ??
+      buildTeacherProjectDetail(id) ??
+      buildArchiveProjectDetail(id);
     return detail
       ? HttpResponse.json(detail)
       : apiError(404, 'not_found', 'Projeto não encontrado.');

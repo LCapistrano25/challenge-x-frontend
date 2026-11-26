@@ -1,307 +1,398 @@
 import { useMemo, useState } from 'react';
-import { usePublicProjects } from '../hooks/usePublicPanel';
-import type { PublicProject } from '../types';
+import { useQueries, type UseQueryResult } from '@tanstack/react-query';
+import { usePageHeader } from '@/shared/lib/page-header';
+import {
+  Alert,
+  Badge,
+  Button,
+  ButtonLink,
+  EmptyState,
+  Select,
+  Spinner,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+  TextField,
+} from '@/shared/ui';
+import { ProjectCard } from '../components/ProjectCard';
+import { fetchEditionWinners } from '../api/public.api';
+import { editionLabel } from '../lib/edition';
+import {
+  publicKeys,
+  useClosedEditions,
+  useCurrentEdition,
+  usePublicProjects,
+} from '../hooks/usePublicPanel';
+import type { EditionSummary } from '@/shared/types/api';
+import type { Winner } from '../types';
+import styles from './HistoricArchive.module.css';
 
+const PAGE_SIZE = 100;
+
+const normalize = (text: string) => text.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+const AWARD_LABEL: Record<1 | 2 | 3, string> = {
+  1: 'Grande Vencedor',
+  2: '2º lugar',
+  3: '3º lugar',
+};
+
+const PLACE_CLASS: Record<1 | 2 | 3, string | undefined> = {
+  1: styles.place1,
+  2: styles.place2,
+  3: styles.place3,
+};
+
+const editionName = (edition: EditionSummary) =>
+  edition.name ?? `Desafio X ${editionLabel(edition)}`;
+
+/**
+ * Acervo Histórico e Galeria de Vencedores (RF35/RF46). Tela pública compartilhada: abre dentro
+ * da moldura do perfil logado (PublicLayout) e os cartões levam ao detalhe em /projetos/:id
+ * mantendo o contexto (?from=/acervo). Duas seções alternadas por abas: Vencedores (pódio de
+ * cada edição encerrada + a edição vigente "em breve") e Projetos passados (grade filtrável).
+ */
 export function HistoricArchivePage() {
-  const { data, isLoading, isError } = usePublicProjects({
-    page_size: 100,
-  });
+  usePageHeader('Acervo Histórico', 'Galeria de vencedores e projetos das edições do Desafio X.');
 
-  const [editionId, setEditionId] = useState('');
-  const [year, setYear] = useState('');
-  const [courseId, setCourseId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
-  const [sdgId, setSdgId] = useState('');
-
-  const projects = data?.results ?? [];
-
+  const editionsQuery = useClosedEditions();
   const editions = useMemo(
     () =>
-      Array.from(
-        new Map(projects.map((project) => [project.edition.id, project.edition])).values(),
-      ).sort((a, b) => b.year - a.year || b.semester - a.semester),
-    [projects],
+      [...(editionsQuery.data ?? [])].sort(
+        (a, b) => b.edition.year - a.edition.year || b.edition.semester - a.edition.semester,
+      ),
+    [editionsQuery.data],
   );
+  const currentEdition = useCurrentEdition().data?.edition ?? null;
 
-  const years = [...new Set(editions.map((edition) => edition.year))].sort((a, b) => b - a);
-
-  const courses = Array.from(
-    new Map(projects.map((project) => [project.course.id, project.course])).values(),
-  );
-
-  const categories = Array.from(
-    new Map(
-      projects
-        .filter((project) => project.category)
-        .map((project) => [project.category!.id, project.category!]),
-    ).values(),
-  );
-
-  const sdgs = Array.from(
-    new Map(projects.map((project) => [project.sdg.id, project.sdg])).values(),
-  ).sort((a, b) => a.number - b.number);
-
-  const filteredProjects = projects.filter((project) => {
-    return (
-      (!editionId || String(project.edition.id) === editionId) &&
-      (!year || String(project.edition.year) === year) &&
-      (!courseId || String(project.course.id) === courseId) &&
-      (!categoryId || String(project.category?.id ?? '') === categoryId) &&
-      (!sdgId || String(project.sdg.id) === sdgId)
-    );
+  // Pódio de cada edição encerrada (uma consulta por edição).
+  const winnersQueries = useQueries({
+    queries: editions.map((item) => ({
+      queryKey: publicKeys.winners(item.edition.id),
+      queryFn: () => fetchEditionWinners(item.edition.id),
+      staleTime: 5 * 60_000,
+    })),
   });
 
-  const groupedProjects = useMemo(() => {
-    const groups = new Map<
-      number,
-      {
-        edition: PublicProject['edition'];
-        projects: PublicProject[];
-      }
-    >();
-
-    filteredProjects.forEach((project) => {
-      const group = groups.get(project.edition.id);
-
-      if (group) {
-        group.projects.push(project);
-      } else {
-        groups.set(project.edition.id, {
-          edition: project.edition,
-          projects: [project],
-        });
-      }
-    });
-
-    return Array.from(groups.values()).sort(
-      (a, b) => b.edition.year - a.edition.year || b.edition.semester - a.edition.semester,
-    );
-  }, [filteredProjects]);
-
-  function clearFilters() {
-    setEditionId('');
-    setYear('');
-    setCourseId('');
-    setCategoryId('');
-    setSdgId('');
-  }
-
-  const hasFilters = Boolean(editionId || year || courseId || categoryId || sdgId);
-
-  if (isLoading) {
-    return <main style={{ padding: 32 }}>Carregando acervo histórico...</main>;
-  }
-
-  if (isError) {
+  if (editionsQuery.isLoading) {
     return (
-      <main style={{ padding: 32 }}>
-        <h1>Acervo Histórico</h1>
-        <p>Não foi possível carregar os projetos históricos.</p>
-      </main>
+      <div className={`page-flush ${styles.page}`}>
+        <Spinner label="Carregando o acervo…" />
+      </div>
+    );
+  }
+
+  if (editionsQuery.isError) {
+    return (
+      <div className={`page-flush ${styles.page}`}>
+        <Alert
+          tone="danger"
+          title="Não foi possível carregar o acervo"
+          action={
+            <Button size="small" variant="secondary" onClick={() => void editionsQuery.refetch()}>
+              Tentar de novo
+            </Button>
+          }
+        >
+          Verifique sua conexão e tente novamente.
+        </Alert>
+      </div>
+    );
+  }
+
+  if (editions.length === 0 && !currentEdition) {
+    return (
+      <div className={`page-flush ${styles.page}`}>
+        <EmptyState
+          title="Ainda não há edições no acervo"
+          description="Quando uma edição for concluída e homologada, os vencedores e projetos aparecerão aqui."
+        />
+      </div>
     );
   }
 
   return (
-    <main style={{ maxWidth: 1200, margin: '0 auto', padding: 32 }}>
-      <header style={{ marginBottom: 28 }}>
-        <h1>Acervo Histórico</h1>
-        <p style={{ color: 'var(--color-text-secondary)' }}>
-          Explore os projetos acadêmicos organizados por edição, curso, categoria e Objetivos de
-          Desenvolvimento Sustentável.
+    <div className={`page-flush ${styles.page}`}>
+      <section className={styles.hero}>
+        <Badge tone="brand" shape="pill">
+          Acervo do Desafio X
+        </Badge>
+        <h2 className={styles.heroTitle}>Acervo Histórico</h2>
+        <p className={styles.heroSubtitle}>
+          Reveja a galeria de vencedores e os projetos das edições anteriores do Desafio X.
         </p>
-      </header>
-
-      <section
-        aria-label="Filtros do acervo"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 16,
-          marginBottom: 24,
-        }}
-      >
-        <label>
-          Edição
-          <select
-            value={editionId}
-            onChange={(event) => setEditionId(event.target.value)}
-            style={selectStyle}
-          >
-            <option value="">Todas as edições</option>
-            {editions.map((edition) => (
-              <option key={edition.id} value={edition.id}>
-                {edition.name || `${edition.year} - ${edition.semester}º semestre`}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Ano
-          <select
-            value={year}
-            onChange={(event) => setYear(event.target.value)}
-            style={selectStyle}
-          >
-            <option value="">Todos os anos</option>
-            {years.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Curso
-          <select
-            value={courseId}
-            onChange={(event) => setCourseId(event.target.value)}
-            style={selectStyle}
-          >
-            <option value="">Todos os cursos</option>
-            {courses.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Categoria
-          <select
-            value={categoryId}
-            onChange={(event) => setCategoryId(event.target.value)}
-            style={selectStyle}
-          >
-            <option value="">Todas as categorias</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          ODS
-          <select
-            value={sdgId}
-            onChange={(event) => setSdgId(event.target.value)}
-            style={selectStyle}
-          >
-            <option value="">Todos os ODS</option>
-            {sdgs.map((sdg) => (
-              <option key={sdg.id} value={sdg.id}>
-                ODS {sdg.number} - {sdg.title}
-              </option>
-            ))}
-          </select>
-        </label>
       </section>
 
-      {hasFilters && (
-        <div style={{ marginBottom: 20 }}>
-          <button type="button" onClick={clearFilters}>
-            Limpar filtros
-          </button>
-        </div>
-      )}
+      <Tabs defaultValue="vencedores">
+        <TabsList aria-label="Seções do acervo">
+          <TabsTrigger value="vencedores">Vencedores</TabsTrigger>
+          <TabsTrigger value="passados">Projetos passados</TabsTrigger>
+        </TabsList>
 
-      <h2 style={{ fontSize: 18, marginBottom: 24 }}>
-        Projetos encontrados: {filteredProjects.length}
-      </h2>
+        <TabsContent value="vencedores">
+          <div className={styles.editionList}>
+            {currentEdition && <ComingSoon edition={currentEdition} />}
+            {editions.map((item, index) => (
+              <EditionPodium
+                key={item.edition.id}
+                edition={item.edition}
+                query={winnersQueries[index]}
+              />
+            ))}
+          </div>
+        </TabsContent>
 
-      {groupedProjects.length === 0 ? (
-        <section style={emptyStyle}>
-          <h2>Nenhum projeto encontrado</h2>
-          <p>Não há projetos para os filtros selecionados.</p>
-          <button type="button" onClick={clearFilters}>
-            Limpar filtros
-          </button>
-        </section>
-      ) : (
-        <div style={{ display: 'grid', gap: 32 }}>
-          {groupedProjects.map(({ edition, projects: editionProjects }) => (
-            <section key={edition.id}>
-              <h2 style={{ marginBottom: 16 }}>
-                {edition.name || `${edition.year} - ${edition.semester}º semestre`}
-              </h2>
-
-              <p style={{ color: 'var(--color-text-secondary)' }}>
-                Ano: {edition.year} · Semestre: {edition.semester} · Projetos:{' '}
-                {editionProjects.length}
-              </p>
-
-              <h3 style={{ fontSize: 16, marginBottom: 12 }}>Destaques da edição</h3>
-
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-                  gap: 16,
-                }}
-              >
-                {editionProjects.slice(0, 3).map((project) => (
-                  <article
-                    key={project.id}
-                    style={{
-                      background: 'var(--color-bg-primary)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 12,
-                      padding: 20,
-                    }}
-                  >
-                    <strong>Projeto da edição</strong>
-                    <h3>{project.title}</h3>
-                    <p>{project.summary}</p>
-                    <p>
-                      <strong>Curso:</strong> {project.course.name}
-                    </p>
-                    <p>
-                      <strong>Categoria:</strong> {project.category?.name ?? 'Não informada'}
-                    </p>
-                    <p>
-                      <strong>ODS:</strong> {project.sdg.number} - {project.sdg.title}
-                    </p>
-                    <p>
-                      <strong>Integrantes:</strong>{' '}
-                      {project.members.map((member) => member.name).join(', ') || 'Não informados'}
-                    </p>
-                    <a
-                      href={`/projetos/${project.id}`}
-                      style={{
-                        color: 'var(--color-primary)',
-                        fontWeight: 600,
-                      }}
-                    >
-                      Ver projeto
-                    </a>
-                  </article>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
-      )}
-    </main>
+        <TabsContent value="passados">
+          <PastProjects editions={editions} />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
 
-const selectStyle = {
-  display: 'block',
-  width: '100%',
-  marginTop: 8,
-  padding: 12,
-  border: '1px solid var(--color-border)',
-  borderRadius: 8,
-  background: 'var(--color-bg-primary)',
-};
+/** Edição vigente: resultados ainda não homologados — bloco interativo "em breve". */
+function ComingSoon({ edition }: { edition: EditionSummary }) {
+  return (
+    <section className={styles.comingSoon} aria-label={`Vencedores de ${editionName(edition)}`}>
+      <div className={styles.comingSoonText}>
+        <span className={styles.liveDot} aria-hidden="true" />
+        <div>
+          <h4 className={styles.editionTitle}>{editionName(edition)}</h4>
+          <p className={styles.comingSoonLead}>
+            Edição em andamento — o pódio de vencedores será divulgado ao final.
+          </p>
+        </div>
+        <span className={styles.soonTag}>Em breve</span>
+      </div>
+      <ol className={styles.ghostPodium} aria-hidden="true">
+        {[1, 2, 3].map((place) => (
+          <li key={place} className={styles.ghostSlot}>
+            <span className={styles.ghostMedal}>{place}º</span>
+            <span className={styles.ghostBar} />
+            <span className={`${styles.ghostBar} ${styles.ghostBarShort}`} />
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
 
-const emptyStyle = {
-  textAlign: 'center' as const,
-  padding: 48,
-  border: '1px solid var(--color-border)',
-  borderRadius: 12,
-};
+/** Pódio (1º/2º/3º) de uma edição encerrada. */
+function EditionPodium({
+  edition,
+  query,
+}: {
+  edition: EditionSummary;
+  query: UseQueryResult<Winner[]> | undefined;
+}) {
+  const winners = [...(query?.data ?? [])].sort((a, b) => a.award_place - b.award_place);
+  const loading = query?.isLoading ?? true;
+  return (
+    <section className={styles.editionBlock} aria-label={`Vencedores de ${editionName(edition)}`}>
+      <header className={styles.editionHead}>
+        <h4 className={styles.editionTitle}>{editionName(edition)}</h4>
+        <span className={styles.editionStatus}>Encerrada</span>
+      </header>
+
+      {loading ? (
+        <Spinner label="Carregando o pódio…" />
+      ) : winners.length === 0 ? (
+        <EmptyState
+          title="Pódio em homologação"
+          description="Os vencedores desta edição ainda não foram divulgados."
+        />
+      ) : (
+        <ol className={styles.podium}>
+          {winners.map((winner) => (
+            <li key={winner.project.id} className={PLACE_CLASS[winner.award_place]}>
+              <WinnerCard winner={winner} />
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  );
+}
+
+function WinnerCard({ winner }: { winner: Winner }) {
+  const { project, award_place: place, category } = winner;
+  return (
+    <article className={styles.winner}>
+      <div className={styles.medalRow}>
+        <span className={styles.medal} aria-hidden="true">
+          {place}º
+        </span>
+        <span className={styles.award}>{AWARD_LABEL[place]}</span>
+      </div>
+      <h5 className={styles.winnerTitle}>{project.title}</h5>
+      <p className={styles.winnerMeta}>
+        {project.course.name} · {category.name}
+      </p>
+      <p className={styles.winnerSummary}>{project.summary}</p>
+      <div className={styles.winnerFooter}>
+        <ButtonLink
+          to={`/projetos/${project.id}?from=/acervo`}
+          variant="ghost"
+          size="small"
+          className={styles.winnerLink}
+        >
+          Ver projeto
+        </ButtonLink>
+      </div>
+    </article>
+  );
+}
+
+/** Seção "Projetos passados": seletor de edição encerrada + filtros + grade. */
+function PastProjects({
+  editions,
+}: {
+  editions: { edition: EditionSummary; closed_at: string | null }[];
+}) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const editionId = selected ?? editions[0]?.edition.id ?? null;
+  const currentEdition = editions.find((item) => item.edition.id === editionId)?.edition ?? null;
+
+  const projectsQuery = usePublicProjects(
+    editionId != null ? { edition_id: editionId, page_size: PAGE_SIZE } : {},
+  );
+
+  const [query, setQuery] = useState('');
+  const [course, setCourse] = useState('');
+  const [category, setCategory] = useState('');
+  const [sdg, setSdg] = useState('');
+
+  const projects = useMemo(() => projectsQuery.data?.results ?? [], [projectsQuery.data]);
+  const courses = useMemo(
+    () => [...new Map(projects.map((p) => [p.course.id, p.course])).values()],
+    [projects],
+  );
+  const categories = useMemo(
+    () => [
+      ...new Map(
+        projects.filter((p) => p.category).map((p) => [p.category!.id, p.category!]),
+      ).values(),
+    ],
+    [projects],
+  );
+  const sdgs = useMemo(
+    () =>
+      [...new Map(projects.map((p) => [p.sdg.number, p.sdg])).values()].sort(
+        (a, b) => a.number - b.number,
+      ),
+    [projects],
+  );
+
+  const visible = useMemo(() => {
+    const term = normalize(query.trim());
+    return projects.filter((p) => {
+      if (course && String(p.course.id) !== course) return false;
+      if (category && String(p.category?.id ?? '') !== category) return false;
+      if (sdg && String(p.sdg.number) !== sdg) return false;
+      if (!term) return true;
+      return normalize(`${p.title} ${p.summary} ${p.course.name} ${p.sdg.title}`).includes(term);
+    });
+  }, [projects, query, course, category, sdg]);
+
+  const hasFilters = query !== '' || course !== '' || category !== '' || sdg !== '';
+  const clearFilters = () => {
+    setQuery('');
+    setCourse('');
+    setCategory('');
+    setSdg('');
+  };
+
+  if (editions.length === 0) {
+    return (
+      <EmptyState
+        title="Nenhuma edição encerrada"
+        description="Os projetos das edições anteriores aparecerão aqui quando uma edição for concluída."
+      />
+    );
+  }
+
+  return (
+    <section aria-label="Projetos passados" className={styles.section}>
+      <header className={styles.sectionHead}>
+        <p className={styles.sectionSubtitle}>
+          {visible.length} {visible.length === 1 ? 'projeto' : 'projetos'}
+          {currentEdition ? ` · ${editionName(currentEdition)}` : ''}
+        </p>
+      </header>
+
+      <div className={styles.filters} role="search" aria-label="Filtrar projetos do acervo">
+        <Select
+          label="Edição"
+          value={editionId != null ? String(editionId) : ''}
+          onChange={(event) => {
+            setSelected(Number(event.target.value));
+            clearFilters();
+          }}
+          options={editions.map((item) => ({
+            value: String(item.edition.id),
+            label: editionName(item.edition),
+          }))}
+        />
+        <TextField
+          label="Buscar projeto"
+          type="search"
+          placeholder="Buscar por palavra-chave..."
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+        <Select
+          label="Curso"
+          value={course}
+          onChange={(event) => setCourse(event.target.value)}
+          options={[
+            { value: '', label: 'Todos os cursos' },
+            ...courses.map((c) => ({ value: String(c.id), label: c.name })),
+          ]}
+        />
+        <Select
+          label="Categoria"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+          options={[
+            { value: '', label: 'Todas as categorias' },
+            ...categories.map((c) => ({ value: String(c.id), label: c.name })),
+          ]}
+        />
+        <Select
+          label="ODS"
+          value={sdg}
+          onChange={(event) => setSdg(event.target.value)}
+          options={[
+            { value: '', label: 'Todas as ODS' },
+            ...sdgs.map((s) => ({ value: String(s.number), label: `ODS ${s.number}` })),
+          ]}
+        />
+      </div>
+
+      {projectsQuery.isLoading ? (
+        <Spinner label="Carregando os projetos…" />
+      ) : visible.length > 0 ? (
+        <ul className={styles.grid}>
+          {visible.map((project) => (
+            <li key={project.id}>
+              <ProjectCard project={project} href={`/projetos/${project.id}?from=/acervo`} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyState
+          title="Nenhum projeto encontrado"
+          description="Ajuste a busca ou limpe os filtros para ver todos os projetos da edição."
+          action={
+            hasFilters ? (
+              <Button variant="secondary" onClick={clearFilters}>
+                Limpar filtros
+              </Button>
+            ) : undefined
+          }
+        />
+      )}
+    </section>
+  );
+}

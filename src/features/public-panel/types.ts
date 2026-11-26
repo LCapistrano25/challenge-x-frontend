@@ -25,6 +25,20 @@ export interface PublicEdition {
   challenges: PublicChallenge[];
 }
 
+/** PublicEditionListItem — item de GET /api/public/editions (edições encerradas, RF35/RF46). */
+export interface PublicEditionListItem {
+  edition: EditionSummary;
+  closed_at: string | null;
+}
+
+/** Winner — item do pódio em GET /api/public/editions/{id}/winners (RF35/RF46). */
+export interface Winner {
+  award_place: 1 | 2 | 3;
+  course: CourseSummary;
+  category: { id: number; name: string };
+  project: PublicProject;
+}
+
 /** Integrante na identidade pública do projeto. O contrato só garante `name`. */
 export interface PublicProjectMember {
   name: string;

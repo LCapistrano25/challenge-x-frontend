@@ -59,7 +59,13 @@ export function ProjectDetailPage() {
   const fromParam = searchParams.get('from');
   const backTo =
     fromParam && fromParam.startsWith('/') && !fromParam.startsWith('//') ? fromParam : null;
-  const backLabel = backTo ? 'Voltar para a avaliação' : 'Voltar para a vitrine';
+  const backLabel = !backTo
+    ? 'Voltar para a vitrine'
+    : backTo.startsWith('/professor/entregas')
+      ? 'Voltar para a avaliação'
+      : backTo.startsWith('/acervo')
+        ? 'Voltar para o acervo'
+        : 'Voltar';
 
   usePageHeader(
     edition ? `Desafio X · Edição ${editionLabel(edition)}` : 'Projetos',
