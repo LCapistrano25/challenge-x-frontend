@@ -45,6 +45,13 @@ import {
   buildTeacherMemberNotes,
   buildTeacherProjectRows,
 } from './fixtures/teacher-members';
+import { buildAdminOverview } from './fixtures/admin-dashboard';
+import {
+  buildAdminTeamDetail,
+  buildAdminTeams,
+  disqualifyAdminTeam,
+  resetAdminTeamsMock,
+} from './fixtures/admin-teams';
 import { TAKEN_PROJECT_TITLES, buildProject, buildProjectOptions } from './fixtures/project';
 import {
   PROJECT_LEADER_MEMBER_ID,
@@ -1597,6 +1604,52 @@ export const handlers = [
     });
   }),
 
+  // Painel administrativo (RF20, PROPOSTO): visão geral da edição em preparação.
+  http.get('*/api/admin/overview', () => {
+    if (!session || session.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
+    }
+    return HttpResponse.json(buildAdminOverview());
+  }),
+
+  // Equipes e Projetos (administração, RF13).
+  http.get('*/api/admin/teams', ({ request }) => {
+    if (!session || session.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
+    }
+    const url = new URL(request.url);
+    const search = normalize(url.searchParams.get('search') ?? '').trim();
+    const items = buildAdminTeams().filter((team) => {
+      if (!search) return true;
+      return normalize(`${team.name} ${team.project?.title ?? ''} ${team.course ?? ''}`).includes(
+        search,
+      );
+    });
+    return HttpResponse.json(paginate(items, url));
+  }),
+  http.get('*/api/admin/teams/:teamId', ({ params }) => {
+    if (!session || session.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
+    }
+    const detail = buildAdminTeamDetail(Number(params.teamId));
+    return detail
+      ? HttpResponse.json(detail)
+      : apiError(404, 'not_found', 'Equipe não encontrada.');
+  }),
+  http.post('*/api/admin/teams/:teamId/disqualify', async ({ params, request }) => {
+    if (!session || session.role !== 'ADMIN') {
+      return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
+    }
+    const body = (await request.json().catch(() => ({}))) as { reason?: string };
+    if (!body.reason?.trim()) {
+      return validationError({ reason: ['Informe o motivo da desclassificação.'] });
+    }
+    const result = disqualifyAdminTeam(Number(params.teamId), body.reason.trim());
+    if (!result.ok) return apiError(result.status, result.code, result.message);
+    const detail = buildAdminTeamDetail(Number(params.teamId));
+    return HttpResponse.json(detail);
+  }),
+
   http.get('*/api/admin/email-domains', ({ request }) => {
     if (!session || session.role !== 'ADMIN') {
       return apiError(403, 'forbidden', 'Acesso restrito a administradores.');
@@ -1785,6 +1838,7 @@ export function resetMockSession() {
   session = null;
   resetTeacherMock();
   resetEvaluatorMock();
+  resetAdminTeamsMock();
   for (const email of Object.keys(users)) delete users[email];
   Object.assign(users, structuredClone(initialUsers));
   readNotifications.clear();

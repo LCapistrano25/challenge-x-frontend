@@ -151,6 +151,8 @@ const roleRoutes: RouteObject[] = [
         element: <AppLayout area="Administração" nav={NAV_ITEMS.ADMIN} />,
         children: [
           { path: '/admin', lazy: lazyPage(admin, 'AdminDashboardPage') },
+          { path: '/admin/equipes', lazy: lazyPage(admin, 'AdminTeamsPage') },
+          { path: '/admin/equipes/:teamId', lazy: lazyPage(admin, 'AdminTeamDetailPage') },
           { path: '/admin/cursos-professores', lazy: lazyPage(admin, 'CoursesTeachersPage') },
           { path: '/admin/ods-desafios', lazy: lazyPage(admin, 'OdsChallengesPage') },
           { path: '/admin/etapas', lazy: lazyPage(admin, 'StagesPage') },

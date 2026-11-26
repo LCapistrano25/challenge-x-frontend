@@ -1,0 +1,315 @@
+.page {
+  display: grid;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-5) var(--spacing-8);
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.context {
+  margin: calc(var(--spacing-3) * -1) 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* --- Métricas --- */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  margin: 0;
+}
+
+.metric {
+  display: grid;
+  gap: var(--spacing-1);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-card);
+}
+
+.metric dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.metricValue {
+  margin: 0;
+  font-size: 30px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.metricCaption {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* --- Cartões --- */
+.card {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.cardMeta {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: end;
+  gap: var(--spacing-3);
+}
+
+.tableFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.count {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.teamName {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.detailLink {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
+}
+.detailLink:hover {
+  text-decoration: underline;
+}
+
+.muted {
+  color: var(--color-text-secondary);
+}
+
+/* --- Selos de situação --- */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+}
+.neutral {
+  background: var(--color-bg-50);
+  color: var(--color-text-secondary);
+}
+.progress {
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+.success {
+  background: var(--color-success-soft);
+  color: var(--color-success-text);
+}
+.danger {
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+}
+
+/* --- Aviso --- */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-info-soft);
+}
+
+.noticeIcon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-primary);
+}
+
+.noticeTitle {
+  margin: 0;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
+
+.noticeText {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* --- Detalhe: projeto --- */
+.projectHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.projectTitle {
+  margin: 0;
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.7;
+}
+
+.projectInfo {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-3) var(--spacing-5);
+  margin: 0;
+}
+
+.projectInfo > div {
+  display: grid;
+  gap: 2px;
+}
+
+.projectInfo dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+.projectInfo dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+/* --- Diálogo de desclassificação --- */
+.dialog {
+  display: grid;
+  gap: var(--spacing-4);
+}
+
+.transition {
+  justify-self: start;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-danger-soft);
+  color: var(--color-danger-text);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+}
+
+.warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-attention-soft);
+}
+
+.warningIcon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: var(--color-attention-text);
+}
+
+.warningTitle {
+  margin: 0;
+  color: var(--color-attention-text);
+  font-weight: var(--font-weight-semibold);
+}
+
+.warningText {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.dialogError {
+  margin: 0;
+  color: var(--color-danger-text);
+  font-size: var(--font-size-small);
+}
+
+.dialogHint {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+@media (max-width: 64rem) {
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: 0 var(--spacing-4) var(--spacing-6);
+  }
+  .card {
+    padding: var(--spacing-5);
+  }
+  .filters,
+  .projectInfo {
+    grid-template-columns: 1fr;
+  }
+}

@@ -163,3 +163,10 @@ export const IconCheckCircle = make(
   </>,
   'IconCheckCircle',
 );
+export const IconBoard = make(
+  <>
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <path d="M9 4v16M15 4v16" />
+  </>,
+  'IconBoard',
+);

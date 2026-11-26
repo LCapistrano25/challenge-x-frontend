@@ -1,6 +1,13 @@
 import type { ReactNode } from 'react';
 import type { Role } from '@/features/auth';
-import { IconArchive, IconCalendar, IconClipboard, IconHome, IconUsers } from '@/shared/ui/icons';
+import {
+  IconArchive,
+  IconBoard,
+  IconCalendar,
+  IconClipboard,
+  IconHome,
+  IconUsers,
+} from '@/shared/ui/icons';
 import {
   NavIconArchive,
   NavIconHelp,
@@ -107,6 +114,12 @@ export const NAV_ITEMS: Record<NavigationProfile, NavItem[]> = {
   ],
   ADMIN: [
     { to: '/admin', label: 'Início', icon: <IconHome />, end: true },
+    {
+      to: '/admin/equipes',
+      label: 'Equipes e projetos',
+      icon: <IconBoard />,
+      activePaths: ['/admin/equipes'],
+    },
     { to: '/admin/cursos-professores', label: 'Cursos e professores', icon: <IconUsers /> },
     { to: '/admin/ods-desafios', label: 'ODS e desafios', icon: <IconArchive /> },
     { to: '/admin/etapas', label: 'Etapas', icon: <IconCalendar /> },
