@@ -103,3 +103,124 @@ export interface StageCriteriaItem {
   criterion_id: number;
   max_score: string;
 }
+
+/* --- Painel administrativo (RF20, PROPOSTO: GET /api/admin/overview) --- */
+
+export interface AdminMetric {
+  key: string;
+  label: string;
+  value: number;
+  caption: string;
+}
+
+export interface AdminQuickAction {
+  label: string;
+  to?: string;
+  disabled?: boolean;
+  primary?: boolean;
+}
+
+export interface AdminTimelineStep {
+  id: string;
+  label: string;
+  date: string;
+  status: 'done' | 'current' | 'upcoming';
+  progress?: number;
+}
+
+export interface AdminPendencia {
+  id: string;
+  title: string;
+  description: string;
+  to?: string;
+}
+
+export interface AdminTeamRow {
+  id: number;
+  name: string;
+  project: string;
+  course: string;
+  status_label: string;
+}
+
+export interface AdminOverview {
+  edition: { id: number; label: string; status_label: string };
+  editions: { id: number; label: string }[];
+  admin_name: string;
+  today: string;
+  metrics: AdminMetric[];
+  quick_actions: AdminQuickAction[];
+  edition_management: {
+    title: string;
+    phase: string;
+    manage_to: string;
+    progress_percent: number;
+    requirements_done: number;
+    requirements_total: number;
+    timeline: AdminTimelineStep[];
+    points: { valid: boolean; total: number; max: number; formula: string };
+  };
+  teams: AdminTeamRow[];
+  pendencias: AdminPendencia[];
+}
+
+/* --- Equipes e Projetos (admin, RF13) --- */
+
+export type AdminTeamSituation = 'PRE_REGISTERED' | 'PENDING' | 'VALIDATED' | 'DISQUALIFIED';
+
+/** AdminTeamListItem — GET /api/admin/teams (course e situation são PROPOSTA para a tabela). */
+export interface AdminTeamListItem {
+  id: number;
+  edition_id: number;
+  name: string;
+  code: string;
+  status: 'ACTIVE' | 'DISQUALIFIED' | 'DISBANDED';
+  qualification: 'QUALIFIED' | 'NOT_QUALIFIED' | null;
+  member_count: number;
+  project: { id: number; title: string } | null;
+  course: string | null;
+  situation: AdminTeamSituation;
+}
+
+export interface AdminTeamMember {
+  name: string;
+  email: string;
+  role: 'LEADER' | 'MEMBER';
+  course: string;
+}
+
+export interface AdminTeamDelivery {
+  stage: string;
+  resource: string;
+  submitted_at: string | null;
+  situation: string;
+  action_label: string;
+  href?: string | null;
+}
+
+/**
+ * AdminTeamDetail — detalhe da equipe para a administração (RF13). PROPOSTO: compõe projeto,
+ * integrantes e entregas num só retorno para a tela "Detalhes da equipe".
+ */
+export interface AdminTeamDetail {
+  id: number;
+  name: string;
+  code: string;
+  project: { id: number; title: string; category: string | null } | null;
+  situation: AdminTeamSituation;
+  description: string;
+  course: string;
+  advisor: string;
+  sdg: string;
+  challenge: string;
+  member_count: number;
+  members: AdminTeamMember[];
+  deliverables: AdminTeamDelivery[];
+  validated_at: string | null;
+  flow_note: string;
+}
+
+/** TeamDisqualify — POST /api/admin/teams/{id}/disqualify. */
+export interface TeamDisqualifyInput {
+  reason: string;
+}

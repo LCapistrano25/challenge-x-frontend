@@ -1,0 +1,322 @@
+.page {
+  display: grid;
+  gap: var(--spacing-5);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0 var(--spacing-5) var(--spacing-8);
+}
+
+/* --- Topo: saudação + seletor de edição --- */
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-4);
+  flex-wrap: wrap;
+}
+
+.greeting {
+  display: grid;
+  gap: var(--spacing-1);
+  min-width: 0;
+}
+
+.hello {
+  margin: 0;
+  font-size: 24px;
+  font-weight: var(--font-weight-bold);
+}
+
+.helloSub {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.editionControls {
+  display: grid;
+  gap: var(--spacing-2);
+  justify-items: end;
+  min-width: 16rem;
+}
+
+.editionMeta {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+}
+
+.date {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* --- Métricas --- */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--spacing-4);
+  margin: 0;
+}
+
+.metric {
+  display: grid;
+  gap: var(--spacing-1);
+  padding: var(--spacing-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-card);
+}
+
+.metricHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.metricHead dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.metricIcon {
+  display: inline-flex;
+  color: var(--color-primary);
+}
+
+.metricValue {
+  margin: 0;
+  font-size: 30px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.metricCaption {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+/* --- Ações rápidas --- */
+.quick {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+.quickLabel {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-semibold);
+}
+
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-3);
+}
+
+/* --- Cartões --- */
+.card {
+  display: grid;
+  gap: var(--spacing-4);
+  padding: var(--spacing-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-bg-secondary);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.cardMeta {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.subTitle {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-bold);
+}
+
+/* --- Progresso --- */
+.progressBox {
+  display: grid;
+  gap: var(--spacing-2);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+}
+
+.progressLabels {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.percent {
+  color: var(--color-primary);
+  font-size: var(--font-size-body);
+}
+
+.timeline {
+  display: grid;
+  gap: var(--spacing-3);
+}
+
+/* --- Nota de pontuação --- */
+.pointsNote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4) var(--spacing-5);
+  border-radius: var(--radius-lg);
+}
+
+.valid {
+  background: var(--color-success-soft);
+}
+.valid .pointsIcon,
+.valid .pointsText strong {
+  color: var(--color-success-text);
+}
+.invalid {
+  background: var(--color-danger-soft);
+}
+.invalid .pointsIcon,
+.invalid .pointsText strong {
+  color: var(--color-danger-text);
+}
+
+.pointsIcon {
+  flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+.pointsText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pointsText p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.pointsHint {
+  margin-left: auto;
+  flex: 0 0 auto;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+/* --- Inferior: equipes + pendências --- */
+.bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: var(--spacing-4);
+  align-items: start;
+}
+
+.teamList,
+.pendList {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.teamRow,
+.pendRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-3) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.teamList li:first-child,
+.pendList li:first-child {
+  border-top: 0;
+}
+
+.teamInfo,
+.pendInfo {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.teamName,
+.pendTitle {
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.teamMeta,
+.pendDesc {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.footer {
+  margin: 0;
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-caption);
+}
+
+@media (max-width: 64rem) {
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 40rem) {
+  .page {
+    padding: 0 var(--spacing-4) var(--spacing-6);
+  }
+  .card {
+    padding: var(--spacing-5);
+  }
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+  .editionControls {
+    justify-items: start;
+    width: 100%;
+  }
+  .quickActions :global(.button) {
+    flex: 1 1 auto;
+  }
+}
