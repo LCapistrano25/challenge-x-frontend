@@ -13,6 +13,8 @@ export {
   usePublicProjects,
   usePublicProject,
   useCourses,
+  useClosedEditions,
+  useEditionWinners,
   publicKeys,
 } from './hooks/usePublicPanel';
 
@@ -21,6 +23,8 @@ export {
   fetchPublicProjects,
   fetchPublicProject,
   fetchCourses,
+  fetchClosedEditions,
+  fetchEditionWinners,
 } from './api/public.api';
 
 export { NEWS } from './content/news';
@@ -31,9 +35,11 @@ export type {
   ProjectCanvasBlock,
   PublicDeliverableLink,
   PublicEdition,
+  PublicEditionListItem,
   PublicProject,
   PublicProjectDetail,
   PublicProjectMember,
   PublicProjectsQuery,
   PublicSdg,
+  Winner,
 } from './types';

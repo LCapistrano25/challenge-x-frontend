@@ -64,6 +64,15 @@ describe('ProjectDetailPage — tela compartilhada', () => {
     );
   });
 
+  it('volta para o acervo quando vem do acervo (?from=/acervo)', async () => {
+    renderPage('/projetos/600?from=%2Facervo');
+
+    expect(await screen.findByRole('link', { name: /Voltar para o acervo/ })).toHaveAttribute(
+      'href',
+      '/acervo',
+    );
+  });
+
   it('mostra erro quando o projeto não existe', async () => {
     renderPage('/projetos/999');
 
