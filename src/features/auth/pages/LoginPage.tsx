@@ -50,9 +50,14 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
   );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Durante o login por senha o usuário já está no cache, mas a sessão ainda pode ser derrubada.
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false);
   const [showMockPicker, setShowMockPicker] = useState(false);
 
-  if (user) {
+  // A guarda cai quando a sessão rejeitada sai do cache (ou ao fim de um login que não a derrubou).
+  if (!user && passwordSubmitting && !submitting) setPasswordSubmitting(false);
+
+  if (user && !passwordSubmitting) {
     return (
       <Navigate
         to={adminOnly && user.role !== 'ADMIN' ? '/acesso-negado' : homePathFor(user)}
@@ -97,14 +102,18 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
+    setPasswordSubmitting(true);
+    let sessionDropped = false;
     try {
       const loggedUser = await login({ email, password });
       if (adminOnly && loggedUser.role !== 'ADMIN') {
+        sessionDropped = true;
         await logout();
         throw new LoginRuleError('Acesso administrativo não autorizado.');
       }
       if (!adminOnly && (loggedUser.role === 'STUDENT' || loggedUser.role === 'TEACHER')) {
         // Defesa extra: o back-end já deve recusar, mas o front não mantém essa sessão.
+        sessionDropped = true;
         await logout();
         throw new LoginRuleError('Alunos e professores entram com a conta Microsoft.');
       }
@@ -122,6 +131,7 @@ export function LoginPage({ adminOnly = false }: LoginPageProps) {
       setError(err instanceof LoginRuleError ? err.message : getLoginErrorMessage(err));
     } finally {
       setSubmitting(false);
+      if (!sessionDropped) setPasswordSubmitting(false);
     }
   }
 

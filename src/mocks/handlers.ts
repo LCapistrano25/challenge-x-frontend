@@ -1517,9 +1517,32 @@ export const handlers = [
   }),
 
   http.get('*/api/public/editions/current', () => HttpResponse.json(buildCurrentEdition())),
-  http.get('*/api/public/projects', ({ request }) =>
-    HttpResponse.json(paginate(publicProjects, new URL(request.url))),
-  ),
+
+  http.get('*/api/public/projects', ({ request }) => {
+    const url = new URL(request.url);
+
+    const search = normalize(url.searchParams.get('search') ?? '').trim();
+
+    const courseId = url.searchParams.get('course_id');
+    const sdgId = url.searchParams.get('sdg_id');
+
+    const filteredProjects = publicProjects.filter((project) => {
+      const searchableText = normalize(
+        `${project.title} ${project.summary} ${project.course.name}`,
+      );
+
+      const matchesSearch = !search || searchableText.includes(search);
+
+      const matchesCourse = !courseId || String(project.course.id) === courseId;
+
+      const matchesSdg = !sdgId || String(project.sdg.id) === sdgId;
+
+      return matchesSearch && matchesCourse && matchesSdg;
+    });
+
+    return HttpResponse.json(paginate(filteredProjects, url));
+  }),
+
   http.get('*/api/public/projects/:projectId', ({ params }) => {
     const id = Number(params.projectId);
     const detail = buildPublicProjectDetail(id) ?? buildTeacherProjectDetail(id);

@@ -47,8 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { mutateAsync: logoutAsync } = useMutation({
     mutationFn: logoutRequest,
     onSuccess: () => {
-      queryClient.clear();
       queryClient.setQueryData(ME_KEY, null);
+      queryClient.removeQueries({
+        predicate: (query) => query.queryKey[0] !== 'auth',
+      });
     },
   });
 

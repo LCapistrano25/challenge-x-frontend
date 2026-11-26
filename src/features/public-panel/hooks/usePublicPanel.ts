@@ -1,10 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchCurrentEdition, fetchPublicProject, fetchPublicProjects } from '../api/public.api';
+import {
+  fetchCourses,
+  fetchCurrentEdition,
+  fetchPublicProject,
+  fetchPublicProjects,
+} from '../api/public.api';
 import type { PublicProjectsQuery } from '../types';
 
 export const publicKeys = {
   currentEdition: ['public', 'editions', 'current'] as const,
   projects: (params: PublicProjectsQuery) => ['public', 'projects', params] as const,
+  courses: ['public', 'courses'] as const,
   project: (id: number) => ['public', 'projects', 'detail', id] as const,
 };
 
@@ -20,6 +26,14 @@ export function usePublicProjects(params: PublicProjectsQuery = {}) {
   return useQuery({
     queryKey: publicKeys.projects(params),
     queryFn: () => fetchPublicProjects(params),
+  });
+}
+
+export function useCourses() {
+  return useQuery({
+    queryKey: publicKeys.courses,
+    queryFn: fetchCourses,
+    staleTime: 5 * 60_000,
   });
 }
 

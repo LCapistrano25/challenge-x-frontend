@@ -2,12 +2,15 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState, type ReactNode } from 'react';
+import { http, HttpResponse } from 'msw';
 import { MemoryRouter } from 'react-router-dom';
 import {
   PageHeaderContentContext,
   PageHeaderSetterContext,
   type PageHeaderContent,
 } from '@/shared/lib/page-header';
+import { publicProjects } from '@/mocks/fixtures/academic-home';
+import { server } from '@/mocks/server';
 import { ProjectShowcasePage } from './ProjectShowcasePage';
 
 function HeaderProbe({ children }: { children: ReactNode }) {
@@ -47,6 +50,9 @@ describe('ProjectShowcasePage — vitrine compartilhada', () => {
   });
 
   it('filtra por curso', async () => {
+    // As opções do filtro vêm de GET /api/courses; aqui usamos os cursos dos projetos públicos.
+    const courses = [...new Map(publicProjects.map((p) => [p.course.id, p.course])).values()];
+    server.use(http.get('*/api/courses', () => HttpResponse.json(courses)));
     renderPage();
 
     await screen.findByRole('heading', { name: 'Vitrine de Projetos' });
