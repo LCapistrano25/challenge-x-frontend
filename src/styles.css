@@ -587,6 +587,11 @@
     margin-left: 0;
   }
 
+  /* O título quebra a linha e o avatar da conta continua ao lado dele. */
+  .app-header:has(.app-header__actions) .app-header__title {
+    flex: 1 1 0;
+  }
+
   /* No celular a barra continua à esquerda: fechada com 60px; aberta, cobre o conteúdo. */
   .app-shell {
     grid-template-columns: 3.75rem minmax(0, 1fr);

@@ -212,6 +212,12 @@
   align-items: start;
 }
 
+/* Um valor longo (ex.: critérios escolhidos) não estica a coluna além da tela. */
+.row > *,
+.row > * > * {
+  min-width: 0;
+}
+
 .fields label,
 .filters label {
   font-weight: 500;
@@ -219,7 +225,7 @@
 
 .fields :where(input, select),
 .filters :where(input, select),
-.fields [aria-haspopup='listbox'] {
+.fields button[aria-haspopup] {
   min-height: 48px;
   font-size: var(--font-size-body);
 }

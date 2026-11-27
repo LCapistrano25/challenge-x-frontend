@@ -163,3 +163,19 @@ export const IconCheckCircle = make(
   </>,
   'IconCheckCircle',
 );
+export const IconUserCheck = make(
+  <>
+    <circle cx="9" cy="8" r="4" />
+    <path d="M2 21a7 7 0 0 1 14 0" />
+    <path d="m16 11 2 2 4-4" />
+  </>,
+  'IconUserCheck',
+);
+export const IconUserPlus = make(
+  <>
+    <circle cx="9" cy="8" r="4" />
+    <path d="M2 21a7 7 0 0 1 14 0" />
+    <path d="M19 8v6M16 11h6" />
+  </>,
+  'IconUserPlus',
+);

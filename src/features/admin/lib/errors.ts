@@ -9,6 +9,17 @@ const MESSAGES: Record<string, string> = {
   criterion_in_use_by_evaluations: 'Há avaliações iniciadas em etapa que usa o critério.',
   stage_criteria_sum_mismatch: 'A soma dos critérios não confere com a pontuação da etapa.',
   tiebreak_order_taken: 'Já existe critério nesta posição de desempate.',
+  // Editais e avaliadores (task #24; códigos da proposta em docs/api/propostas).
+  regulation_published: 'A versão publicada é preservada; crie uma nova versão para alterar.',
+  draft_exists: 'Já existe uma minuta em aberto nesta edição; edite-a ou publique-a antes.',
+  regulation_not_draft: 'Somente minutas podem ser publicadas.',
+  edition_not_ready: 'A edição ainda tem pendências de configuração para publicar.',
+  unsupported_file_type: 'Formato não aceito. Envie o edital em PDF.',
+  file_too_large: 'O arquivo passa do limite de 10 MB.',
+  evaluator_already_linked: 'O avaliador já está vinculado a esta edição.',
+  email_taken: 'Já existe usuário com este e-mail; vincule o avaliador existente.',
+  invitation_not_accepted: 'As atribuições só são liberadas depois do aceite do convite.',
+  assignment_conflict: 'O avaliador participa da equipe e não pode avaliá-la.',
 };
 
 /** Primeira mensagem de campo em `details` (validation_error do DRF), se houver. */

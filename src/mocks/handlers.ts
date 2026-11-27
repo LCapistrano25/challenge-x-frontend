@@ -66,7 +66,26 @@ import type { DeliverableSubmissionItem, PublishEvaluationInput } from '@/featur
 import { buildMemberNotes, type MockMemberNote } from './fixtures/member-notes';
 import { buildProjectScores } from './fixtures/scores';
 import { buildEvaluationSetup, toStageCriteria } from './fixtures/evaluation-setup';
-import type { CriterionCreate, Stage, StageCreate, StageCriteriaItem } from '@/features/admin';
+import {
+  ADMIN_COURSES,
+  SAMPLE_PDF,
+  buildAdminTeams,
+  buildCatalog,
+  buildEditionEvaluators,
+  buildRegulations,
+  personOf,
+  type CatalogPerson,
+} from './fixtures/admin-registry';
+import type {
+  CriterionCreate,
+  EditionEvaluator,
+  EvaluatorAssignmentItem,
+  EvaluatorInvitationCreate,
+  Regulation,
+  Stage,
+  StageCreate,
+  StageCriteriaItem,
+} from '@/features/admin';
 import {
   EVALUATOR_WITHOUT_PANEL,
   buildFinalEvaluation,
@@ -351,6 +370,76 @@ let emailDomains = [
 // Configuração da avaliação (task #23): etapas, critérios, rubricas e pontuações.
 let evaluationSetup = buildEvaluationSetup();
 let nextSetupId = 900;
+
+// Editais e avaliadores externos (task #24).
+let regulations = buildRegulations(evaluationSetup.editions);
+let editionEvaluators = buildEditionEvaluators();
+let extraEvaluators: CatalogPerson[] = [];
+const adminTeams = buildAdminTeams();
+let nextRegistryId = 2000;
+
+function resetRegistry() {
+  regulations = buildRegulations(evaluationSetup.editions);
+  editionEvaluators = buildEditionEvaluators();
+  extraEvaluators = [];
+  nextRegistryId = 2000;
+}
+
+const editionRef = (editionId: number) => {
+  const edition = evaluationSetup.editions.find((e) => e.id === editionId)!;
+  return {
+    id: edition.id,
+    year: edition.year,
+    semester: edition.semester,
+    name: edition.name,
+    status: edition.status,
+  };
+};
+
+/** Mantém a situação da edição atualizada nas versões (ela muda ao publicar). */
+const withEdition = (regulation: Regulation): Regulation => ({
+  ...regulation,
+  edition: editionRef(regulation.edition.id),
+});
+
+/** Primeiros bytes do arquivo; o Blob do jsdom (testes) não tem text(). */
+function readHeader(file: Blob): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => resolve('');
+    reader.readAsText(file.slice(0, 5));
+  });
+}
+
+/** Valida o PDF enviado no multipart (mesmas regras do cliente). */
+async function checkPdf(file: FormDataEntryValue | null) {
+  if (!(file instanceof File)) return setupValidationError('file', 'Anexe o edital em PDF.');
+  if (!/\.pdf$/i.test(file.name)) {
+    return apiError(415, 'unsupported_file_type', 'Formato não aceito. Envie o edital em PDF.');
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    return apiError(413, 'file_too_large', 'O arquivo passa do limite de 10 MB.');
+  }
+  if ((await readHeader(file)) !== '%PDF-') {
+    return apiError(415, 'unsupported_file_type', 'O arquivo não é um PDF válido.');
+  }
+  return null;
+}
+
+const evaluatorLink = (editionId: number, userId: number) =>
+  editionEvaluators.find((e) => e.edition_id === editionId && e.evaluator.user_id === userId);
+
+function saveLink(updated: EditionEvaluator) {
+  editionEvaluators = editionEvaluators.map((e) => (e.id === updated.id ? updated : e));
+  return updated;
+}
+
+/** Responsável no formato { id, name } da proposta. */
+const sessionRef = () => ({ id: Number(session?.id) || 1, name: session?.name ?? 'Administração' });
+
+const catalogPerson = (userId: number) =>
+  personOf(userId) ?? extraEvaluators.find((p) => p.user_id === userId);
 
 const adminOnly = () =>
   !session || session.role !== 'ADMIN'
@@ -1778,6 +1867,405 @@ export const handlers = [
     );
     return HttpResponse.json(updated);
   }),
+  // --- Editais (task #24; proposta P-E1 a P-E5) ---
+  http.get('*/api/admin/regulations', ({ request }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const url = new URL(request.url);
+    const editionId = url.searchParams.get('edition_id');
+    const status = url.searchParams.get('status');
+    const search = (url.searchParams.get('search') ?? '').toLowerCase();
+    return HttpResponse.json(
+      regulations
+        .filter((r) => !editionId || r.edition.id === Number(editionId))
+        .filter((r) => !status || r.status === status)
+        .filter((r) => !search || r.title.toLowerCase().includes(search))
+        .map(withEdition),
+    );
+  }),
+  http.get('*/api/admin/regulations/:regulationId', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const found = regulations.find((r) => r.id === Number(params.regulationId));
+    return found
+      ? HttpResponse.json(withEdition(found))
+      : apiError(404, 'not_found', 'Edital não encontrado.');
+  }),
+  http.get('*/api/admin/regulations/:regulationId/file', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const found = regulations.find((r) => r.id === Number(params.regulationId));
+    if (!found) return apiError(404, 'not_found', 'Edital não encontrado.');
+    return new HttpResponse(SAMPLE_PDF, {
+      headers: {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="${found.file.name}"`,
+      },
+    });
+  }),
+  http.post('*/api/admin/editions/:editionId/regulations', async ({ params, request }) => {
+    const editionId = Number(params.editionId);
+    const denied = adminOnly();
+    if (denied) return denied;
+    const edition = evaluationSetup.editions.find((e) => e.id === editionId);
+    if (!edition) return apiError(404, 'not_found', 'Edição não encontrada.');
+    if (edition.status === 'CLOSED') {
+      return apiError(409, 'edition_closed', 'A edição está encerrada e não pode ser alterada.');
+    }
+    if (regulations.some((r) => r.edition.id === editionId && r.status === 'DRAFT')) {
+      return apiError(409, 'draft_exists', 'Já existe uma minuta em aberto nesta edição.');
+    }
+    const form = await request.formData();
+    const title = String(form.get('title') ?? '').trim();
+    const description = String(form.get('description') ?? '').trim();
+    if (!title) return setupValidationError('title', 'Informe o título do edital.');
+    if (!description) return setupValidationError('description', 'Informe a descrição.');
+    const file = form.get('file');
+    const invalid = await checkPdf(file);
+    if (invalid) return invalid;
+    const pdf = file as File;
+    const versions = regulations.filter((r) => r.edition.id === editionId).map((r) => r.version);
+    const now = new Date().toISOString();
+    const created: Regulation = {
+      id: nextRegistryId++,
+      edition: editionRef(editionId),
+      title,
+      description,
+      version: versions.length ? Math.max(...versions) + 1 : 1,
+      status: 'DRAFT',
+      file: { name: pdf.name, size_bytes: pdf.size, url: '' },
+      created_at: now,
+      updated_at: now,
+      published_at: null,
+      published_by: null,
+    };
+    created.file.url = `/api/admin/regulations/${created.id}/file`;
+    regulations = [created, ...regulations];
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.patch('*/api/admin/regulations/:regulationId', async ({ params, request }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const existing = regulations.find((r) => r.id === Number(params.regulationId));
+    if (!existing) return apiError(404, 'not_found', 'Edital não encontrado.');
+    if (existing.status !== 'DRAFT') {
+      return apiError(
+        409,
+        'regulation_published',
+        'A versão publicada é preservada; crie uma nova versão para alterar.',
+      );
+    }
+    const form = await request.formData();
+    const file = form.get('file');
+    if (file) {
+      const invalid = await checkPdf(file);
+      if (invalid) return invalid;
+    }
+    const updated: Regulation = {
+      ...existing,
+      title: String(form.get('title') ?? existing.title).trim() || existing.title,
+      description:
+        String(form.get('description') ?? existing.description).trim() || existing.description,
+      file:
+        file instanceof File
+          ? { ...existing.file, name: file.name, size_bytes: file.size }
+          : existing.file,
+      updated_at: new Date().toISOString(),
+    };
+    regulations = regulations.map((r) => (r.id === updated.id ? updated : r));
+    return HttpResponse.json(withEdition(updated));
+  }),
+  http.post('*/api/admin/regulations/:regulationId/publish', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const existing = regulations.find((r) => r.id === Number(params.regulationId));
+    if (!existing) return apiError(404, 'not_found', 'Edital não encontrado.');
+    if (existing.status !== 'DRAFT') {
+      return apiError(409, 'regulation_not_draft', 'Somente minutas podem ser publicadas.');
+    }
+    const editionId = existing.edition.id;
+    const edition = evaluationSetup.editions.find((e) => e.id === editionId)!;
+    if (edition.status === 'CLOSED') {
+      return apiError(409, 'edition_closed', 'A edição está encerrada e não pode ser alterada.');
+    }
+    if (edition.status === 'SETUP') {
+      const total = evaluationSetup.stages
+        .filter((s) => s.edition_id === editionId && s.scored)
+        .reduce((sum, s) => sum + cents(s.max_score), 0);
+      const pending = editionEvaluators.some(
+        (e) => e.edition_id === editionId && e.invitation?.status !== 'ACCEPTED',
+      );
+      if (total !== 1000 || pending) {
+        return apiError(
+          409,
+          'edition_not_ready',
+          'A edição ainda tem pendências de configuração para publicar.',
+        );
+      }
+    }
+    const now = new Date().toISOString();
+    const published: Regulation = {
+      ...existing,
+      status: 'PUBLISHED',
+      published_at: now,
+      published_by: sessionRef(),
+      updated_at: now,
+    };
+    regulations = regulations.map((r) => {
+      if (r.id === published.id) return published;
+      if (r.edition.id === editionId && r.status === 'PUBLISHED') {
+        return { ...r, status: 'SUPERSEDED' as const, updated_at: now };
+      }
+      return r;
+    });
+    evaluationSetup.editions = evaluationSetup.editions.map((e) =>
+      e.id === editionId
+        ? {
+            ...e,
+            status: 'PUBLISHED' as const,
+            published_at: e.published_at ?? now,
+            regulation_url: published.file.url,
+          }
+        : e,
+    );
+    return HttpResponse.json(withEdition(published));
+  }),
+
+  // --- Avaliadores externos (task #24) ---
+  http.get('*/api/admin/editions/:editionId/evaluators', ({ params }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const editionId = Number(params.editionId);
+    return HttpResponse.json(editionEvaluators.filter((e) => e.edition_id === editionId));
+  }),
+  http.post('*/api/admin/editions/:editionId/evaluators', async ({ params, request }) => {
+    const editionId = Number(params.editionId);
+    const denied = adminOnly();
+    if (denied) return denied;
+    const edition = evaluationSetup.editions.find((e) => e.id === editionId);
+    if (!edition) return apiError(404, 'not_found', 'Edição não encontrada.');
+    if (edition.status === 'CLOSED') {
+      return apiError(409, 'edition_closed', 'A edição está encerrada e não pode ser alterada.');
+    }
+    const body = (await request.json()) as { evaluator_id: number; course_id: number | null };
+    const person = catalogPerson(body.evaluator_id);
+    if (!person) return apiError(404, 'not_found', 'Avaliador não encontrado.');
+    if (evaluatorLink(editionId, person.user_id)) {
+      return apiError(
+        409,
+        'evaluator_already_linked',
+        'O avaliador já está vinculado a esta edição.',
+      );
+    }
+    const course = ADMIN_COURSES.find((c) => c.id === body.course_id);
+    const now = new Date().toISOString();
+    const created: EditionEvaluator = {
+      id: nextRegistryId++,
+      edition_id: editionId,
+      evaluator: {
+        user_id: person.user_id,
+        name: person.name,
+        email: person.email,
+        institution: person.institution,
+        phone: person.phone,
+        role_title: person.role_title,
+      },
+      course: course ? { id: course.id, name: course.name } : null,
+      specialty: null,
+      active: true,
+      invitation: {
+        status: 'PENDING',
+        sent_at: now,
+        responded_at: null,
+        sent_by: sessionRef(),
+      },
+      assignments: [],
+      created_at: now,
+      updated_at: now,
+    };
+    editionEvaluators = [...editionEvaluators, created];
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.post(
+    '*/api/admin/editions/:editionId/evaluator-invitations',
+    async ({ params, request }) => {
+      const editionId = Number(params.editionId);
+      const denied = adminOnly();
+      if (denied) return denied;
+      const edition = evaluationSetup.editions.find((e) => e.id === editionId);
+      if (!edition) return apiError(404, 'not_found', 'Edição não encontrada.');
+      if (edition.status === 'CLOSED') {
+        return apiError(409, 'edition_closed', 'A edição está encerrada e não pode ser alterada.');
+      }
+      const body = (await request.json()) as EvaluatorInvitationCreate;
+      const email = body.email.trim().toLowerCase();
+      const known = buildCatalog(editionEvaluators, evaluationSetup.editions, extraEvaluators).some(
+        (p) => p.email.toLowerCase() === email,
+      );
+      if (known || users[email]) {
+        return apiError(409, 'email_taken', 'Já existe usuário com este e-mail.');
+      }
+      if (!body.name?.trim()) return setupValidationError('name', 'Informe o nome completo.');
+      if (!body.institution?.trim()) {
+        return setupValidationError('institution', 'Informe a instituição ou organização.');
+      }
+      const person: CatalogPerson = {
+        user_id: nextRegistryId++,
+        name: body.name.trim(),
+        email,
+        institution: body.institution.trim(),
+        phone: body.phone,
+        role_title: body.role_title,
+      };
+      extraEvaluators = [...extraEvaluators, person];
+      const now = new Date().toISOString();
+      const created: EditionEvaluator = {
+        id: nextRegistryId++,
+        edition_id: editionId,
+        evaluator: { ...person },
+        course: null,
+        specialty: body.specialty,
+        active: true,
+        invitation: {
+          status: 'PENDING',
+          sent_at: now,
+          responded_at: null,
+          sent_by: sessionRef(),
+        },
+        assignments: [],
+        created_at: now,
+        updated_at: now,
+      };
+      editionEvaluators = [...editionEvaluators, created];
+      return HttpResponse.json(created, { status: 201 });
+    },
+  ),
+  http.patch(
+    '*/api/admin/editions/:editionId/evaluators/:evaluatorId',
+    async ({ params, request }) => {
+      const editionId = Number(params.editionId);
+      const denied = adminOnly();
+      if (denied) return denied;
+      const existing = evaluatorLink(editionId, Number(params.evaluatorId));
+      if (!existing) return apiError(404, 'not_found', 'Vínculo não encontrado.');
+      const edition = evaluationSetup.editions.find((e) => e.id === editionId)!;
+      if (edition.status === 'CLOSED') {
+        return apiError(409, 'edition_closed', 'A edição está encerrada e não pode ser alterada.');
+      }
+      const body = (await request.json()) as {
+        course_id?: number | null;
+        specialty?: string | null;
+        active?: boolean;
+      };
+      const course =
+        body.course_id === undefined
+          ? existing.course
+          : (ADMIN_COURSES.filter((c) => c.id === body.course_id).map((c) => ({
+              id: c.id,
+              name: c.name,
+            }))[0] ?? null);
+      return HttpResponse.json(
+        saveLink({
+          ...existing,
+          course,
+          specialty: body.specialty === undefined ? existing.specialty : body.specialty,
+          active: body.active ?? existing.active,
+          updated_at: new Date().toISOString(),
+        }),
+      );
+    },
+  ),
+  http.post(
+    '*/api/admin/editions/:editionId/evaluators/:evaluatorId/invitation/resend',
+    ({ params }) => {
+      const denied = adminOnly();
+      if (denied) return denied;
+      const existing = evaluatorLink(Number(params.editionId), Number(params.evaluatorId));
+      if (!existing) return apiError(404, 'not_found', 'Vínculo não encontrado.');
+      const now = new Date().toISOString();
+      const invitation = existing.invitation ?? {
+        status: 'ACCEPTED' as const,
+        sent_at: existing.created_at,
+        responded_at: existing.created_at,
+        sent_by: null,
+      };
+      return HttpResponse.json(
+        saveLink({
+          ...existing,
+          invitation:
+            invitation.status === 'ACCEPTED'
+              ? invitation
+              : {
+                  ...invitation,
+                  status: 'PENDING',
+                  sent_at: now,
+                  responded_at: null,
+                  sent_by: sessionRef(),
+                },
+          updated_at: now,
+        }),
+      );
+    },
+  ),
+  http.put(
+    '*/api/admin/editions/:editionId/evaluators/:evaluatorId/assignments',
+    async ({ params, request }) => {
+      const editionId = Number(params.editionId);
+      const denied = adminOnly();
+      if (denied) return denied;
+      const existing = evaluatorLink(editionId, Number(params.evaluatorId));
+      if (!existing) return apiError(404, 'not_found', 'Vínculo não encontrado.');
+      if ((existing.invitation?.status ?? 'ACCEPTED') !== 'ACCEPTED') {
+        return apiError(
+          409,
+          'invitation_not_accepted',
+          'As atribuições só são liberadas depois do aceite do convite.',
+        );
+      }
+      const { items } = (await request.json()) as { items: EvaluatorAssignmentItem[] };
+      const assignments = [];
+      for (const item of items) {
+        const team = adminTeams.find((t) => t.id === item.team_id && t.edition_id === editionId);
+        const stage = evaluationSetup.stages.find(
+          (s) => s.id === item.stage_id && s.edition_id === editionId,
+        );
+        if (!team || !stage) {
+          return setupValidationError('items', 'Equipe ou etapa não pertence à edição.');
+        }
+        assignments.push({
+          id: nextRegistryId++,
+          team: { id: team.id, name: team.name },
+          project: team.project,
+          stage: { id: stage.id, name: stage.name },
+        });
+      }
+      saveLink({ ...existing, assignments, updated_at: new Date().toISOString() });
+      return HttpResponse.json(assignments);
+    },
+  ),
+  http.get('*/api/admin/external-evaluators', ({ request }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const url = new URL(request.url);
+    const search = (url.searchParams.get('search') ?? '').toLowerCase();
+    const items = buildCatalog(editionEvaluators, evaluationSetup.editions, extraEvaluators).filter(
+      (p) => !search || p.name.toLowerCase().includes(search) || p.email.includes(search),
+    );
+    return HttpResponse.json(paginate(items, url));
+  }),
+  http.get('*/api/admin/teams', ({ request }) => {
+    const denied = adminOnly();
+    if (denied) return denied;
+    const url = new URL(request.url);
+    const editionId = url.searchParams.get('edition_id');
+    return HttpResponse.json(
+      paginate(
+        adminTeams.filter((t) => !editionId || t.edition_id === Number(editionId)),
+        url,
+      ),
+    );
+  }),
+  http.get('*/api/admin/courses', () => adminOnly() ?? HttpResponse.json(ADMIN_COURSES)),
 ];
 
 /** Usado nos testes para isolar a sessão simulada entre os casos. */
@@ -1795,6 +2283,7 @@ export function resetMockSession() {
   resetEmailDomains();
   evaluationSetup = buildEvaluationSetup();
   nextSetupId = 900;
+  resetRegistry();
   resetMyTeams();
   resetProjects();
 }

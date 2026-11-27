@@ -60,7 +60,7 @@ export function SetupContext({
         <nav aria-label="Trilha de navegação">
           <ol className={styles.breadcrumb}>
             {crumbs.map((crumb, index) => (
-              <li key={crumb.label}>
+              <li key={`${index}-${crumb.label}`}>
                 {crumb.to && index < crumbs.length - 1 ? (
                   <Link to={crumb.to}>{crumb.label}</Link>
                 ) : (
