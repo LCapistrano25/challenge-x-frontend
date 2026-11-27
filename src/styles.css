@@ -135,7 +135,7 @@
   font-size: var(--font-size-caption);
 }
 
-/* --- Avaliador externo (Figma: 06 - Avaliador): cabeçalho em degradê + abas --- */
+/* --- Avaliador externo (Figma: 06 - Avaliador): cabeçalho em degradê --- */
 .app-header--brand {
   min-height: 6.25rem;
   padding: 0 var(--spacing-8);
@@ -186,32 +186,12 @@
   border: 1px solid var(--color-text-on-dark);
 }
 
-.app-tabs {
-  display: flex;
-  gap: var(--spacing-7);
-  padding: var(--spacing-3) var(--spacing-8);
-  overflow-x: auto;
-  background: var(--color-bg-secondary);
+.app-header--brand .app-header__menu {
+  color: var(--color-text-on-dark);
 }
 
-.app-tabs__link {
-  flex: 0 0 auto;
-  padding: var(--spacing-2) 0;
-  border-bottom: 2px solid transparent;
-  color: var(--color-text-secondary);
-  font-size: var(--font-size-small);
-  line-height: 1.4;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.app-tabs__link:hover {
-  color: var(--color-primary);
-}
-
-.app-tabs__link.active {
-  border-bottom-color: var(--color-primary);
-  color: var(--color-primary);
+.app-header--brand .app-header__menu:hover {
+  background: color-mix(in srgb, var(--color-text-on-dark) 12%, transparent);
 }
 
 .app-shell--brand .sidebar__link.active {
@@ -658,8 +638,7 @@
     padding: var(--spacing-4);
   }
 
-  /* Avaliador externo (Figma: "Externo · Projetos finalistas · Mobile"): sem trilho lateral;
-     a navegação fica nas abas e o cabeçalho mostra a logo. */
+  /* Avaliador externo: cabeçalho com logo; a navegação fica na barra inferior e na gaveta. */
   .app-shell.app-shell--brand {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -697,11 +676,6 @@
 
   .app-header__tagline {
     display: none;
-  }
-
-  .app-tabs {
-    gap: var(--spacing-4);
-    padding: var(--spacing-2) var(--spacing-4);
   }
 
   .app-shell--brand .app-content {

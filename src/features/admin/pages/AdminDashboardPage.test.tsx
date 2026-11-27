@@ -54,6 +54,11 @@ describe('AdminDashboardPage — painel administrativo (RF20)', () => {
       'href',
       '/admin/etapas',
     );
+    expect(
+      within(screen.getByRole('region', { name: 'Equipes e projetos' })).getByRole('link', {
+        name: 'Ver todas',
+      }),
+    ).toHaveAttribute('href', '/admin/equipes');
     expect(screen.getByRole('button', { name: 'Publicar edital' })).toBeDisabled();
 
     // Gestão da edição: progresso + cronograma + pontuação.

@@ -180,7 +180,7 @@ export function AdminDashboardPage() {
         <section className={styles.card} aria-label="Equipes e projetos">
           <header className={styles.cardHead}>
             <h3 className={styles.cardTitle}>Equipes e projetos</h3>
-            <ButtonLink to="/admin/cursos-professores" variant="ghost" size="small">
+            <ButtonLink to="/admin/equipes" variant="ghost" size="small">
               Ver todas
             </ButtonLink>
           </header>

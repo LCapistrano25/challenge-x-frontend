@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router-dom';
+import { Outlet, ScrollRestoration } from 'react-router-dom';
 import { ROLE_LABEL, useAuth } from '@/features/auth';
 import { useCurrentEdition } from '@/features/public-panel';
 import { useStudentDashboard } from '@/features/teams';
 import { Avatar, ConfirmDialog, DropdownMenu, IconMenu, notify } from '@/shared/ui';
 import { BrandLogo } from '@/app/config/nav-icons';
-import { isNavItemActive, type NavItem } from '@/app/config/navigation';
+import type { NavItem } from '@/app/config/navigation';
 import { PageHeaderProvider } from './PageHeaderProvider';
 import { usePageHeaderContent } from './page-header-context';
 import { BottomNav } from './BottomNav';
@@ -87,10 +87,29 @@ function AppHeader({
  * Cabeçalho do avaliador externo (Figma: 06 - Avaliador › "Cabeçalho do sistema"): faixa em
  * degradê com a identificação do sistema e o perfil.
  */
-function BrandHeader({ area, onRequestLogout }: { area: string; onRequestLogout: () => void }) {
+function BrandHeader({
+  area,
+  onOpenMenu,
+  onRequestLogout,
+}: {
+  area: string;
+  onOpenMenu?: () => void;
+  onRequestLogout: () => void;
+}) {
   const { user } = useAuth();
   return (
     <header className="app-header app-header--brand">
+      {onOpenMenu && (
+        <button
+          type="button"
+          className="app-header__menu"
+          onClick={onOpenMenu}
+          aria-label="Abrir menu"
+          title="Menu"
+        >
+          <IconMenu size={24} />
+        </button>
+      )}
       <div className="app-header__brand">
         <span className="app-header__logo" aria-hidden="true">
           <BrandLogo />
@@ -124,25 +143,6 @@ function BrandHeader({ area, onRequestLogout }: { area: string; onRequestLogout:
   );
 }
 
-/** Abas da área externa (Figma: "Navegação da área externa"), abaixo do cabeçalho. */
-function AreaTabs({ area, items }: { area: string; items: readonly NavItem[] }) {
-  const { pathname } = useLocation();
-  return (
-    <nav className="app-tabs" aria-label={`Navegação da área ${area}`}>
-      {items.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.end}
-          className={isNavItemActive(item, pathname) ? 'app-tabs__link active' : 'app-tabs__link'}
-        >
-          {item.label}
-        </NavLink>
-      ))}
-    </nav>
-  );
-}
-
 /** Layout das áreas autenticadas. Cada perfil passa o próprio menu. */
 export function AppLayout({ area, nav }: AppLayoutProps) {
   const { user, logout } = useAuth();
@@ -150,7 +150,7 @@ export function AppLayout({ area, nav }: AppLayoutProps) {
   const isLeader =
     useStudentDashboard({ enabled: user?.role === 'STUDENT' }).data?.is_leader === true;
   const items = nav.filter((item) => !item.leaderOnly || isLeader);
-  // O avaliador externo tem moldura própria no Figma: cabeçalho em degradê e abas.
+  // O avaliador externo mantém a moldura própria com cabeçalho em degradê.
   const brand = user?.role === 'EXTERNAL_EVALUATOR';
   const barItems = items.filter((item) => item.mobileBar);
   const hybrid = barItems.length > 0;
@@ -193,10 +193,11 @@ export function AppLayout({ area, nav }: AppLayoutProps) {
         />
         <div className="app-main">
           {brand ? (
-            <>
-              <BrandHeader area={area} onRequestLogout={() => setLogoutConfirmOpen(true)} />
-              <AreaTabs area={area} items={items} />
-            </>
+            <BrandHeader
+              area={area}
+              onOpenMenu={hybrid ? () => setMenuOpen(true) : undefined}
+              onRequestLogout={() => setLogoutConfirmOpen(true)}
+            />
           ) : (
             <AppHeader
               area={area}

@@ -99,18 +99,30 @@ export const NAV_ITEMS: Record<NavigationProfile, NavItem[]> = {
     },
     { to: '/acervo', label: 'Acervo', icon: <NavIconArchive /> },
   ],
-  // Figma: 06 - Avaliador › "Navegação lateral" e "Navegação da área externa" (abas).
+  // Figma: 06 - Avaliador › navegação lateral.
   // "Início" é a home pública, que continua dentro do layout do avaliador (ver PublicLayout).
   EXTERNAL_EVALUATOR: [
-    { to: '/', label: 'Início', icon: <NavIconHome />, end: true },
+    { to: '/', label: 'Início', icon: <NavIconHome />, end: true, mobileBar: true },
+    {
+      to: '/projetos',
+      label: 'Projetos',
+      icon: <NavIconProjects />,
+    },
+    { to: '/acervo', label: 'Acervo', icon: <NavIconArchive /> },
     {
       to: '/avaliador',
       label: 'Projetos finalistas',
-      icon: <NavIconProjects />,
+      icon: <IconBoard />,
       end: true,
       activePaths: ['/avaliador/projetos'],
+      mobileBar: true,
     },
-    { to: '/avaliador/avaliacoes', label: 'Minhas avaliações', icon: <NavIconArchive /> },
+    {
+      to: '/avaliador/avaliacoes',
+      label: 'Minhas avaliações',
+      icon: <IconClipboard />,
+      mobileBar: true,
+    },
   ],
   ADMIN: [
     { to: '/admin', label: 'Início', icon: <IconHome />, end: true },
